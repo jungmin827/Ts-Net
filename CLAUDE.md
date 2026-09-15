@@ -86,7 +86,8 @@ docs/SPEC.md           기능 명세 — 작업 전 반드시 읽을 것
 
 - [x] 요구사항 확정, 기술 스택 결정
 - [x] DB 스키마 작성 (`BE/supabase/migrations/001_init_schema.sql`)
-- [ ] Supabase 프로젝트 생성 및 마이그레이션 적용 (`BE/README.md` 절차 참고)
+- [x] Supabase 프로젝트 생성 및 마이그레이션 적용 — Seoul 리전, ref `yrqfnjiynyenxrjxruot`
+  - [ ] 대시보드 후속: pg_cron 스케줄 / 어드민 계정 / Storage 버킷 / 키를 FE/.env.local에 기입 (`BE/README.md` 5~8번)
 - [x] Next.js 스캐폴딩 + 디자인 토큰 (주조색·통신사 컬러는 임시값 — 브랜드 확정 시 `FE/app/globals.css`만 교체)
 - [x] lib 기반 모듈 (crypto / validation / supabase 클라이언트 3종 / audit)
 - [ ] 메인 랜딩 퍼블리싱
