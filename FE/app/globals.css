@@ -29,6 +29,24 @@
   --font-sans: var(--font-noto-sans-kr);
 }
 
+/* 실시간 신청현황 세로 롤링 — 리스트를 2배로 이어붙인 뒤 절반만큼 이동 */
+@keyframes feed-scroll {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+@theme {
+  --animate-feed-scroll: feed-scroll 25s linear infinite;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 /* 랜딩 특성상 라이트 테마 고정 (다크모드 자동 반전 없음) */
 body {
   background: var(--background);

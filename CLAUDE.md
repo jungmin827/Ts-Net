@@ -90,7 +90,9 @@ docs/SPEC.md           기능 명세 — 작업 전 반드시 읽을 것
   - [ ] 대시보드 후속: pg_cron 스케줄 / 어드민 계정 / Storage 버킷 / 키를 FE/.env.local에 기입 (`BE/README.md` 5~8번)
 - [x] Next.js 스캐폴딩 + 디자인 토큰 (주조색·통신사 컬러는 임시값 — 브랜드 확정 시 `FE/app/globals.css`만 교체)
 - [x] lib 기반 모듈 (crypto / validation / supabase 클라이언트 3종 / audit)
-- [ ] 메인 랜딩 퍼블리싱
+- [x] 메인 랜딩 퍼블리싱 1차 — 섹션(Hero·LiveFeed·Benefits·Process·Reviews·Footer)
+  + 폼 3종(인라인·플로팅 퀵상담·모바일 하단바). 카피·사업자정보는 `FE/lib/site-config.ts`
+  - 잔여: 약관 모달(content/*.mdx), 실제 카피·사업자 정보, 히어로 이미지
 - [x] `/api/leads` 접수 파이프라인 + `/api/feed/live` (60초 캐시, 5건 미만 빈 배열)
   - 실 접수 E2E 테스트는 anon/service_role 키 기입 후 진행 필요
 - [ ] 어드민 (목록·필터·상세·상태변경·엑셀)

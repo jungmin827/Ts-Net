@@ -1,21 +1,57 @@
-// 메인 랜딩 — SSG. 섹션 구성은 docs/SPEC.md §1.1 순서를 따른다.
-// 각 섹션은 components/sections/ 에 만들어 여기서 조립한다.
+import { createClient } from "@supabase/supabase-js";
+import Hero from "@/components/sections/Hero";
+import LiveFeed from "@/components/sections/LiveFeed";
+import Benefits from "@/components/sections/Benefits";
+import Process from "@/components/sections/Process";
+import Reviews, { type ReviewItem } from "@/components/sections/Reviews";
+import LeadForm from "@/components/forms/LeadForm";
 
-export default function HomePage() {
+// 메인 랜딩 — docs/SPEC.md §1.1 섹션 순서. 후기 반영을 위해 5분 재생성
+export const revalidate = 300;
+
+/** 게시 승인된 후기만 anon 키로 조회 (RLS reviews_public_read). 키 미설정·오류 시 섹션 미출력 */
+async function getReviews(): Promise<ReviewItem[]> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return [];
+  try {
+    const supabase = createClient(url, key);
+    const { data } = await supabase
+      .from("reviews")
+      .select("id, title, content, rating, thumbnail_url, carrier, created_at")
+      .eq("is_published", true)
+      .order("created_at", { ascending: false })
+      .limit(8);
+    return (data as ReviewItem[]) ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export default async function HomePage() {
+  const reviews = await getReviews();
+
   return (
-    <main className="mx-auto flex min-h-screen max-w-5xl flex-col items-center justify-center gap-4 px-4">
-      <h1 className="text-3xl font-bold text-brand">TS넷 랜딩 (퍼블리싱 예정)</h1>
-      <ol className="list-decimal text-sm text-gray-500">
-        <li>Header</li>
-        <li>Hero</li>
-        <li>LeadForm (인라인 상담폼)</li>
-        <li>LiveFeed (실시간 신청현황 — 실데이터 5건 미만 시 미출력)</li>
-        <li>Benefits (차별점 4카드)</li>
-        <li>Process (가입절차 5스텝)</li>
-        <li>Reviews (후기 슬라이더)</li>
-        <li>Footer</li>
-        <li>QuickForm (플로팅) / MobileBottomBar</li>
-      </ol>
+    <main>
+      <Hero />
+
+      {/* 인라인 상담폼 — 하단바·히어로 CTA의 앵커 목적지 */}
+      <section id="consult" className="scroll-mt-20 py-16">
+        <div className="mx-auto max-w-xl px-4">
+          <h2 className="mb-2 text-center text-2xl font-black md:text-3xl">
+            가입 상담 신청
+          </h2>
+          <p className="mb-8 text-center text-sm text-gray-500">
+            남겨주신 연락처로 확인 후 순차적으로 연락드립니다
+          </p>
+          <LeadForm variant="full" />
+        </div>
+      </section>
+
+      <LiveFeed />
+      <Benefits />
+      <Process />
+      <Reviews reviews={reviews} />
     </main>
   );
 }
