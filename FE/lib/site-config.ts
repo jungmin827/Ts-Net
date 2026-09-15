@@ -49,12 +49,49 @@ export const SITE = {
   ],
 } as const;
 
+// 통신사 4사 — 메뉴·서브페이지 라우팅·브랜드 컬러의 단일 출처.
+// colorVar 는 globals.css 의 통신사 토큰을 가리킨다 (서브 히어로 그라데이션에 사용).
 export const CARRIER_MENU = [
-  { slug: "kt", code: "KT", label: "KT" },
-  { slug: "sk", code: "SK", label: "SK브로드밴드" },
-  { slug: "lg", code: "LG", label: "LG유플러스" },
-  { slug: "skylife", code: "SKYLIFE", label: "KT스카이라이프" },
+  {
+    slug: "kt",
+    code: "KT",
+    label: "KT",
+    fullLabel: "KT 인터넷·IPTV",
+    colorVar: "--carrier-kt",
+    tagline: "전국 커버리지와 안정적인 품질",
+  },
+  {
+    slug: "sk",
+    code: "SK",
+    label: "SK브로드밴드",
+    fullLabel: "SK브로드밴드 인터넷·IPTV",
+    colorVar: "--carrier-sk",
+    tagline: "결합 구성에 강점이 있는 상품군",
+  },
+  {
+    slug: "lg",
+    code: "LG",
+    label: "LG유플러스",
+    fullLabel: "LG유플러스 인터넷·IPTV",
+    colorVar: "--carrier-lg",
+    tagline: "IPTV 콘텐츠 구성이 다양한 편",
+  },
+  {
+    slug: "skylife",
+    code: "SKYLIFE",
+    label: "KT스카이라이프",
+    fullLabel: "KT스카이라이프 인터넷·TV",
+    colorVar: "--carrier-skylife",
+    tagline: "위성 기반으로 설치 지역 제약이 적음",
+  },
 ] as const;
+
+export type CarrierMenuItem = (typeof CARRIER_MENU)[number];
+
+/** slug → 통신사 정보. 없는 slug면 undefined (서브페이지에서 notFound 처리) */
+export function carrierBySlug(slug: string): CarrierMenuItem | undefined {
+  return CARRIER_MENU.find((c) => c.slug === slug);
+}
 
 /** 통신사 코드 → 뱃지 배경 클래스 (globals.css 토큰) */
 export const CARRIER_COLOR: Record<string, string> = {
@@ -63,3 +100,22 @@ export const CARRIER_COLOR: Record<string, string> = {
   LG: "bg-carrier-lg",
   SKYLIFE: "bg-carrier-skylife",
 };
+
+/** 요금표 하단 고지 — 표시 금액의 전제를 밝힌다 (표시광고 리스크 방지) */
+export const PLAN_DISCLAIMER =
+  "표시 금액은 약정·결합·제휴카드 조건에 따라 달라질 수 있으며, 실제 적용 금액과 사은품은 상담 시 안내해 드립니다.";
+
+// 제휴카드 할인 안내 — 카드사별 할인액·실적 조건은 근거자료 확보 후 채운다.
+// 숫자를 임의로 적지 않는다 (CLAUDE.md 규칙 6).
+export const PARTNER_CARD = {
+  title: "제휴카드 할인 안내",
+  summary:
+    "제휴 신용카드로 통신요금을 자동납부하고 카드사 실적 조건을 충족하면 월 요금이 추가로 할인됩니다.",
+  details: [
+    "할인 금액과 전월 실적 기준은 카드사·카드 상품별로 다릅니다.",
+    "할인은 청구 할인 방식이며, 적용 시점은 카드사 심사 이후입니다.",
+    "약정 기간 중 카드 해지·실적 미달 시 할인이 중단될 수 있습니다.",
+    "가입 가능한 카드와 정확한 할인 조건은 상담 시 안내해 드립니다.",
+  ],
+  // TODO: 제휴 카드사 목록과 할인표 확정 후 details 교체 (근거자료 보유 필수)
+} as const;
