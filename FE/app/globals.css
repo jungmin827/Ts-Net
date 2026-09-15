@@ -5,9 +5,10 @@
   --background: #ffffff;
   --foreground: #171717;
 
-  --brand: #1d4ed8; /* 주조색 (임시) */
-  --brand-dark: #1e3a8a;
-  --accent: #f59e0b; /* CTA·사은품 강조 (임시) */
+  --brand: #2b50c8; /* 주조색 — 밝은 남색 (docs/DESIGN.md 컬러 시스템) */
+  --brand-dark: #1d379b;
+  --brand-light: #eaf0ff; /* 섹션 틴트·뱃지 배경 */
+  --accent: #f59e0b; /* CTA·사은품 강조 */
 
   /* 통신사 아이덴티티 컬러 (근사값 — 퍼블리싱 시 공식 가이드 확인) */
   --carrier-kt: #e4002b;
@@ -21,6 +22,7 @@
   --color-foreground: var(--foreground);
   --color-brand: var(--brand);
   --color-brand-dark: var(--brand-dark);
+  --color-brand-light: var(--brand-light);
   --color-accent: var(--accent);
   --color-carrier-kt: var(--carrier-kt);
   --color-carrier-sk: var(--carrier-sk);
