@@ -91,7 +91,8 @@ docs/SPEC.md           기능 명세 — 작업 전 반드시 읽을 것
 - [x] Next.js 스캐폴딩 + 디자인 토큰 (주조색·통신사 컬러는 임시값 — 브랜드 확정 시 `FE/app/globals.css`만 교체)
 - [x] lib 기반 모듈 (crypto / validation / supabase 클라이언트 3종 / audit)
 - [ ] 메인 랜딩 퍼블리싱
-- [ ] `/api/leads` 접수 파이프라인
+- [x] `/api/leads` 접수 파이프라인 + `/api/feed/live` (60초 캐시, 5건 미만 빈 배열)
+  - 실 접수 E2E 테스트는 anon/service_role 키 기입 후 진행 필요
 - [ ] 어드민 (목록·필터·상세·상태변경·엑셀)
 - [ ] 통신사 서브페이지 4종
 - [ ] 후기·공지 게시판
