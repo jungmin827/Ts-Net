@@ -33,6 +33,14 @@ export const leadSchema = z.object({
   turnstileToken: z.string().min(1),
   // honeypot — 봇이 채우는 숨김 필드. 값이 있으면 200 반환 후 조용히 폐기
   website: z.literal("").optional(),
+
+  // 유입 추적 — 폼 컴포넌트가 URL 쿼리에서 수집해 전달 (광고비 손익 판단 근거)
+  utm_source: z.string().max(100).optional(),
+  utm_medium: z.string().max(100).optional(),
+  utm_campaign: z.string().max(100).optional(),
+  utm_content: z.string().max(100).optional(),
+  landing_path: z.string().max(255).optional(),
+  referrer: z.string().max(2000).optional(),
 });
 
 export type LeadInput = z.infer<typeof leadSchema>;
