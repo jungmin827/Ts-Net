@@ -5,9 +5,11 @@ import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import { CARRIERS, PRODUCTS, type Carrier } from "@/lib/validation";
 import { CARRIER_MENU } from "@/lib/site-config";
 import Button from "@/components/ui/Button";
+import Icon from "@/components/ui/Icon";
+import { ConsentCheck, fieldBase, selectBase } from "@/components/ui/Field";
 
 // 상담 접수 폼 — /api/leads 로 POST.
-// variant "full": 통신사+관심상품 포함(랜딩 인라인), "compact": 관심상품+이름+연락처(플로팅 퀵상담)
+// variant "full": 통신사+관심상품 포함(랜딩 인라인), "compact": 관심상품+이름+연락처(플로팅·서브페이지)
 
 interface Props {
   variant?: "full" | "compact";
@@ -49,14 +51,22 @@ function collectTracking(): Tracking {
 
 /** 접수 성공 시 전환 이벤트 발화. 스크립트 미설치 환경에서는 조용히 무시 */
 function fireConversion() {
-  const w = window as unknown as Record<string, ((...args: unknown[]) => void) | undefined>;
+  const w = window as unknown as Record<
+    string,
+    ((...args: unknown[]) => void) | undefined
+  >;
   w.gtag?.("event", "generate_lead");
   w.fbq?.("track", "Lead");
   // TODO: 네이버·카카오 픽셀은 트래킹 스크립트 도입 시 함께 연결
 }
 
-const inputCls =
-  "w-full rounded-lg border border-gray-300 px-4 py-3 text-base outline-none focus:border-brand focus:ring-2 focus:ring-brand/20";
+/** 입력 중 하이픈을 자동으로 넣어준다. 서버는 어차피 숫자만 남겨 정규화한다 */
+function formatPhone(raw: string) {
+  const d = raw.replace(/\D/g, "").slice(0, 11);
+  if (d.length < 4) return d;
+  if (d.length < 8) return `${d.slice(0, 3)}-${d.slice(3)}`;
+  return `${d.slice(0, 3)}-${d.slice(3, d.length - 4)}-${d.slice(-4)}`;
+}
 
 export default function LeadForm({ variant = "full", defaultCarrier }: Props) {
   const [name, setName] = useState("");
@@ -115,9 +125,14 @@ export default function LeadForm({ variant = "full", defaultCarrier }: Props) {
 
   if (status === "done") {
     return (
-      <div className="rounded-xl bg-brand/5 p-8 text-center">
-        <p className="text-xl font-bold text-brand">상담 신청이 접수되었습니다</p>
-        <p className="mt-2 text-sm text-gray-600">
+      <div className="animate-pop rounded-panel border border-brand/20 bg-brand-soft p-8 text-center">
+        <span className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-brand text-white shadow-brand">
+          <Icon name="check" size={28} />
+        </span>
+        <p className="text-xl font-black text-brand-deep">
+          상담 신청이 접수되었습니다
+        </p>
+        <p className="mt-2 text-sm text-muted">
           확인 후 순차적으로 연락드리겠습니다
         </p>
       </div>
@@ -128,7 +143,7 @@ export default function LeadForm({ variant = "full", defaultCarrier }: Props) {
     <form onSubmit={submit} className="relative flex flex-col gap-3">
       {variant === "full" && (
         <select
-          className={inputCls}
+          className={selectBase}
           value={carrier}
           onChange={(e) => setCarrier(e.target.value)}
           aria-label="통신사 선택"
@@ -143,7 +158,7 @@ export default function LeadForm({ variant = "full", defaultCarrier }: Props) {
       )}
 
       <select
-        className={inputCls}
+        className={selectBase}
         value={product}
         onChange={(e) => setProduct(e.target.value)}
         aria-label="관심상품 선택"
@@ -157,7 +172,7 @@ export default function LeadForm({ variant = "full", defaultCarrier }: Props) {
       </select>
 
       <input
-        className={inputCls}
+        className={fieldBase}
         type="text"
         placeholder="이름"
         value={name}
@@ -167,11 +182,12 @@ export default function LeadForm({ variant = "full", defaultCarrier }: Props) {
         autoComplete="name"
       />
       <input
-        className={inputCls}
+        className={fieldBase}
         type="tel"
+        inputMode="numeric"
         placeholder="연락처 (010-0000-0000)"
         value={phone}
-        onChange={(e) => setPhone(e.target.value)}
+        onChange={(e) => setPhone(formatPhone(e.target.value))}
         required
         maxLength={13}
         autoComplete="tel"
@@ -188,27 +204,19 @@ export default function LeadForm({ variant = "full", defaultCarrier }: Props) {
       />
 
       {/* 개인정보 동의와 마케팅 동의는 반드시 분리 (CLAUDE.md 규칙 2) */}
-      <label className="flex items-start gap-2 text-sm text-gray-700">
-        <input
-          type="checkbox"
+      <div className="mt-1 flex flex-col gap-2">
+        <ConsentCheck
           checked={consentPrivacy}
-          onChange={(e) => setConsentPrivacy(e.target.checked)}
-          className="mt-0.5 size-4 accent-brand"
-        />
-        <span>
-          [필수] 개인정보 수집·이용 동의 — 이름·연락처를 상담 목적으로 수집하며
-          2년 보관 후 파기합니다
-        </span>
-      </label>
-      <label className="flex items-start gap-2 text-sm text-gray-500">
-        <input
-          type="checkbox"
-          checked={consentMarketing}
-          onChange={(e) => setConsentMarketing(e.target.checked)}
-          className="mt-0.5 size-4 accent-brand"
-        />
-        <span>[선택] 마케팅 정보 수신 동의</span>
-      </label>
+          onChange={setConsentPrivacy}
+          required
+        >
+          개인정보 수집·이용 동의 — 이름·연락처를 상담 목적으로 수집하며 2년
+          보관 후 파기합니다
+        </ConsentCheck>
+        <ConsentCheck checked={consentMarketing} onChange={setConsentMarketing}>
+          마케팅 정보 수신 동의
+        </ConsentCheck>
+      </div>
 
       {siteKey ? (
         <Turnstile
@@ -224,12 +232,22 @@ export default function LeadForm({ variant = "full", defaultCarrier }: Props) {
         </p>
       )}
 
-      {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+      {error && (
+        <p
+          role="alert"
+          className="animate-pop rounded-lg bg-red-50 px-3 py-2.5 text-sm font-medium text-red-600"
+        >
+          {error}
+        </p>
+      )}
 
       <Button
         type="submit"
         variant="accent"
-        disabled={!consentPrivacy || !token || status === "loading"}
+        size="lg"
+        fullWidth
+        loading={status === "loading"}
+        disabled={!consentPrivacy || !token}
       >
         {status === "loading" ? "접수 중..." : "상담 신청하기"}
       </Button>
