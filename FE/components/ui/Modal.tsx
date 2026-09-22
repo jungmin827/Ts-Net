@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Icon from "./Icon";
 
 interface Props {
   open: boolean;
@@ -29,7 +30,7 @@ export default function Modal({ open, onClose, title, children }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
       onClick={onClose}
       role="presentation"
     >
@@ -37,18 +38,18 @@ export default function Modal({ open, onClose, title, children }: Props) {
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
+        className="animate-pop max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-panel bg-white p-6 shadow-float"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-4 flex items-start justify-between gap-4">
-          <h3 className="text-lg font-bold">{title}</h3>
+        <div className="mb-5 flex items-start justify-between gap-4 border-b border-line pb-4">
+          <h3 className="text-lg font-black">{title}</h3>
           <button
             type="button"
             onClick={onClose}
             aria-label="닫기"
-            className="cursor-pointer text-2xl leading-none text-gray-400 hover:text-gray-600"
+            className="-mt-1 flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-surface-muted hover:text-brand"
           >
-            ×
+            <Icon name="close" size={20} />
           </button>
         </div>
         {children}
