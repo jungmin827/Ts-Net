@@ -21,31 +21,36 @@ export const SITE = {
     cta: "상담 신청하기",
   },
 
+  // icon 값은 components/ui/Icon.tsx 의 IconName 과 일치해야 한다
   benefits: [
     {
+      icon: "bolt",
       title: "빠른 상담 연결",
       lines: ["접수 확인 후 순차적으로", "전화 상담을 진행합니다", "영업시간 내 신속 안내"],
     },
     {
+      icon: "compare",
       title: "통신사 조건 비교",
       lines: ["KT·SK·LG·스카이라이프", "요금제와 약정 조건을", "한 번에 비교해 드립니다"],
     },
     {
+      icon: "gift",
       title: "명확한 사은품 안내",
       lines: ["지급 조건과 절차를", "상담 시 명확히 안내하고", "진행 상태를 확인해 드립니다"],
     },
     {
+      icon: "shield",
       title: "개인정보 보호",
       lines: ["연락처는 암호화 저장하며", "보유기간이 지나면", "자동 파기됩니다"],
     },
   ],
 
   processSteps: [
-    { title: "상담 신청", desc: "이름·연락처 접수" },
-    { title: "전화 상담", desc: "조건 비교 안내" },
-    { title: "통신사 접수", desc: "가입 신청 진행" },
-    { title: "설치", desc: "기사 방문 설치" },
-    { title: "사은품 지급", desc: "설치 확인 후 지급" },
+    { icon: "chat", title: "상담 신청", desc: "이름·연락처 접수" },
+    { icon: "clipboard", title: "전화 상담", desc: "조건 비교 안내" },
+    { icon: "calendar", title: "통신사 접수", desc: "가입 신청 진행" },
+    { icon: "wrench", title: "설치", desc: "기사 방문 설치" },
+    { icon: "wallet", title: "사은품 지급", desc: "설치 확인 후 지급" },
   ],
 } as const;
 

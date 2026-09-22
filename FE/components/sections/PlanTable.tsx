@@ -6,6 +6,8 @@ import {
   type Plan,
 } from "@/lib/plans";
 import { PLAN_DISCLAIMER } from "@/lib/site-config";
+import Reveal from "@/components/ui/Reveal";
+import SectionHeading from "@/components/ui/SectionHeading";
 
 /** 요금제 표 — 카테고리(결합/인터넷/TV)별로 분리. 좁은 화면에서는 표만 가로 스크롤 */
 export default function PlanTable({ plans }: { plans: Plan[] }) {
@@ -13,59 +15,67 @@ export default function PlanTable({ plans }: { plans: Plan[] }) {
   if (groups.length === 0) return null;
 
   return (
-    <section className="bg-gray-50 py-14">
+    <section className="bg-brand-soft py-16 md:py-20">
       <div className="mx-auto max-w-6xl px-4">
-        <h2 className="mb-8 text-center text-2xl font-black md:text-3xl">
-          요금제 안내
-        </h2>
+        <SectionHeading eyebrow="PRICING" title="요금제 안내" />
 
         <div className="flex flex-col gap-10">
-          {groups.map(([category, list]) => (
-            <div key={category}>
-              <h3 className="mb-3 text-lg font-bold">
-                {CATEGORY_LABEL[category]}
-              </h3>
-              <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
-                <table className="w-full min-w-[640px] text-sm">
-                  <thead>
-                    <tr className="bg-brand-light text-left">
-                      <th className="px-4 py-3 font-bold">상품명</th>
-                      <th className="px-4 py-3 font-bold">속도</th>
-                      <th className="px-4 py-3 text-right font-bold">월 요금</th>
-                      <th className="px-4 py-3 text-center font-bold">약정</th>
-                      <th className="px-4 py-3 text-right font-bold">
-                        현금 사은품
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {list.map((p) => (
-                      <tr key={p.id} className="border-t border-gray-100">
-                        <td className="px-4 py-3 font-medium">{p.name}</td>
-                        <td className="px-4 py-3 text-gray-500">
-                          {p.speed ?? "-"}
-                        </td>
-                        <td className="px-4 py-3 text-right font-bold text-brand">
-                          {formatWon(p.monthly_fee)}
-                        </td>
-                        <td className="px-4 py-3 text-center text-gray-500">
-                          {formatContract(p.contract_months)}
-                        </td>
-                        <td className="px-4 py-3 text-right font-medium text-accent">
-                          {p.gift_amount == null
-                            ? "-"
-                            : `최대 ${formatWon(p.gift_amount)}`}
-                        </td>
+          {groups.map(([category, list], gi) => (
+            <Reveal key={category} delay={gi * 60}>
+              <div>
+                <h3 className="mb-3 flex items-center gap-2 text-lg font-bold">
+                  <span className="h-4 w-1 rounded-full bg-brand" />
+                  {CATEGORY_LABEL[category]}
+                </h3>
+                <div className="overflow-x-auto rounded-panel border border-line bg-white shadow-card">
+                  <table className="w-full min-w-[640px] text-sm">
+                    <thead>
+                      <tr className="border-b border-line bg-brand-light/70 text-left">
+                        <th className="px-5 py-3.5 font-bold">상품명</th>
+                        <th className="px-5 py-3.5 font-bold">속도</th>
+                        <th className="px-5 py-3.5 text-right font-bold">
+                          월 요금
+                        </th>
+                        <th className="px-5 py-3.5 text-center font-bold">
+                          약정
+                        </th>
+                        <th className="px-5 py-3.5 text-right font-bold">
+                          현금 사은품
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {list.map((p) => (
+                        <tr
+                          key={p.id}
+                          className="border-t border-line/70 transition-colors hover:bg-brand-soft"
+                        >
+                          <td className="px-5 py-3.5 font-medium">{p.name}</td>
+                          <td className="px-5 py-3.5 text-muted">
+                            {p.speed ?? "-"}
+                          </td>
+                          <td className="px-5 py-3.5 text-right text-base font-black text-brand">
+                            {formatWon(p.monthly_fee)}
+                          </td>
+                          <td className="px-5 py-3.5 text-center text-muted">
+                            {formatContract(p.contract_months)}
+                          </td>
+                          <td className="px-5 py-3.5 text-right font-bold text-accent">
+                            {p.gift_amount == null
+                              ? "-"
+                              : `최대 ${formatWon(p.gift_amount)}`}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
+            </Reveal>
           ))}
         </div>
 
-        <p className="mt-6 text-xs leading-relaxed text-gray-400">
+        <p className="mt-6 text-xs leading-relaxed text-slate-400">
           {PLAN_DISCLAIMER}
         </p>
       </div>
