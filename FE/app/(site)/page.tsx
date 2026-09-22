@@ -6,6 +6,7 @@ import Benefits from "@/components/sections/Benefits";
 import Process from "@/components/sections/Process";
 import Reviews, { type ReviewItem } from "@/components/sections/Reviews";
 import LeadForm from "@/components/forms/LeadForm";
+import SectionHeading from "@/components/ui/SectionHeading";
 
 // 메인 랜딩 — docs/SPEC.md §1.1 섹션 순서. 후기 반영을 위해 5분 재생성
 export const revalidate = 300;
@@ -36,16 +37,21 @@ export default async function HomePage() {
     <main>
       <Hero />
 
-      {/* 인라인 상담폼 — 하단바·히어로 CTA의 앵커 목적지 */}
-      <section id="consult" className="scroll-mt-20 py-16">
+      {/* 인라인 상담폼 — 하단바·히어로 CTA의 앵커 목적지.
+          히어로 위로 카드를 끌어올려 두 섹션이 겹치게 하면 깊이가 생긴다 */}
+      <section
+        id="consult"
+        className="relative scroll-mt-24 bg-white pb-16 md:pb-20"
+      >
         <div className="mx-auto max-w-xl px-4">
-          <h2 className="mb-2 text-center text-2xl font-black md:text-3xl">
-            가입 상담 신청
-          </h2>
-          <p className="mb-8 text-center text-sm text-gray-500">
-            남겨주신 연락처로 확인 후 순차적으로 연락드립니다
-          </p>
-          <LeadForm variant="full" />
+          <div className="-mt-10 rounded-panel border border-line bg-white p-6 shadow-float md:-mt-14 md:p-8">
+            <SectionHeading
+              eyebrow="상담 신청"
+              title="가입 상담 신청"
+              description="남겨주신 연락처로 확인 후 순차적으로 연락드립니다"
+            />
+            <LeadForm variant="full" />
+          </div>
         </div>
       </section>
 
