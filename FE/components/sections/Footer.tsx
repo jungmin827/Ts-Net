@@ -8,7 +8,7 @@ export default function Footer() {
   const b = SITE.business;
 
   return (
-    <footer className="pb-20 lg:pb-0">
+    <footer>
       {/* 전환 밴드 — 스크롤 끝까지 내려온 사람에게 마지막으로 행동을 제안한다 */}
       <section
         className="relative isolate overflow-hidden text-white"
