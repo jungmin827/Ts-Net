@@ -4,6 +4,8 @@
 
 export const SITE = {
   name: "TS넷",
+  // 헤더 브랜드 존에서 로고 위에 붙는 한 줄. 사이트가 무엇을 하는 곳인지만 말한다
+  tagline: "인터넷 · IPTV 가입 상담 창구",
   tel: process.env.NEXT_PUBLIC_TEL || "1600-0000", // TODO: 대표번호 확정
 
   business: {
@@ -53,6 +55,37 @@ export const SITE = {
     { icon: "wallet", title: "사은품 지급", desc: "설치 확인 후 지급" },
   ],
 } as const;
+
+/**
+ * 홍보 밴드 — 프레임이 순차 교체되며 한 문장이 완성되는 풀폭 타이포 배너.
+ *
+ * 운영자가 **이 배열만 고치면** 문구가 통째로 바뀐다. 컴포넌트 쪽엔 문구가 없다.
+ * - `words` 의 한 항목이 화면에 한 번에 뜨는 덩어리다. `accent: true` 면 강조색.
+ * - `tone` 은 프레임 배경. "brand" = 남색 면 / "light" = 밝은 면.
+ *   프레임마다 면이 뒤집히면서 리듬이 생긴다.
+ * - 수치(금액·지원금 등)는 **근거를 확보한 경우에만** 넣는다 (CLAUDE.md 규칙 6).
+ *   지금은 검증 가능한 사실만 적힌 중립 자리표시자다.
+ * - `enabled: false` 로 두면 섹션 자체가 렌더링되지 않는다.
+ */
+/** 밴드에 한 번에 뜨는 단어 한 덩어리. accent 면 강조색으로 찍힌다 */
+export type PromoWord = { t: string; accent?: boolean };
+/** 밴드 한 장(프레임). tone 은 그 프레임의 면 색 */
+export type PromoFrame = { tone: "brand" | "light"; words: PromoWord[] };
+
+export const PROMO_BAND: {
+  enabled: boolean;
+  holdMs: number;
+  frames: PromoFrame[];
+} = {
+  enabled: true,
+  holdMs: 2400, // 프레임 한 장이 머무는 시간
+  frames: [
+    { tone: "brand", words: [{ t: "인터넷 · TV" }, { t: "가입", accent: true }] },
+    { tone: "light", words: [{ t: "통신사" }, { t: "4사", accent: true }, { t: "조건을" }] },
+    { tone: "brand", words: [{ t: "한자리에서" }, { t: "비교하고", accent: true }] },
+    { tone: "light", words: [{ t: "확인 후" }, { t: "신청하세요", accent: true }] },
+  ],
+};
 
 // 통신사 4사 — 메뉴·서브페이지 라우팅·브랜드 컬러의 단일 출처.
 // colorVar 는 globals.css 의 통신사 토큰을 가리킨다 (서브 히어로 그라데이션에 사용).

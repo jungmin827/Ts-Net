@@ -68,6 +68,20 @@
   --animate-feed-scroll: feed-scroll 32s linear infinite;
   --animate-slide-down: slide-down 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-pop: pop-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-promo-word: promo-word 0.62s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* 홍보 밴드 단어 등장 — 초대형 타이포라서 blur 필터를 쓰면 합성 비용이 크다.
+   transform/opacity 만으로 "훅 들어와 자리를 잡는" 인상을 만든다 */
+@keyframes promo-word {
+  from {
+    opacity: 0;
+    transform: translate3d(-0.18em, 0.14em, 0) scale(0.86);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* 실시간 신청현황 세로 롤링 — 리스트를 2배로 이어붙인 뒤 절반만큼 이동 */
