@@ -1,6 +1,7 @@
 import Header from "@/components/sections/Header";
 import Footer from "@/components/sections/Footer";
 import StickyConsultBar from "@/components/forms/StickyConsultBar";
+import BackToTop from "@/components/ui/BackToTop";
 
 /** 공개 사이트 공통 셸 — 어드민 (admin) 그룹에는 적용되지 않는다 */
 export default function SiteLayout({
@@ -14,6 +15,7 @@ export default function SiteLayout({
         {children}
         <Footer />
       </div>
+      <BackToTop />
       <StickyConsultBar />
     </>
   );

@@ -1,5 +1,6 @@
 import { publicClient } from "@/lib/supabase/public";
 import Hero from "@/components/sections/Hero";
+import PromoBand from "@/components/sections/PromoBand";
 import LiveFeed from "@/components/sections/LiveFeed";
 import CarrierHub from "@/components/sections/CarrierHub";
 import Benefits from "@/components/sections/Benefits";
@@ -54,6 +55,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* 홍보 밴드 — 퍼스트뷰(히어로+상담폼) 직후. 문구는 site-config 설정값 */}
+      <PromoBand />
 
       <LiveFeed />
       <CarrierHub />
