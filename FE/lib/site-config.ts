@@ -21,6 +21,16 @@ export const SITE = {
     headline: "인터넷·TV 가입, 통신사별 조건 비교하고 신청하세요",
     sub: "KT · SK · LG · KT스카이라이프 상품 조건을 비교해 안내해 드립니다",
     cta: "상담 신청하기",
+
+    // 배경 이미지 — public/ 기준 경로. 비워두면 초록 그라데이션만 쓴다.
+    // 예: "/hero.jpg" (파일을 FE/public/hero.jpg 로 두면 된다)
+    // 글자가 박힌 이미지는 넣지 마라 — 수정이 불가능해지고 모바일에서 잘린다.
+    background: "",
+    // 이미지에서 화면에 남길 기준점. 인물·제품이 한쪽에 있으면 조정한다.
+    backgroundPosition: "center",
+    // 이미지 위 초록 오버레이 농도(0~1). 낮출수록 사진이 선명해지지만
+    // 흰 글씨 가독성이 떨어진다. 0.55 아래로는 내리지 말 것.
+    overlay: 0.78,
   },
 
   // icon 값은 components/ui/Icon.tsx 의 IconName 과 일치해야 한다

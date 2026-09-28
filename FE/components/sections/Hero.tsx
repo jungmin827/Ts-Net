@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { SITE } from "@/lib/site-config";
 import Icon from "@/components/ui/Icon";
 
@@ -13,8 +14,12 @@ const TRUST_CHIPS = [
  * 배경 이미지를 넣을 경우 (1)과 (2) 사이 레이어로 삽입한다.
  */
 export default function Hero() {
+  const bg = SITE.hero.background;
+  const o = SITE.hero.overlay;
+
   return (
-    // 광원은 blur 필터가 아니라 radial-gradient 레이어로 만든다.
+    // 배경 이미지가 없으면 초록 그라데이션만 쓴다.
+    // 광원은 blur 필터가 아니라 radial-gradient 레이어로 만든다 —
     // 같은 결과를 내면서 필터 합성 비용이 없다 (모바일 성능 요구사항).
     <section
       className="relative isolate overflow-hidden text-white"
@@ -26,6 +31,29 @@ export default function Hero() {
         ].join(","),
       }}
     >
+      {/* 운영자가 제작한 배경 템플릿. LCP 요소라 priority 로 먼저 받아온다 */}
+      {bg && (
+        <>
+          <Image
+            src={bg}
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="-z-10 object-cover"
+            style={{ objectPosition: SITE.hero.backgroundPosition }}
+          />
+          {/* 초록 오버레이 — 사진 위에서도 흰 글씨가 읽히게 한다.
+              왼쪽(글자가 놓이는 쪽)을 더 진하게 눌러 대비를 확보한다 */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 -z-10"
+            style={{
+              background: `linear-gradient(100deg, rgba(20,83,43,${o}) 0%, rgba(35,128,63,${o * 0.85}) 55%, rgba(47,158,82,${o * 0.7}) 100%)`,
+            }}
+          />
+        </>
+      )}
       {/* 격자 — 아주 옅게 깔아 면이 비어 보이지 않게 */}
       <div
         aria-hidden="true"
