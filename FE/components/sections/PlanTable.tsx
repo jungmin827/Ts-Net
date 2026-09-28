@@ -6,7 +6,6 @@ import {
   type Plan,
 } from "@/lib/plans";
 import { PLAN_DISCLAIMER } from "@/lib/site-config";
-import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
 
 /** 요금제 표 — 카테고리(결합/인터넷/TV)별로 분리. 좁은 화면에서는 표만 가로 스크롤 */
@@ -17,12 +16,11 @@ export default function PlanTable({ plans }: { plans: Plan[] }) {
   return (
     <section className="bg-brand-soft py-16 md:py-20">
       <div className="mx-auto max-w-6xl px-4">
-        <SectionHeading eyebrow="PRICING" title="요금제 안내" />
+        <SectionHeading title="요금제 안내" />
 
         <div className="flex flex-col gap-10">
-          {groups.map(([category, list], gi) => (
-            <Reveal key={category} delay={gi * 60}>
-              <div>
+          {groups.map(([category, list]) => (
+            <div key={category}>
                 <h3 className="mb-3 flex items-center gap-2 text-lg font-bold">
                   <span className="h-4 w-1 rounded-full bg-brand" />
                   {CATEGORY_LABEL[category]}
@@ -70,8 +68,7 @@ export default function PlanTable({ plans }: { plans: Plan[] }) {
                     </tbody>
                   </table>
                 </div>
-              </div>
-            </Reveal>
+            </div>
           ))}
         </div>
 

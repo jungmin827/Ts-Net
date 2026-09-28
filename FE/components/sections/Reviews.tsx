@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { CARRIER_COLOR } from "@/lib/site-config";
 import Icon from "@/components/ui/Icon";
-import Reveal from "@/components/ui/Reveal";
 
 export interface ReviewItem {
   id: number;
@@ -48,9 +47,6 @@ export default function Reviews({ reviews }: { reviews: ReviewItem[] }) {
       <div className="mx-auto max-w-6xl px-4">
         <div className="mb-8 flex items-end justify-between gap-4">
           <div>
-            <span className="mb-3 inline-block rounded-full bg-brand-light px-3.5 py-1.5 text-xs font-bold tracking-wide text-brand">
-              REVIEW
-            </span>
             <h2 className="text-2xl font-black md:text-[2rem]">가입 후기</h2>
           </div>
           <Link
@@ -66,13 +62,12 @@ export default function Reviews({ reviews }: { reviews: ReviewItem[] }) {
           </Link>
         </div>
 
-        <Reveal>
-          <div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-3">
+        <div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-3">
             {reviews.map((r) => (
               <Link
                 key={r.id}
                 href={`/review/${r.id}`}
-                className="group flex w-72 shrink-0 snap-start flex-col rounded-panel border border-line bg-white p-5 shadow-soft transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1.5 hover:border-brand/30 hover:shadow-lift"
+                className="group flex w-72 shrink-0 snap-start flex-col rounded-panel border-2 border-line bg-white p-5 transition-colors duration-200 hover:border-brand"
               >
                 {r.carrier && (
                   <span
@@ -93,8 +88,7 @@ export default function Reviews({ reviews }: { reviews: ReviewItem[] }) {
                 </p>
               </Link>
             ))}
-          </div>
-        </Reveal>
+        </div>
       </div>
     </section>
   );

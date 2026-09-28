@@ -1,7 +1,6 @@
 import { Fragment } from "react";
 import { SITE } from "@/lib/site-config";
 import Icon, { type IconName } from "@/components/ui/Icon";
-import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
 
 /**
@@ -16,14 +15,12 @@ export default function Process() {
     <section className="bg-brand-soft py-16 md:py-20">
       <div className="mx-auto max-w-6xl px-4">
         <SectionHeading
-          eyebrow="PROCESS"
           title="가입 절차"
           description="신청부터 사은품 지급까지 5단계로 진행됩니다"
         />
 
-        <Reveal>
-          <ol className="flex flex-col md:flex-row md:items-start">
-            {SITE.processSteps.map((s, i) => (
+        <ol className="flex flex-col md:flex-row md:items-start">
+          {SITE.processSteps.map((s, i) => (
               <Fragment key={s.title}>
                 <li className="group flex items-center gap-4 md:flex-1 md:flex-col md:gap-3 md:text-center">
                   <span className="relative flex size-14 shrink-0 items-center justify-center rounded-2xl bg-white text-brand shadow-card transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:-translate-y-1 group-hover:bg-brand group-hover:text-white group-hover:shadow-lift">
@@ -46,8 +43,7 @@ export default function Process() {
                 )}
               </Fragment>
             ))}
-          </ol>
-        </Reveal>
+        </ol>
       </div>
     </section>
   );

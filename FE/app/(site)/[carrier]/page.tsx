@@ -78,7 +78,6 @@ export default async function CarrierPage({ params }: Params) {
         <div className="mx-auto max-w-xl px-4">
           <div className="rounded-panel border border-line bg-white p-6 shadow-float md:p-8">
             <SectionHeading
-              eyebrow="상담 신청"
               title={`${info.label} 가입 상담 신청`}
               description="남겨주신 연락처로 확인 후 순차적으로 연락드립니다"
             />

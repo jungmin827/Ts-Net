@@ -41,7 +41,6 @@ export default function LiveFeed() {
     <section className="bg-brand-soft py-16 md:py-20">
       <div className="mx-auto max-w-4xl px-4">
         <SectionHeading
-          eyebrow="LIVE"
           title="실시간 신청 현황"
           description="실제 접수된 상담 신청만 마스킹해 표시합니다"
         />

@@ -47,7 +47,6 @@ export default async function HomePage() {
         <div className="mx-auto max-w-xl px-4">
           <div className="-mt-10 rounded-panel border border-line bg-white p-6 shadow-float md:-mt-14 md:p-8">
             <SectionHeading
-              eyebrow="상담 신청"
               title="가입 상담 신청"
               description="남겨주신 연락처로 확인 후 순차적으로 연락드립니다"
             />

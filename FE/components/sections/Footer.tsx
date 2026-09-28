@@ -14,7 +14,7 @@ export default function Footer() {
         className="relative isolate overflow-hidden text-white"
         style={{
           backgroundImage: [
-            "radial-gradient(40rem 28rem at 92% -20%, rgba(125,165,255,0.42), transparent 62%)",
+            "radial-gradient(40rem 28rem at 92% -20%, rgba(163,240,180,0.44), transparent 62%)",
             "linear-gradient(135deg, var(--brand-deep) 0%, var(--brand-dark) 55%, var(--brand) 100%)",
           ].join(","),
         }}
@@ -31,7 +31,7 @@ export default function Footer() {
           <div className="flex w-full shrink-0 flex-col gap-3 sm:flex-row md:w-auto">
             <a
               href="#consult"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-7 py-4 font-black text-white shadow-accent transition-all duration-200 hover:-translate-y-0.5 hover:bg-accent-dark hover:shadow-float active:translate-y-0"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-7 py-4 font-black text-accent-ink shadow-accent transition-all duration-200 hover:-translate-y-0.5 hover:bg-accent-dark hover:shadow-float active:translate-y-0"
             >
               상담 신청하기
               <Icon name="arrowRight" size={18} />

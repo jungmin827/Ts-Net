@@ -20,8 +20,8 @@ export default function Hero() {
       className="relative isolate overflow-hidden text-white"
       style={{
         backgroundImage: [
-          "radial-gradient(55rem 38rem at 88% -12%, rgba(125,165,255,0.45), transparent 62%)",
-          "radial-gradient(42rem 32rem at -8% 118%, rgba(88,120,255,0.38), transparent 62%)",
+          "radial-gradient(55rem 38rem at 88% -12%, rgba(163,240,180,0.5), transparent 62%)",
+          "radial-gradient(42rem 32rem at -8% 118%, rgba(120,214,150,0.34), transparent 62%)",
           "linear-gradient(135deg, var(--brand-deep) 0%, var(--brand-dark) 52%, var(--brand) 100%)",
         ].join(","),
       }}
@@ -55,7 +55,7 @@ export default function Hero() {
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <a
             href="#consult"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-7 py-4 text-lg font-black text-white shadow-accent transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:bg-accent-dark hover:shadow-float active:translate-y-0"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-7 py-4 text-lg font-black text-accent-ink shadow-accent transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:bg-accent-dark hover:shadow-float active:translate-y-0"
           >
             {SITE.hero.cta}
             <Icon name="arrowRight" size={20} />

@@ -10,7 +10,6 @@ export default function CarrierHub() {
     <section className="bg-white py-16 md:py-20">
       <div className="mx-auto max-w-6xl px-4">
         <SectionHeading
-          eyebrow="CARRIERS"
           title="통신사별 상품 보기"
           description="요금제와 약정 조건을 비교하고 원하는 통신사로 상담을 신청하세요"
         />
@@ -21,7 +20,7 @@ export default function CarrierHub() {
               {/* 상단 컬러 바가 hover에서 두꺼워지며 해당 통신사를 강조한다 */}
               <Link
                 href={`/${c.slug}`}
-                className="group relative flex h-full flex-col gap-2 overflow-hidden rounded-panel border border-line bg-white p-6 shadow-soft transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1.5 hover:shadow-lift"
+                className="group relative flex h-full flex-col gap-2 overflow-hidden rounded-panel border-2 border-line bg-white p-6 transition-colors duration-200 hover:border-brand"
               >
                 <span
                   aria-hidden="true"

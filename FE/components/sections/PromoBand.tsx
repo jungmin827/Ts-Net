@@ -59,11 +59,11 @@ export default function PromoBand() {
       style={{
         backgroundImage: isBrand
           ? [
-              "radial-gradient(40rem 16rem at 18% -40%, rgba(125,165,255,0.35), transparent 65%)",
+              "radial-gradient(40rem 16rem at 18% -40%, rgba(163,240,180,0.38), transparent 65%)",
               "linear-gradient(100deg, var(--brand-deep) 0%, var(--brand-dark) 60%, var(--brand) 100%)",
             ].join(",")
           : [
-              "radial-gradient(36rem 14rem at 82% 140%, rgba(43,80,200,0.16), transparent 65%)",
+              "radial-gradient(36rem 14rem at 82% 140%, rgba(47,158,82,0.18), transparent 65%)",
               "linear-gradient(100deg, var(--brand-light) 0%, var(--brand-soft) 48%, var(--brand-light) 100%)",
             ].join(","),
       }}
@@ -94,14 +94,14 @@ export default function PromoBand() {
       >
         {reduced ? (
           // 모션 최소화 — 순환 없이 전체 문장을 한 줄로
-          <p className="py-8 text-2xl leading-tight font-black md:text-4xl">
+          <p className="font-display py-8 text-2xl leading-tight md:text-4xl">
             {sentence}
           </p>
         ) : (
           <p
             // key 가 바뀌면 자식 span 들이 새로 마운트되며 등장 애니메이션이 다시 돈다
             key={index}
-            className="flex flex-wrap items-baseline gap-x-[0.35em] gap-y-1 py-6 text-[clamp(2.25rem,7.5vw,5.25rem)] leading-[1.15] font-black tracking-tight"
+            className="font-display flex flex-wrap items-baseline gap-x-[0.35em] gap-y-1 py-6 text-[clamp(2.25rem,7.5vw,5.25rem)] leading-[1.15] tracking-tight"
           >
             {frame.words.map((w, wi) => (
               <span

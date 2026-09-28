@@ -240,7 +240,7 @@ export default function StickyConsultBar() {
               <button
                 type="submit"
                 disabled={!canSubmit}
-                className="ml-auto flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-accent px-5 py-2.5 text-sm font-black text-white shadow-accent transition-all duration-200 hover:-translate-y-0.5 hover:bg-accent-dark active:translate-y-0 disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-white/20 disabled:text-white/50 disabled:shadow-none"
+                className="ml-auto flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-accent px-5 py-2.5 text-sm font-black text-accent-ink shadow-accent transition-all duration-200 hover:-translate-y-0.5 hover:bg-accent-dark active:translate-y-0 disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-white/20 disabled:text-white/50 disabled:shadow-none"
               >
                 {status === "loading" ? (
                   <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -407,7 +407,7 @@ export default function StickyConsultBar() {
                 setEngaged(true);
               }}
               aria-expanded={sheet}
-              className="flex cursor-pointer items-center justify-center gap-2 bg-accent py-4 font-bold text-white transition-colors active:bg-accent-dark"
+              className="flex cursor-pointer items-center justify-center gap-2 bg-accent py-4 font-bold text-accent-ink transition-colors active:bg-accent-dark"
             >
               <Icon name="chat" size={18} />
               상담 신청

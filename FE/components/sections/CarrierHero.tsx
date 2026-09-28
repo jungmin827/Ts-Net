@@ -46,7 +46,7 @@ export default function CarrierHero({ carrier }: { carrier: CarrierMenuItem }) {
         <div className="mt-3 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
           <a
             href="#consult"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-7 py-3.5 font-black text-white shadow-accent transition-all duration-200 hover:-translate-y-0.5 hover:bg-accent-dark hover:shadow-float active:translate-y-0"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-7 py-3.5 font-black text-accent-ink shadow-accent transition-all duration-200 hover:-translate-y-0.5 hover:bg-accent-dark hover:shadow-float active:translate-y-0"
           >
             {SITE.hero.cta}
             <Icon name="arrowRight" size={18} />

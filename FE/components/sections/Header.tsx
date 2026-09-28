@@ -89,7 +89,7 @@ export default function Header() {
         style={{
           backgroundImage: [
             // 로고 뒤에 옅은 광원 하나 — 로고가 흰 면 위에 떠 보이게
-            "radial-gradient(34rem 11rem at 16% 125%, rgba(43,80,200,0.09), transparent 72%)",
+            "radial-gradient(34rem 11rem at 16% 125%, rgba(47,158,82,0.10), transparent 72%)",
             // 좌우 끝을 살짝 눌러 가운데가 넓은 캔버스처럼 읽히게
             "linear-gradient(90deg, var(--brand-soft) 0%, #fff 22%, #fff 78%, var(--brand-soft) 100%)",
           ].join(","),
@@ -165,7 +165,7 @@ export default function Header() {
           <a
             // 메인·통신사 서브페이지 모두 #consult 앵커를 갖고 있어 상대 앵커로 둔다
             href="#consult"
-            className="ml-4 flex shrink-0 items-center gap-2 bg-accent px-7 text-[0.95rem] font-black text-white transition-colors duration-200 hover:bg-accent-dark"
+            className="ml-4 flex shrink-0 items-center gap-2 bg-accent px-7 text-[0.95rem] font-black text-accent-ink transition-colors duration-200 hover:bg-accent-dark"
           >
             <Icon name="clipboard" size={17} />
             상담 신청
