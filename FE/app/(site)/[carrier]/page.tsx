@@ -5,7 +5,7 @@ import PlanCards from "@/components/sections/PlanCards";
 import PlanTable from "@/components/sections/PlanTable";
 import PartnerCard from "@/components/sections/PartnerCard";
 import LeadForm from "@/components/forms/LeadForm";
-import { getPlansByCarrier } from "@/lib/plans";
+import { getPlansByCarrier, tableRows } from "@/lib/plans";
 import { CARRIER_MENU, SITE, carrierBySlug } from "@/lib/site-config";
 import type { Carrier } from "@/lib/validation";
 import Icon from "@/components/ui/Icon";
@@ -46,7 +46,8 @@ export default async function CarrierPage({ params }: Params) {
       {plans.length > 0 ? (
         <>
           <PlanCards plans={plans} carrier={info} />
-          <PlanTable plans={plans} />
+          {/* 추천 카드로 이미 보여준 행은 표에서 빼 같은 금액이 두 번 나오지 않게 한다 */}
+          <PlanTable plans={tableRows(plans)} />
         </>
       ) : (
         // 요금제 미등록 상태에서 빈 표를 보여주지 않는다 — 상담 유도로 대체
