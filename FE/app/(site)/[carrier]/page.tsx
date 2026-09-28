@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import CarrierHero from "@/components/sections/CarrierHero";
+import PlanCalculator from "@/components/sections/PlanCalculator";
 import PlanCards from "@/components/sections/PlanCards";
 import PlanTable from "@/components/sections/PlanTable";
 import PartnerCard from "@/components/sections/PartnerCard";
@@ -45,6 +46,9 @@ export default async function CarrierPage({ params }: Params) {
 
       {plans.length > 0 ? (
         <>
+          {/* 고르면 바로 계산 → 추천 구성 → 전체 표 순서.
+              찾아보기 전에 "내 경우 얼마인지"를 먼저 답해준다 */}
+          <PlanCalculator plans={plans} carrier={info} />
           <PlanCards plans={plans} carrier={info} />
           {/* 추천 카드로 이미 보여준 행은 표에서 빼 같은 금액이 두 번 나오지 않게 한다 */}
           <PlanTable plans={tableRows(plans)} />

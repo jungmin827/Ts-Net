@@ -26,13 +26,16 @@ export default function PlanTable({ plans }: { plans: Plan[] }) {
                   {CATEGORY_LABEL[category]}
                 </h3>
                 <div className="overflow-x-auto rounded-panel border border-line bg-white shadow-card">
-                  <table className="w-full min-w-[640px] text-sm">
+                  <table className="w-full min-w-[760px] text-sm">
                     <thead>
                       <tr className="border-b border-line bg-brand-light/70 text-left">
                         <th className="px-5 py-3.5 font-bold">상품명</th>
                         <th className="px-5 py-3.5 font-bold">속도</th>
                         <th className="px-5 py-3.5 text-right font-bold">
-                          월 요금
+                          총요금(월)
+                        </th>
+                        <th className="px-5 py-3.5 text-right font-bold">
+                          할인가(월)
                         </th>
                         <th className="px-5 py-3.5 text-center font-bold">
                           약정
@@ -52,7 +55,16 @@ export default function PlanTable({ plans }: { plans: Plan[] }) {
                           <td className="px-5 py-3.5 text-muted">
                             {p.speed ?? "-"}
                           </td>
-                          <td className="px-5 py-3.5 text-right text-base font-black text-brand">
+                          <td className="tabular px-5 py-3.5 text-right text-muted">
+                            {p.list_fee != null && p.list_fee !== p.monthly_fee ? (
+                              <span className="line-through">
+                                {formatWon(p.list_fee)}
+                              </span>
+                            ) : (
+                              formatWon(p.list_fee ?? p.monthly_fee)
+                            )}
+                          </td>
+                          <td className="tabular px-5 py-3.5 text-right text-base font-black text-brand">
                             {formatWon(p.monthly_fee)}
                           </td>
                           <td className="px-5 py-3.5 text-center text-muted">
