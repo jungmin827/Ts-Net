@@ -46,8 +46,29 @@ export const leadFilterSchema = z.object({
 
 export type LeadFilter = z.infer<typeof leadFilterSchema>;
 
+/**
+ * 시작일이 종료일보다 뒤면 거른다.
+ *
+ * 이게 없으면 `from=2026-03-01&to=2026-01-01` 이 그대로 통과한다. 쿼리는
+ * `created_at >= 2026-03-01 AND created_at <= 2026-01-01` 이 되어 **항상 0건**이고,
+ * 화면에는 "선택한 기간·조건에 내보낼 내역이 없습니다" 만 뜬다.
+ * 운영자는 데이터가 없다고 믿지, 기간이 거꾸로라는 건 끝까지 모른다.
+ * 날짜 입력 두 칸이 나란히 있는 UI 에서 충분히 나오는 실수다.
+ */
+const rangeOrdered = <T extends { from?: string; to?: string }>(v: T, ctx: z.RefinementCtx) => {
+  if (v.from && v.to && v.from > v.to) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["to"],
+      message: "종료일이 시작일보다 빠릅니다. 기간을 확인해 주세요",
+    });
+  }
+};
+
 /** 내보내기는 페이지네이션 없이 구간 전체를 대상으로 한다 */
-export const exportFilterSchema = leadFilterSchema.omit({ page: true });
+export const exportFilterSchema = leadFilterSchema
+  .omit({ page: true })
+  .superRefine(rangeOrdered);
 export type ExportFilter = z.infer<typeof exportFilterSchema>;
 
 type RawParams = Record<string, string | string[] | undefined>;
@@ -63,7 +84,9 @@ function compact(raw: RawParams): Record<string, string> {
 }
 
 export function parseLeadFilter(raw: RawParams): LeadFilter {
-  const parsed = leadFilterSchema.safeParse(compact(raw));
+  const parsed = leadFilterSchema
+    .superRefine(rangeOrdered)
+    .safeParse(compact(raw));
   // 잘못된 쿼리스트링으로 화면이 깨지지 않도록 기본 필터로 복구한다
   return parsed.success ? parsed.data : leadFilterSchema.parse({});
 }

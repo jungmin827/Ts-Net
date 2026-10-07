@@ -9,3 +9,7 @@ node_modules/
 # supabase CLI 로컬 산출물
 BE/supabase/.temp/
 BE/supabase/.branches/
+
+# verify-export.mjs 가 FE/ 안에 잠깐 만드는 번들 (정상 종료 시 스스로 지운다)
+FE/.export-entry-*.ts
+FE/.export-check-*.mjs
