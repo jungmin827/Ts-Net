@@ -34,7 +34,7 @@ cat supabase/.temp/linked-project.json   # ref 가 yrqfnjiynyenxrjxruot 인지 �
 | 003 | `003_lock_down_functions.sql` | 공개 anon 키로 호출 가능하던 **파기 함수 권한 회수** + `live_feed` 에 5건 게이트 |
 | 004 | `004_purge_at_by_status.sql` | 보유기간을 고지(개통 D+1095 / 단순상담 D+14)에 맞춤 |
 | 005 | `005_lead_logs_insert_policy.sql` | 변경 이력에 수정 주체(actor_id) 기록 |
-| 006 | `006_lead_rate_count.sql` | 접수 레이트리밋 함수 |
+| 006 | `006_lead_rate_count.sql` | 접수 레이트리밋 함수 (`lead_rate_exceeded`) |
 
 **003 이 004 보다 먼저여야 하는 이유**: 004 는 미개통 접수의 파기 예정일을 D+14 로
 당긴다. 삭제 구멍(003 이 막는 것)이 열린 상태에서 파기 대상만 넓어지면 피해가 커진다.
@@ -63,7 +63,7 @@ where n.nspname = 'public'
 select status, count(*), min(purge_at), max(purge_at) from leads group by status;
 
 -- 레이트리밋 함수가 있는가 (정수 1개를 돌려주면 정상)
-select lead_rate_count('127.0.0.1'::inet, now() - interval '10 minutes');
+select lead_rate_exceeded('127.0.0.1'::inet);  -- false 면 정상
 ```
 
 외부에서도 확인한다 — **둘 다 404/401 이어야 한다**:

@@ -12,7 +12,16 @@ import { publicClient } from "@/lib/supabase/public";
 // 접수 파이프라인 — docs/SPEC.md §2 순서 그대로. 하나라도 실패하면 즉시 중단.
 // 알림 발송 단계는 없다 (운영자가 어드민에서만 확인).
 
-const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
+/**
+ * 레이트리밋 창·임계치. **실제 판정은 DB 함수 `lead_rate_exceeded()` 안에서 한다** —
+ * 여기 값은 화면 문구·문서를 위한 사본이다.
+ *
+ * 창을 호출자가 넘기지 않는 이유: 넘길 수 있게 두면 공개 anon 키로
+ * 시간 축을 이분 탐색해 특정 IP 의 접수 시각을 초 단위까지 좁힐 수 있다.
+ * 함수는 boolean 한 비트만 돌려준다 (`006_lead_rate_count.sql` 참고).
+ * 임계치를 바꾸려면 FE 상수가 아니라 새 마이그레이션이 필요하다.
+ */
+const RATE_LIMIT_WINDOW_MIN = 10;
 const RATE_LIMIT_MAX = 3;
 
 function clientIp(req: NextRequest): string | null {
@@ -84,7 +93,7 @@ async function handlePost(req: NextRequest) {
    * 접수 경로는 **anon 키 하나로 완결된다.**
    *
    * INSERT 는 `leads_public_insert` 정책이 허용하고, 레이트리밋 건수는
-   * `lead_rate_count()` (security definer, 정수만 반환) 가 돌려준다.
+   * `lead_rate_exceeded()` (security definer, boolean 만 반환) 가 판정한다.
    * 공개 엔드포인트가 RLS 를 통째로 우회하는 service_role 키를 쥘 이유가 없다.
    *
    * 예전에는 라우트 첫 줄에서 `createAdminClient()` 를 불러, 키가 없으면
@@ -102,10 +111,9 @@ async function handlePost(req: NextRequest) {
 
   // 4. Rate limit — 동일 IP 10분 내 3건 초과 시 429
   if (ip) {
-    const since = new Date(Date.now() - RATE_LIMIT_WINDOW_MS).toISOString();
-    const { data: recent, error: countError } = await supabase.rpc(
-      "lead_rate_count",
-      { p_ip: ip, p_since: since },
+    const { data: exceeded, error: countError } = await supabase.rpc(
+      "lead_rate_exceeded",
+      { p_ip: ip },
     );
 
     if (countError) {
@@ -113,13 +121,17 @@ async function handlePost(req: NextRequest) {
       // 접수를 막지는 않되 **조용히 넘어가지 않는다** — 통제가 꺼진 상태는
       // 운영자가 반드시 알아야 한다 (console.warn 이 아니라 error).
       console.error(
-        "[/api/leads] 레이트리밋 미작동 — lead_rate_count 호출 실패:",
+        "[/api/leads] 레이트리밋 미작동 — lead_rate_exceeded 호출 실패:",
         countError.code,
         countError.message,
       );
-    } else if ((recent ?? 0) >= RATE_LIMIT_MAX) {
+    } else if (exceeded === true) {
+      // "잠시 후"는 얼마나 기다려야 하는지 알려주지 않는다 — 창 길이를 그대로 말한다
       return NextResponse.json(
-        { ok: false, error: "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요" },
+        {
+          ok: false,
+          error: `요청이 너무 많습니다. ${RATE_LIMIT_WINDOW_MIN}분 내 ${RATE_LIMIT_MAX}건까지 접수할 수 있습니다. 잠시 후 다시 시도해 주세요`,
+        },
         { status: 429 },
       );
     }

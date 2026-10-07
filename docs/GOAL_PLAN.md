@@ -233,7 +233,7 @@ DB 쓰기 권한이 없어 이쪽에서 삭제하지 못했다. 어드민 상세
 2. **재시드** `plans_damoa_2026-10-08.sql` → 적용 후 `SUPPRESS_PLAN_DESCRIPTION = false`
 3. **QA 행 2건 삭제** (`테스트`/`검증`). 권고 규약: 앞으로 QA 접수는 넣은 직후
    `status = 'SPAM'` 으로 바꿀 것 — `live_feed` 가 SPAM 을 제외하므로 지우는 걸 잊어도 안 보인다.
-4. **레이트리밋을 RPC 로 이관** — `lead_rate_count(inet, timestamptz)` 를 `security definer` 로
+4. **레이트리밋을 RPC 로 이관** — `lead_rate_exceeded(inet)` 를 `security definer` 로
    만들고 anon 에만 execute 부여. service_role 의존과 fail-open 선택이 동시에 사라진다.
 5. **운영 Turnstile 키 발급** — 현재 테스트 시크릿이라 봇 방어가 사실상 없다.
 
@@ -263,7 +263,7 @@ DB 쓰기 권한이 없어 이쪽에서 삭제하지 못했다. 어드민 상세
 - **C-21** 클라이언트가 `res.json().catch(() => ({}))` 로 비JSON 응답을 흡수.
 - **C-19** 이름·연락처 입력칸에 `sr-only` 라벨 + `aria-invalid` / `aria-describedby`.
   placeholder 는 입력을 시작하면 사라지므로 라벨이 아니다.
-- **C-30** 레이트리밋을 `lead_rate_count()` RPC(`006`)로 이관 — service_role 의존 제거.
+- **C-30** 레이트리밋을 `lead_rate_exceeded()` RPC(`006`)로 이관 — service_role 의존 제거.
   함수 미적용 시 접수는 통과시키되 **원인까지 `console.error` 로 남긴다**(조용한 저하 금지).
 
 ### 아직 남은 높음 (다음 라운드)
@@ -312,7 +312,7 @@ DB 쓰기 권한이 없어 이쪽에서 삭제하지 못했다. 어드민 상세
 
 **락아웃의 한계를 명시한다** — 프로세스 메모리 기반이라 인스턴스별로 따로 세고 재배포 시 초기화된다.
 결정적 방어가 아니라 자동화 공격의 비용을 올리는 장치다. 제대로 하려면 DB 테이블 +
-`security definer` RPC 가 필요하고(레이트리밋을 `lead_rate_count()` 로 옮긴 것과 같은 방식),
+`security definer` RPC 가 필요하고(레이트리밋을 `lead_rate_exceeded()` 로 옮긴 것과 같은 방식),
 마이그레이션 적용 권한이 생긴 뒤의 과제로 남긴다. 근거는 `lib/admin/login-throttle.ts` 주석.
 
 ## 프로덕션 빌드 (2026-10-08)
@@ -400,6 +400,13 @@ C-11(2FA 실질 강제)을 고치면서 **더 나쁜 결함을 만들었다.** �
   갈려 있었다. 페이지 전체 폼 컨트롤 61개를 재감사한 결과 이름 없는 컨트롤 0건
   (허니팟 2개는 `tabindex=-1`+`aria-hidden`, 홍보 이미지 링크 4개는 `img alt`로 이름을 얻는다).
 
+- **D-27 해소 (적용 전에 고침)** `006` 의 함수를 `lead_rate_count(inet, timestamptz)
+  → integer` 에서 `lead_rate_exceeded(inet) → boolean` 으로 좁혔다. 창(10분)·임계치(3건)를
+  함수 안에 고정해 호출자가 시간 축을 움직이지 못하게 했다. 건수와 `p_since` 자유 지정을
+  함께 열면 공개 anon 키로 특정 IP 의 접수 여부는 물론 **접수 시각까지 이분 탐색**으로
+  좁힐 수 있었다. 남는 유출은 한 비트뿐이고 레이트리밋 기능은 그대로다.
+  호출부(`FE/app/api/leads/route.ts`)와 429 문구도 함께 맞췄다.
+
 ## 목표 달성도 (2라운드 판정)
 
 **파일 기준 85% / 라이브 기준 45%.** G4·G5·G6 는 실질 완료(95~100%),
@@ -444,7 +451,7 @@ CLI 가 현재 미인증이라 당장은 실패하지만, 운영자가 로그인
 | 003 | `lock_down_functions` | 파기 함수 권한 회수 + `live_feed` 5건 게이트 |
 | 004 | `purge_at_by_status` | 보유기간을 고지에 맞춤 |
 | 005 | `lead_logs_insert_policy` | 변경 주체 기록 |
-| 006 | `lead_rate_count` | 접수 레이트리밋 |
+| 006 | `lead_rate_exceeded` | 접수 레이트리밋 (boolean 반환) |
 
 ## G2 추가 작업
 
