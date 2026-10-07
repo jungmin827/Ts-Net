@@ -1,4 +1,9 @@
-import { formatContract, formatWon, type Plan } from "@/lib/plans";
+import {
+  TABLE_SORT_MIN,
+  formatContract,
+  formatWon,
+  type Plan,
+} from "@/lib/plans";
 import type { CarrierMenuItem } from "@/lib/site-config";
 import Icon from "@/components/ui/Icon";
 import SectionHeading from "@/components/ui/SectionHeading";
@@ -17,7 +22,20 @@ export default function PlanCards({
   plans: Plan[];
   carrier: CarrierMenuItem;
 }) {
-  const top = plans.slice(0, 3);
+  /**
+   * 추천은 `sort_order < TABLE_SORT_MIN` 인 행만이다.
+   *
+   * 예전에는 `plans.slice(0, 3)` 이었다. 정렬이 `sort_order asc` 라서 지금
+   * 시드(4사 모두 추천 3행)에서는 우연히 맞는다. 그런데 운영자가 한 통신사의
+   * 추천을 2개로 줄이거나 하나를 `is_active = false` 로 내리는 순간
+   * **결합표 첫 행(`sort_order` 10)을 끌어온다.** 그러면 같은 상품이 추천 카드와
+   * 요금표에 동시에 나와, `tableRows()` 가 막으려던 "같은 금액이 두 이름으로
+   * 보이는" 상태가 그대로 재현된다.
+   * 제외가 표 쪽에만 있었다 — 축을 같은 상수로 묶는다.
+   */
+  const top = plans
+    .filter((p) => (p.sort_order ?? 0) < TABLE_SORT_MIN)
+    .slice(0, 3);
   if (top.length === 0) return null;
 
   return (

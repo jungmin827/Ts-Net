@@ -37,8 +37,10 @@ export default function DataPolicy({
   return (
     <section className="bg-surface-muted py-16 md:py-20">
       <div className="mx-auto max-w-4xl px-4">
+        {/* 제목을 LiveFeed 와 다르게 둔다. 같은 제목이면 둘 중 어느 상태인지
+            화면만 보고는 알 수 없고, 스크린리더에서는 같은 섹션처럼 읽힌다 */}
         <SectionHeading
-          title="실시간 신청 현황"
+          title="실시간 신청 현황 안내"
           description="실제 접수된 건만 마스킹해 공개합니다"
         />
 

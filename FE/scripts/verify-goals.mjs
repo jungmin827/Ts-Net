@@ -49,7 +49,13 @@ async function g1() {
   for (const [c, raw] of Object.entries(DAMOA)) {
     const pub = new Set(raw.split(/\s+/).map((v) => v.replace(".", ",")));
     const { text } = await http(`/${c}`);
-    const ours = [...new Set(strip(text).match(/\d{2},\d{3}(?=원)/g) ?? [])];
+    // 네 자리(9,900원)와 여섯 자리(100,000원)도 본다.
+    // 예전 정규식 `\d{2},\d{3}` 은 다섯 자리만 봤고, 그래서 시드 description 에 있는
+    // `9,900원`·`6,050원` 이 화면에 나와도 "불일치 0개"가 찍혔다.
+    // G1 은 표시광고 리스크를 막는 유일한 자동 장치라 범위를 좁히면 안 된다.
+    const ours = [
+      ...new Set(strip(text).match(/(?<![\d,])\d{1,3}(?:,\d{3})+(?=원)/g) ?? []),
+    ];
     shown += ours.length;
     mismatch += ours.filter((v) => !pub.has(v)).length;
   }
@@ -108,7 +114,8 @@ async function g3() {
   check("G3", "TOTP 등록 페이지", has("FE/app/(admin)/admin/enroll-2fa/page.tsx"), "aal1 로 진입 가능");
   check("G3", "xlsx 생성기", has("FE/lib/admin/excel.ts"), "exceljs");
   const migs = readdirSync(join(ROOT, "BE/supabase/migrations")).sort();
-  check("G3", "보안 차단이 첫 마이그레이션", migs[2]?.startsWith("003_lock_down"), migs.join(" "));
+  // 라벨을 "첫"이라고 적었지만 보는 것은 세 번째 파일이다. 단언은 맞고 말이 틀렸다.
+  check("G3", "보안 차단이 004 보다 먼저", migs[2]?.startsWith("003_lock_down"), migs.join(" "));
 }
 
 // ── G4 흰색 + 쨍한 녹색 ────────────────────────────────────────────────
@@ -134,10 +141,15 @@ function g4() {
 // ── G5 홍보 이미지 삽입 구조 ───────────────────────────────────────────
 async function g5() {
   const cfg = read("FE/lib/site-config.ts");
-  const slots = (cfg.match(/^\s+\| "after|^\s+\| "before/gm) ?? []).length;
+  // `PromoSlotName` 의 유니온 멤버를 센다.
+  // 예전 판은 `slots + 1` 로 숫자를 틀리게 찍고, `|| used >= 5` 때문에
+  // **정의와 삽입이 어긋나도 항상 통과**했다. 과대 표기를 막으려고 만든
+  // 스크립트 안에서 과대 표기가 한 번 더 일어나고 있었다.
+  const slotBlock = cfg.match(/export type PromoSlotName =[\s\S]*?;/)?.[0] ?? "";
+  const slots = (slotBlock.match(/"[A-Za-z]+"/g) ?? []).length;
   const page = read("FE/app/(site)/page.tsx");
   const used = (page.match(/<PromoSlot slot=/g) ?? []).length;
-  check("G5", "슬롯 정의 = 삽입 지점", slots + 1 === used || used >= 5, `정의 ${slots + 1} · 삽입 ${used}`);
+  check("G5", "슬롯 정의 = 삽입 지점", slots > 0 && slots === used, `정의 ${slots} · 삽입 ${used}`);
   check("G5", "빈 슬롯은 섹션 미렌더", read("FE/components/sections/PromoSlot.tsx").includes("return null"), "");
   check("G5", "데스크톱/모바일 소스 분리", cfg.includes("mobileWidth"), "");
   check("G5", "운영자 가이드", has("docs/PROMO_IMAGE_GUIDE.md"), "");
