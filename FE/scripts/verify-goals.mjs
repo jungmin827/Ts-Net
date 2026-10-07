@@ -99,6 +99,38 @@ async function g1() {
       for (const v of vals) if (!pub.has(v)) seedBad.push(`${row[1]} ${v}`);
     }
   }
+  // 같은 구성(통신사 + 속도 + TV 등급)이 두 값으로 적혀 있으면 하나는 틀린 것이다.
+  // 추천 카드용 행과 요금표용 행이 같은 상품을 가리키는데 금액이 다른 경우가 그렇다.
+  // **외부 레퍼런스 없이 시드 자체만으로 성립하는 검사**라, 다모아가 바뀌어도 유효하다.
+  // 구 시드(현재 라이브 DB)에 돌리면 교차검증이 찾아낸 B·C 두 건을 그대로 잡아낸다.
+  const SPEED = ["1G", "500MB", "500M", "200M", "100M"];
+  const conflicts = [];
+  if (seed) {
+    const combo = new Map();
+    for (const line of read(`BE/supabase/seed/${seed}`).split("\n")) {
+      const m =
+        /^ {2}\('(\w+)',\s*'BUNDLE',\s*'([^']*)',\s*'([^']*)',\s*'([^']*)',\s*(\d+),/.exec(line);
+      if (!m) continue;
+      const [, carrier, name, rawSpeed, tv, fee] = m;
+      const sp = SPEED.find((k) => rawSpeed.startsWith(k));
+      if (!sp) continue;
+      const key = `${carrier} ${sp === "500MB" ? "500M" : sp} ${tv}`;
+      const list = combo.get(key) ?? [];
+      list.push({ fee: Number(fee), name });
+      combo.set(key, list);
+    }
+    for (const [key, list] of combo) {
+      const prices = new Set(list.map((v) => v.fee));
+      if (prices.size > 1) {
+        conflicts.push(
+          `${key} ${list.map((v) => `${v.fee.toLocaleString()}(${v.name})`).join(" vs ")}`,
+        );
+      }
+    }
+  }
+  check("G1", "같은 구성이 한 값으로만 적힘", conflicts.length === 0,
+    conflicts.length ? conflicts.slice(0, 3).join(" / ") : "추천 행과 요금표 행이 일치");
+
   check("G1", "시드 금액이 전부 다모아 게시값에 존재", seed && seedBad.length === 0,
     `검사 ${seedSeen}개 · 불일치 ${seedBad.length}개${seedBad.length ? ` (${seedBad.slice(0, 5).join(", ")})` : ""}`);
 
