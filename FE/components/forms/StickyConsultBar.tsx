@@ -24,6 +24,20 @@ import { formatPhone, useLeadSubmit } from "./useLeadSubmit";
 
 const COLLAPSE_KEY = "tsnet_consultbar_collapsed";
 
+/*
+ * 입력칸의 접근 가능한 이름은 `aria-label` 로 준다.
+ *
+ * placeholder 는 라벨이 아니다 — 한 글자만 입력해도 사라지므로, 그 뒤로는
+ * 스크린리더도 음성입력도 이 칸이 무엇인지 알 수 없다. 같은 파일의 `select`
+ * 두 개는 이미 `aria-label` 을 갖고 있었는데 입력 네 칸만 빠져 있었다.
+ *
+ * `LeadForm` 처럼 `sr-only` 라벨을 쓰지 않는 이유: 이 바는 한 줄 안에 칸을
+ * 밀어 넣는 레이아웃이라 라벨 요소가 하나 늘 때마다 flex 계산이 흔들린다.
+ * 보이는 라벨이 없는 자리에서는 `aria-label` 이 같은 일을 더 간단히 한다.
+ *
+ * 오류 안내는 폼 단위라 칸마다 `aria-invalid` 를 붙이지 않는다. 대신 오류
+ * 문단이 `role="alert"` 이라 뜨는 즉시 읽힌다 (298·403행).
+ */
 const barField =
   "w-full rounded-lg border border-line-strong bg-white px-3 py-2.5 text-sm text-foreground outline-none transition-all duration-200 placeholder:text-faint focus:border-brand focus:ring-4 focus:ring-brand/15";
 
@@ -227,6 +241,7 @@ export default function StickyConsultBar() {
               <input
                 className={`${barField} w-28`}
                 type="text"
+                aria-label="이름"
                 placeholder="이름"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -238,6 +253,7 @@ export default function StickyConsultBar() {
                 className={`${barField} w-40`}
                 type="tel"
                 inputMode="numeric"
+                aria-label="연락처"
                 placeholder="연락처"
                 value={phone}
                 onChange={(e) => setPhone(formatPhone(e.target.value))}
@@ -356,6 +372,7 @@ export default function StickyConsultBar() {
                 <input
                   className={fieldBase}
                   type="text"
+                  aria-label="이름"
                   placeholder="이름을 입력해주세요."
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -367,6 +384,7 @@ export default function StickyConsultBar() {
                   className={fieldBase}
                   type="tel"
                   inputMode="numeric"
+                  aria-label="연락처"
                   placeholder="연락처를 입력해주세요."
                   value={phone}
                   onChange={(e) => setPhone(formatPhone(e.target.value))}
