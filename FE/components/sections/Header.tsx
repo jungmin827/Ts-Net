@@ -191,10 +191,19 @@ export default function Header() {
         </div>
       </header>
 
-      {/* 모바일 드로어 */}
+      {/*
+        모바일 드로어.
+
+        닫힌 상태는 `inert` 로 둔다. `aria-hidden` 만으로는 부족하다 —
+        그건 스크린리더에서만 감추고 **탭 순서에서는 빼지 않는다.**
+        화면 밖(`translate-x-full`)에 있는 메뉴 링크 5개로 포커스가 들어가는데
+        스크린리더는 아무것도 읽지 않는, 선언만 있고 동작이 없는 상태가 된다.
+        (포커스 가능한 요소를 품은 `aria-hidden` 은 그 자체로 ARIA 위반이다.)
+        `inert` 는 포커스·포인터·접근성 트리를 한 번에 막으므로 이것만 쓴다.
+      */}
       <div
         className={`fixed inset-0 z-50 lg:hidden ${open ? "" : "pointer-events-none"}`}
-        aria-hidden={!open}
+        inert={!open}
       >
         <div
           onClick={() => setOpen(false)}
