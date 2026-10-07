@@ -15,8 +15,25 @@ import SectionHeading from "@/components/ui/SectionHeading";
  * 지점이 "저 숫자들 진짜인가"이므로, 꾸미지 않는다는 선언이 곧 차별점이 된다.
  *
  * 경쟁사를 언급하지 않는다 — 우리가 무엇을 하는지만 적는다 (비방 광고 회피).
+ *
+ * ⚠ `reason` 없이 늘 같은 문장을 쓰면 안 된다.
+ *   "아직 공개할 만큼 쌓이지 않았습니다"는 **건수를 안다고 주장하는 문장**이다.
+ *   조회가 실패했거나 아직 응답을 못 받은 상태에서 그 말을 하면 거짓이 된다.
+ *   서버 렌더·크롤러·JS 미동작 환경은 언제나 "아직 모름" 상태라 더 그렇다.
+ *   그래서 단정하는 문장은 `tooFew` 일 때만 쓴다.
  */
-export default function DataPolicy() {
+export default function DataPolicy({
+  reason = "loading",
+}: {
+  reason?: "loading" | "tooFew" | "error";
+}) {
+  /** 상태별 머리 문장. 어느 것도 모르는 것을 아는 척하지 않는다 */
+  const headline =
+    reason === "tooFew"
+      ? "아직 공개할 만큼 쌓이지 않았습니다."
+      : reason === "error"
+        ? "지금은 현황을 불러오지 못했습니다."
+        : "이 자리에는 실제 접수 건만 올립니다.";
   return (
     <section className="bg-surface-muted py-16 md:py-20">
       <div className="mx-auto max-w-4xl px-4">
@@ -27,12 +44,14 @@ export default function DataPolicy() {
 
         <div className="rounded-panel border border-line bg-white p-6 md:p-9">
           <p className="text-base leading-relaxed font-bold text-foreground md:text-lg">
-            아직 공개할 만큼 쌓이지 않았습니다.
+            {headline}
           </p>
           <p className="mt-3 text-sm leading-relaxed text-muted md:text-base">
             이 자리에는 <strong className="font-bold text-foreground">실제 접수 건</strong>만
-            이름을 가려 올립니다. 꾸며낸 내역은 올리지 않습니다. 그래서 표시할 수 있는
-            건수가 모이기 전까지는 비워 둡니다.
+            이름을 가려 올립니다. 꾸며낸 내역은 올리지 않습니다.
+            {reason === "error"
+              ? " 잠시 후 다시 확인해 주세요."
+              : " 그래서 표시할 수 있는 건수가 모이기 전까지는 비워 둡니다."}
           </p>
 
           <dl className="mt-7 grid grid-cols-1 gap-x-8 gap-y-4 border-t border-line pt-6 sm:grid-cols-2">

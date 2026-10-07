@@ -8,6 +8,17 @@ import DataPolicy from "./DataPolicy";
 // 실시간 신청현황 — 실제 접수 데이터만 마스킹해 노출 (CLAUDE.md 규칙 1).
 // API 가 5건 미만이면 빈 배열을 준다. 그때는 섹션을 비우는 대신
 // DataPolicy 로 교체한다 — 왜 비어 있는지를 말하는 쪽이 공백보다 낫다.
+//
+// ⚠ "비어 있음"의 이유를 뭉뚱그리지 않는다.
+//   예전에는 `items.length === 0` 하나로 **로딩 중 · 조회 실패 · 5건 미만**을
+//   똑같이 처리했고, 그 자리에 "아직 공개할 만큼 쌓이지 않았습니다"라는
+//   단정문이 붙었다. 서버 렌더 결과가 늘 그 상태라 크롤러와 JS 미동작
+//   환경에서는 **항상** 그 문장을 보게 된다. 조회가 실패하고 있으면
+//   데이터가 아무리 쌓여도 거짓말이 된다.
+//   그래서 상태를 받아 문장을 달리한다.
+
+/** 비어 있는 이유. `loading` 은 아직 아무것도 단정할 수 없는 상태 */
+type FeedState = "loading" | "ok" | "tooFew" | "error";
 
 interface FeedItem {
   applied_date: string;
@@ -26,16 +37,25 @@ function statusTone(label: string | null) {
 
 export default function LiveFeed() {
   const [items, setItems] = useState<FeedItem[]>([]);
+  /** 서버 렌더·첫 페인트는 항상 "아직 모름" 이다 — 단정하지 않는다 */
+  const [state, setState] = useState<FeedState>("loading");
 
   useEffect(() => {
     fetch("/api/feed/live")
       .then((r) => r.json())
-      .then((d: { items: FeedItem[] }) => setItems(d.items ?? []))
-      .catch(() => setItems([]));
+      .then((d: { items?: FeedItem[]; state?: FeedState }) => {
+        setItems(d.items ?? []);
+        setState(d.state ?? (d.items?.length ? "ok" : "tooFew"));
+      })
+      .catch((e) => {
+        console.error("[LiveFeed] 현황 조회 실패:", e);
+        setState("error");
+      });
   }, []);
 
-  // 로딩 중과 '5건 미만'을 구분하지 않는다 — 어느 쪽이든 보여줄 실데이터가 없다
-  if (items.length === 0) return <DataPolicy />;
+  if (items.length === 0) {
+    return <DataPolicy reason={state === "ok" ? "tooFew" : state} />;
+  }
 
   // 세로 롤링 — 목록을 2배로 이어붙여 -50% 이동을 무한 반복
   const doubled = [...items, ...items];
