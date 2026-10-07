@@ -314,15 +314,6 @@ export interface PromoImage {
  */
 export const PROMO_IMAGES: PromoImage[] = [
   {
-    id: "zz-critique-probe",
-    slot: "afterHero",
-    desktop: "/promo/check-three.png",
-    width: 2240,
-    height: 938,
-    alt: "",
-    enabled: true,
-  },
-  {
     id: "check-three",
     slot: "afterJourney",
     desktop: "/promo/check-three.png",
