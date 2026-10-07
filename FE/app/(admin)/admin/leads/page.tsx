@@ -25,6 +25,17 @@ import {
 import { formatKstDateTime } from "@/lib/kst";
 import LeadFilterBar from "./LeadFilterBar";
 
+/** 내보내기 실패 코드 → 화면 문구. 문구는 **코드가 갖는다**, URL 이 아니라 */
+const EXPORT_ERROR_MESSAGE: Record<string, string> = {
+  filter: "기간·필터 값을 확인해 주세요",
+  query: "대상 조회에 실패했습니다",
+  empty: "선택한 기간·조건에 내보낼 접수 내역이 없습니다",
+  audit: "접속기록을 남길 수 없어 내보내기를 중단했습니다",
+  decrypt: "복호화에 실패했습니다. ENCRYPTION_KEY 를 확인해 주세요",
+  update:
+    "내보내기 기록 갱신에 실패했습니다. 중복 배분 위험이 있어 파일을 전달하지 않았습니다",
+};
+
 // 상담신청 목록.
 // 연락처는 phone_masked 만 노출한다 — 목록에서 평문은 절대 보이지 않는다 (CLAUDE.md 규칙 3).
 // 조회 자체를 access_logs 에 LIST + 필터조건으로 기록하고, 기록이 실패하면 목록을 띄우지 않는다.
@@ -88,9 +99,19 @@ export default async function AdminLeadsPage({
     ).entries(),
   );
 
-  // 내보내기 실패는 JSON 페이지로 이탈시키지 않고 이 화면에서 알린다
+  /**
+   * 내보내기 실패는 JSON 페이지로 이탈시키지 않고 이 화면에서 알린다.
+   *
+   * URL 로는 **코드만** 받는다. 문장을 받아 그대로 렌더하면, 로그인된 운영자에게
+   * 링크 하나를 보내는 것만으로 사이트 자신의 어드민 셸 안에서 임의 문장을
+   * 공식 오류 배너로 띄울 수 있다 (예: "세션이 만료되었습니다. …에서 다시 로그인하세요").
+   * 단일 계정 + 2FA 구조에서 가장 값싼 공격은 운영자를 속이는 것이다.
+   * 알 수 없는 코드는 무시한다.
+   */
   const exportError =
-    typeof raw.exportError === "string" ? raw.exportError : null;
+    typeof raw.exportError === "string"
+      ? (EXPORT_ERROR_MESSAGE[raw.exportError] ?? null)
+      : null;
 
   return (
     <div className="flex flex-col gap-4">

@@ -81,13 +81,20 @@ export function buildLeadQuery(
   columns: string,
   filter: Omit<LeadFilter, "page">,
   range: { from: string; to: string },
-  options?: { count?: boolean },
+  options?: { count?: boolean; head?: boolean },
 ) {
   const { startIso, endIso } = kstRangeToUtc(range.from, range.to);
 
   let query = supabase
     .from("leads")
-    .select(columns, options?.count ? { count: "exact" } : undefined)
+    // head:true 면 행을 한 줄도 전송하지 않고 count 만 받는다.
+    // 집계 카드처럼 숫자만 필요한 자리에서 id 수천 개를 받아 버리던 걸 막는다.
+    .select(
+      columns,
+      options?.count
+        ? { count: "exact", ...(options.head ? { head: true } : {}) }
+        : undefined,
+    )
     .gte("created_at", startIso)
     .lte("created_at", endIso);
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdminApi } from "@/lib/admin/auth";
 import { requestIp } from "@/lib/admin/audit";
+import { isSameOrigin } from "@/lib/admin/same-origin";
 import { logAccess } from "@/lib/audit";
 import { GIFT_STATUSES, LEAD_STATUSES } from "@/lib/admin/labels";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -33,6 +34,13 @@ export async function PATCH(
   req: NextRequest,
   ctx: { params: Promise<{ id: string }> },
 ) {
+  if (!isSameOrigin(req)) {
+    return NextResponse.json(
+      { ok: false, error: "잘못된 요청입니다" },
+      { status: 403 },
+    );
+  }
+
   const guard = await requireAdminApi();
   if (!guard.ok) return guard.response;
 

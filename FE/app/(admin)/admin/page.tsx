@@ -24,6 +24,9 @@ const BASE_FILTER = {
   exported: "all" as const,
 };
 
+/** 분포 집계에 가져오는 행 상한. 넘으면 화면에 그 사실을 적는다 (E-10) */
+const MONTH_ROW_CAP = 5000;
+
 interface MonthRow {
   status: string;
   gift_status: string;
@@ -38,13 +41,18 @@ export default async function AdminDashboardPage() {
   const weekStart = weekStartKst();
   const monthStart = monthStartKst();
 
+  /**
+   * 분포 집계용 행 상한. 이 수를 넘으면 **집계가 조용히 틀린다** —
+   * 카드의 총계는 exact count 라 정확한데 막대 합계만 모자라기 때문이다.
+   * 그래서 상한에 닿으면 화면에 그 사실을 적는다 (아래 `truncated`).
+   */
   const countFor = async (from: string, to: string) => {
     const { count, error } = await buildLeadQuery(
       supabase,
       "id",
       BASE_FILTER,
       { from, to },
-      { count: true },
+      { count: true, head: true },
     );
     if (error) throw new Error(error.message);
     return count ?? 0;
@@ -68,7 +76,7 @@ export default async function AdminDashboardPage() {
       "status, gift_status, carrier, utm_source",
       BASE_FILTER,
       { from: monthStart, to: today },
-    ).limit(5000);
+    ).limit(MONTH_ROW_CAP);
     if (error) throw new Error(error.message);
     monthRows = (data ?? []) as unknown as MonthRow[];
 
@@ -97,6 +105,9 @@ export default async function AdminDashboardPage() {
     const u = row.utm_source?.trim() || "(직접유입)";
     utmCount.set(u, (utmCount.get(u) ?? 0) + 1);
   }
+  /** 상한에 닿았다 = 막대 합계가 총계보다 작다 */
+  const truncated = monthRows.length >= MONTH_ROW_CAP;
+
   const utmRanking = [...utmCount.entries()].sort((a, b) => b[1] - a[1]);
   const utmMax = utmRanking[0]?.[1] ?? 0;
 
@@ -132,7 +143,10 @@ export default async function AdminDashboardPage() {
         <SummaryCard
           label={`이번주 (${weekStart} ~)`}
           value={weekCount}
-          href="/admin/leads?period=7d"
+          // 카드 숫자는 weekStartKst()(이번 주 월요일)로 세는데 period=7d 는
+          // 최근 7일 롤링이라 화~일요일 내내 다른 집합이었다.
+          // "이 숫자를 누르면 이 건들을 본다"는 계약을 지킨다.
+          href={`/admin/leads?period=custom&from=${weekStart}&to=${today}`}
         />
         <SummaryCard
           label={`이번달 (${monthStart} ~)`}
@@ -145,7 +159,10 @@ export default async function AdminDashboardPage() {
       <section className="rounded-card border border-line bg-surface p-5">
         <div className="mb-3 flex items-baseline justify-between gap-2">
           <h2 className="text-base font-bold">유입경로별 접수 (이번달)</h2>
-          <span className="text-xs text-muted">총 {monthCount}건</span>
+          <span className="text-xs text-muted">
+            총 {monthCount}건
+            {truncated && ` (분포는 ${MONTH_ROW_CAP.toLocaleString()}건까지만 집계)`}
+          </span>
         </div>
         {utmRanking.length === 0 ? (
           <p className="py-6 text-center text-sm text-muted">

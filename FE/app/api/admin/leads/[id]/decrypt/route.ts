@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdminApi } from "@/lib/admin/auth";
+import { isSameOrigin } from "@/lib/admin/same-origin";
 import { requestIp } from "@/lib/admin/audit";
 import { logAccess } from "@/lib/audit";
 import { decryptPhone } from "@/lib/crypto";
@@ -14,6 +15,14 @@ export async function POST(
   req: NextRequest,
   ctx: { params: Promise<{ id: string }> },
 ) {
+  // 평문 전화번호를 꺼내는 경로다. 교차 출처에서 부를 수 있어서는 안 된다.
+  if (!isSameOrigin(req)) {
+    return NextResponse.json(
+      { ok: false, error: "잘못된 요청입니다" },
+      { status: 403 },
+    );
+  }
+
   const guard = await requireAdminApi();
   if (!guard.ok) return guard.response;
 

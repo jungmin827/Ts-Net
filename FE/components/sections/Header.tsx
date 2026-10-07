@@ -128,7 +128,7 @@ export default function Header() {
           </nav>
 
           <div className="ml-auto flex shrink-0 items-center gap-2 pl-3 xl:gap-3 xl:pl-4">
-            {/* 헤더 CTA 를 걷어내 자리가 생겼으므로 대표번호는 lg 부터 그대로 보인다 */}
+            {/* 대표번호와 상담 CTA 가 나란히 선다. 좁은 폭에서는 간격만 줄인다 */}
             {hasTel() && (
             <a
               href={`tel:${SITE.tel}`}

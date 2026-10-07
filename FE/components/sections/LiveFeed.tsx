@@ -28,7 +28,7 @@ interface FeedItem {
   gift_label: string | null;
 }
 
-/** 상태 라벨별 뱃지 색 — 완료 계열은 남색, 진행 계열은 중립 */
+/** 상태 라벨별 뱃지 색 — 완료 계열은 진한 초록, 진행 계열은 옅은 초록 */
 function statusTone(label: string | null) {
   if (label === "완료" || label === "설치완료") return "bg-brand-dark text-white";
   if (label === "진행중") return "bg-brand-light text-brand-deep";

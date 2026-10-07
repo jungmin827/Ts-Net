@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PassThrough, Readable } from "node:stream";
 import { requireAdminApi } from "@/lib/admin/auth";
+import { isSameOrigin } from "@/lib/admin/same-origin";
 import { requestIp } from "@/lib/admin/audit";
 import { buildLeadsWorkbook, type ExportRecord } from "@/lib/admin/excel";
 import {
@@ -33,40 +34,48 @@ const EXPORT_MAX = 20000;
 const UPDATE_CHUNK = 300;
 
 /**
- * 교차 출처 요청을 막는다.
- *
- * 이 엔드포인트는 **부수효과가 있다** — 전화번호를 복호화하고 `exported_at` 을 갱신한다.
- * GET 이던 시절에는 외부 페이지가 `<img src="/api/admin/export?...">` 한 줄로
- * 로그인된 어드민의 쿠키를 실어 보낼 수 있었다. 개인정보가 복호화되고
- * 접수 건이 '내보냄'으로 표시되는 일이 어드민 모르게 일어난다.
- *
- * POST 로 바꾸고 `Sec-Fetch-Site` / `Origin` 을 함께 본다.
- * 둘 다 없는 요청(구형 클라이언트·curl)은 허용하지 않는다 — 어드민은 브라우저에서만 쓴다.
- */
-function isSameOrigin(req: NextRequest): boolean {
-  const site = req.headers.get("sec-fetch-site");
-  if (site) return site === "same-origin";
-
-  const origin = req.headers.get("origin");
-  if (!origin) return false;
-  try {
-    return new URL(origin).host === req.headers.get("host");
-  } catch {
-    return false;
-  }
-}
-
-/**
  * 실패를 **JSON 으로 돌려주지 않는다.**
  *
  * 이 엔드포인트는 폼 POST 로 호출된다. JSON 을 돌려주면 브라우저가 그 JSON 을
  * 문서로 띄워, 어드민이 `{"ok":false,...}` 만 적힌 흰 화면에 갇힌다.
  * "대상 0건" 같은 흔한 경우에도 그렇게 된다.
- * 목록으로 되돌리고 오류를 쿼리로 넘겨 화면에서 보여준다.
+ * 목록으로 되돌리고 **어느 단계에서 실패했는지 코드만** 넘긴다.
+ *
+ * ⚠ 문장을 URL 에 싣지 않는 이유 —
+ *   목록 화면은 `exportError` 를 `role="alert"` 빨간 배너로 렌더한다.
+ *   문장을 그대로 실으면, 로그인된 운영자에게 링크 하나를 보내는 것만으로
+ *   **사이트 자신의 어드민 셸 안에서, 자신의 오류 배너 스타일로, 임의 문장**을
+ *   띄울 수 있다. (React 가 이스케이프하므로 XSS 는 아니고, 내용 주입이다.)
+ *   단일 계정 + 2FA 구조에서 가장 값싼 공격은 운영자를 속이는 것이라
+ *   그 경로를 열어 둘 이유가 없다. 코드만 넘기고 문구는 화면이 갖는다.
+ *
+ * ⚠ 필터를 함께 싣는 이유 —
+ *   예전에는 `/admin/leads` 로만 돌려보내 `period`·`carrier`·`q` 등 9개가
+ *   전부 날아갔다. 배너는 "선택한 기간·조건에 내보낼 내역이 없습니다"라고 하는데
+ *   **그 '선택한 조건'이 이미 화면에서 사라진 뒤**라 말과 화면이 어긋났고,
+ *   가장 흔한 실패에서 매번 조건을 다시 입력해야 했다.
+ *   보낸 폼 값을 그대로 되돌려 준다 (목록 쪽에서 다시 검증한다).
  */
-function backToList(req: NextRequest, message: string): NextResponse {
+export type ExportErrorCode =
+  | "filter"
+  | "query"
+  | "empty"
+  | "audit"
+  | "decrypt"
+  | "update";
+
+function backToList(
+  req: NextRequest,
+  code: ExportErrorCode,
+  raw: Record<string, string>,
+): NextResponse {
   const url = new URL("/admin/leads", req.url);
-  url.searchParams.set("exportError", message);
+  for (const [k, v] of Object.entries(raw)) {
+    // exportError 는 우리가 정한다. 폼이 보낸 값을 그대로 되돌리지 않는다
+    if (k === "exportError" || !v) continue;
+    url.searchParams.set(k, v);
+  }
+  url.searchParams.set("exportError", code);
   // 303 이어야 POST 가 GET 으로 바뀐다 (302 는 메서드가 유지될 수 있다)
   return NextResponse.redirect(url, 303);
 }
@@ -91,10 +100,11 @@ export async function POST(req: NextRequest) {
     : Object.fromEntries(req.nextUrl.searchParams.entries());
   const parsed = parseExportFilter(raw);
   if (!parsed.success) {
-    return backToList(
-      req,
-      parsed.error.issues[0]?.message ?? "기간·필터 값을 확인해 주세요",
+    console.error(
+      "[/api/admin/export] 필터 검증 실패:",
+      parsed.error.issues[0]?.message,
     );
+    return backToList(req, "filter", raw);
   }
   const filter = parsed.data;
   const range = resolvePeriod(filter);
@@ -111,12 +121,12 @@ export async function POST(req: NextRequest) {
 
   if (error) {
     console.error("[/api/admin/export] 조회 실패:", error.code, error.message);
-    return backToList(req, "대상 조회에 실패했습니다");
+    return backToList(req, "query", raw);
   }
 
   const rows = (data ?? []) as unknown as LeadExportRow[];
   if (rows.length === 0) {
-    return backToList(req, "선택한 기간·조건에 내보낼 접수 내역이 없습니다");
+    return backToList(req, "empty", raw);
   }
 
   // 2. 반출 사실을 먼저 기록한다 — 실패하면 복호화도 하지 않는다
@@ -139,7 +149,7 @@ export async function POST(req: NextRequest) {
       "[/api/admin/export] 감사로그 기록 실패:",
       e instanceof Error ? e.message : e,
     );
-    return backToList(req, "접속기록을 남길 수 없어 내보내기를 중단했습니다");
+    return backToList(req, "audit", raw);
   }
 
   // 3. 복호화 + 워크북 생성
@@ -160,10 +170,7 @@ export async function POST(req: NextRequest) {
       memo: r.memo,
     }));
   } catch {
-    return backToList(
-      req,
-      "복호화에 실패했습니다. ENCRYPTION_KEY 를 확인해 주세요",
-    );
+    return backToList(req, "decrypt", raw);
   }
 
   const workbook = buildLeadsWorkbook(records, {
@@ -188,10 +195,7 @@ export async function POST(req: NextRequest) {
         updateError.code,
         updateError.message,
       );
-      return backToList(
-        req,
-        "내보내기 기록 갱신에 실패했습니다. 중복 배분 위험이 있어 파일을 전달하지 않았습니다",
-      );
+      return backToList(req, "update", raw);
     }
   }
 
