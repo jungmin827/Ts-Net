@@ -5,9 +5,10 @@ import PlanCalculator from "@/components/sections/PlanCalculator";
 import PlanCards from "@/components/sections/PlanCards";
 import PlanTable from "@/components/sections/PlanTable";
 import PartnerCard from "@/components/sections/PartnerCard";
+import PlanNotice from "@/components/sections/PlanNotice";
 import LeadForm from "@/components/forms/LeadForm";
 import { getPlansByCarrier, tableRows } from "@/lib/plans";
-import { CARRIER_MENU, SITE, carrierBySlug } from "@/lib/site-config";
+import { CARRIER_MENU, SITE, carrierBySlug, hasTel } from "@/lib/site-config";
 import type { Carrier } from "@/lib/validation";
 import Icon from "@/components/ui/Icon";
 import SectionHeading from "@/components/ui/SectionHeading";
@@ -58,7 +59,7 @@ export default async function CarrierPage({ params }: Params) {
         <section className="bg-white py-16 md:py-20">
           <div className="mx-auto max-w-2xl px-4">
             <div className="rounded-panel border border-dashed border-line-strong bg-surface-muted p-10 text-center">
-              <span className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-brand-light text-brand">
+              <span className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-brand-light text-brand-deep">
                 <Icon name="clipboard" size={26} />
               </span>
               <h2 className="mb-3 text-xl font-black md:text-2xl">
@@ -75,9 +76,13 @@ export default async function CarrierPage({ params }: Params) {
 
       <PartnerCard />
 
+      {/* 요금 고지 — 금액을 보여준 페이지와 같은 화면에 전제·추가비용·해지조건을 둔다.
+          요금 미등록 통신사에서는 요금 전제 블록을 빼고 나머지만 렌더한다 */}
+      <PlanNotice hasPrices={plans.length > 0} />
+
       <section
         id="consult"
-        className="scroll-mt-24 bg-brand-soft py-16 md:py-20"
+        className="scroll-mt-24 bg-surface-muted py-16 md:py-20"
       >
         <div className="mx-auto max-w-xl px-4">
           <div className="rounded-panel border border-line bg-white p-6 shadow-float md:p-8">
@@ -86,15 +91,17 @@ export default async function CarrierPage({ params }: Params) {
               description="남겨주신 연락처로 확인 후 순차적으로 연락드립니다"
             />
             <LeadForm variant="compact" defaultCarrier={info.code as Carrier} />
-            <p className="mt-6 text-center text-sm text-muted">
-              전화 상담{" "}
-              <a
-                href={`tel:${SITE.tel}`}
-                className="font-black text-brand hover:underline"
-              >
-                {SITE.tel}
-              </a>
-            </p>
+            {hasTel() && (
+              <p className="mt-6 text-center text-sm text-muted">
+                전화 상담{" "}
+                <a
+                  href={`tel:${SITE.tel}`}
+                  className="font-black text-brand-dark hover:underline"
+                >
+                  {SITE.tel}
+                </a>
+              </p>
+            )}
           </div>
         </div>
       </section>

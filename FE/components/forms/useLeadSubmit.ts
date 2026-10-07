@@ -87,8 +87,13 @@ export function useLeadSubmit() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...payload, ...collectTracking() }),
       });
-      const data: { ok: boolean; error?: string } = await res.json();
-      if (res.ok && data.ok) {
+      // 서버가 JSON 이 아닌 것을 돌려줄 수도 있다(프록시 오류 페이지, 502 HTML 등).
+      // 여기서 파싱이 터지면 catch 로 넘어가 "네트워크 오류"로 뭉뚱그려지므로,
+      // 응답 형태를 먼저 방어한 뒤 상태코드로 판단한다.
+      const data: { ok?: boolean; error?: string } = await res
+        .json()
+        .catch(() => ({}));
+      if (res.ok && data.ok !== false) {
         fireConversion();
         setStatus("done");
         return true;
@@ -106,5 +111,11 @@ export function useLeadSubmit() {
     setError("");
   }
 
-  return { status, error, submit, reset };
+  /** 서버에 보내기 전 단계에서 막혔을 때 쓰는 클라이언트측 안내.
+      (예: 필수 동의 미체크 — 버튼을 비활성으로 두는 대신 이유를 말해준다) */
+  function fail(message: string) {
+    setError(message);
+  }
+
+  return { status, error, submit, reset, fail };
 }

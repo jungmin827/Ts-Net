@@ -2,13 +2,17 @@ import { createAdminClient } from "./supabase/admin";
 
 // 개인정보 접속기록 (법정 1년 보관).
 // LIST(목록조회) / VIEW(상세) / DECRYPT(번호 복호화) / EXPORT(엑셀) / UPDATE / DELETE
+// LOGIN / LOGIN_FAIL / LOGOUT — 어드민 인증 시도 (docs/SPEC.md §3.1)
 export type AuditAction =
   | "LIST"
   | "VIEW"
   | "DECRYPT"
   | "EXPORT"
   | "UPDATE"
-  | "DELETE";
+  | "DELETE"
+  | "LOGIN"
+  | "LOGIN_FAIL"
+  | "LOGOUT";
 
 export interface AuditEntry {
   actorId?: string;

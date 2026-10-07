@@ -1,59 +1,56 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CARRIER_MENU, SITE } from "@/lib/site-config";
+import { CARRIER_MENU, SITE, hasTel } from "@/lib/site-config";
 import Icon from "@/components/ui/Icon";
 
-const BOARD_MENU = [
-  { href: "/review", label: "가입후기" },
-  { href: "/notice", label: "정보공유" },
-];
+/**
+ * 게시판 메뉴.
+ *
+ * `/review` `/notice` 는 아직 구현되지 않아 **404 를 반환한다.**
+ * 누르면 에러 페이지로 떨어지는 메뉴를 내비에 두는 쪽이, 메뉴가 하나 적은
+ * 것보다 신뢰를 더 크게 깎는다. 페이지를 만들면 배열에 다시 넣으면 된다.
+ */
+const BOARD_MENU: { href: string; label: string }[] = [];
 
-/** 내비 2단에 들어가는 전체 항목 — 통신사 4사 + 게시판 2종 */
-const NAV_ITEMS = [
-  ...CARRIER_MENU.map((c) => ({ href: `/${c.slug}`, label: c.label })),
-  ...BOARD_MENU,
-];
+const CARRIER_NAV = CARRIER_MENU.map((c) => ({
+  href: `/${c.slug}`,
+  label: c.label,
+}));
 
-/** 로고 마크 — 신호 세기 막대를 형상화. 외부 이미지 없이 SVG로 그려 선명도를 유지한다 */
-function LogoMark({ size = 36 }: { size?: number }) {
+/** 브랜드 워드마크. 크기는 쓰는 자리에서 높이만 지정하고 폭은 비율대로 따라온다 */
+function Wordmark({ className }: { className: string }) {
   return (
-    <span
-      className="flex items-center justify-center rounded-xl bg-gradient-to-br from-brand to-brand-deep shadow-brand"
-      style={{ width: size, height: size }}
-    >
-      <svg
-        width={size / 2}
-        height={size / 2}
-        viewBox="0 0 18 18"
-        aria-hidden="true"
-      >
-        <rect x="1" y="11" width="3.2" height="6" rx="1.3" fill="#fff" opacity=".55" />
-        <rect x="6" y="7" width="3.2" height="10" rx="1.3" fill="#fff" opacity=".8" />
-        <rect x="11" y="2" width="3.2" height="15" rx="1.3" fill="#fff" />
-      </svg>
-    </span>
+    <Image
+      src={SITE.logo.src}
+      alt={SITE.name}
+      width={SITE.logo.width}
+      height={SITE.logo.height}
+      priority
+      className={`w-auto ${className}`}
+    />
   );
 }
 
 /**
- * 2단 헤더.
+ * 헤더 — 1단 고정 바.
  *
- * - **1단 브랜드 존** (데스크톱 전용): 넓은 여백을 가진 와이드 캔버스 위에 로고가
- *   독립 영역을 차지한다. 우측 끝에 대표번호 아웃라인 버튼. 스크롤하면 흘러간다.
- * - **2단 내비 바**: 스크롤해도 상단에 붙는다. 메뉴를 가로로 균등 배치하고
- *   맨 우측에 바 높이를 꽉 채운 CTA 버튼을 붙여 내비와 시각적으로 분리한다.
- * - **모바일**: 1·2단을 쓰지 않고 기존 컴팩트 바 + 드로어를 그대로 유지한다.
- *   좁은 화면에서 2단을 그리면 세로 공간을 60px 넘게 먹는다.
+ * 이전에는 브랜드 존(1단)과 내비 바(2단)로 나뉘어 있었다. 세로로 100px 넘게 먹으면서
+ * 정작 스크롤하면 1단이 흘러가 로고가 사라졌고, 2단 항목은 `flex-1` 균등 분배라
+ * 1440px 에서 항목 간격이 120px 씩 벌어져 메뉴가 한 묶음으로 읽히지 않았다.
+ *
+ * 지금은 한 줄이다: 로고 · 통신사 4사 · (구분선) 게시판 2종 · 대표번호 · 신청 CTA.
+ * 항목은 제 글자폭만큼만 차지하고, 통신사와 게시판 사이의 세로선이 두 묶음을 구분한다.
  */
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
-  // 스크롤이 시작되면 내비 바에 그림자를 입혀 콘텐츠와 층을 분리한다
+  // 스크롤이 시작되면 바에 그림자를 입혀 콘텐츠와 층을 분리한다
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
     onScroll();
@@ -79,128 +76,114 @@ export default function Header() {
 
   const isActive = (href: string) => pathname === href;
 
+  /** 내비 항목 한 개. 활성/호버 시 아래에서 초록 밑줄이 올라온다 */
+  const navLink = (item: { href: string; label: string }) => (
+    <Link
+      key={item.href}
+      href={item.href}
+      aria-current={isActive(item.href) ? "page" : undefined}
+      className={`group relative flex items-center px-2.5 py-5 text-[0.95rem] font-medium whitespace-nowrap transition-colors duration-200 xl:px-4 ${
+        isActive(item.href) ? "text-brand-dark" : "text-foreground hover:text-brand-dark"
+      }`}
+    >
+      {item.label}
+      <span
+        aria-hidden="true"
+        className={`absolute inset-x-2 bottom-0 h-[3px] origin-center rounded-t-full bg-brand transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          isActive(item.href)
+            ? "scale-x-100"
+            : "scale-x-0 group-hover:scale-x-100"
+        }`}
+      />
+    </Link>
+  );
+
   return (
     <>
-      {/* ── 1단: 브랜드 존 (데스크톱) ────────────────────────────
-          로고가 숨 쉬도록 위아래 여백을 크게 준다. 배경에 아주 옅은 방사형
-          틴트를 깔아 순백 대비 로고가 떠 보이게 했다 (blur 필터 미사용). */}
-      <div
-        className="hidden bg-white lg:block"
-        style={{
-          backgroundImage: [
-            // 로고 뒤에 옅은 광원 하나 — 로고가 흰 면 위에 떠 보이게
-            "radial-gradient(34rem 11rem at 16% 125%, rgba(47,158,82,0.10), transparent 72%)",
-            // 좌우 끝을 살짝 눌러 가운데가 넓은 캔버스처럼 읽히게
-            "linear-gradient(90deg, var(--brand-soft) 0%, #fff 22%, #fff 78%, var(--brand-soft) 100%)",
-          ].join(","),
-        }}
-      >
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-4 py-7">
-          <Link
-            href="/"
-            className="group flex items-center gap-3.5"
-            aria-label={`${SITE.name} 홈`}
-          >
-            <LogoMark size={46} />
-            <span className="flex flex-col">
-              <span className="text-[11px] font-bold tracking-[0.11em] text-brand/70">
-                {SITE.tagline}
-              </span>
-              <span className="text-[1.75rem] leading-tight font-black tracking-tight text-brand-deep">
-                {SITE.name}
-              </span>
-            </span>
-          </Link>
-
-          <a
-            href={`tel:${SITE.tel}`}
-            className="flex items-center gap-2.5 rounded-full border-2 border-brand/25 px-6 py-2.5 transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:border-brand hover:shadow-lift"
-          >
-            <span className="flex flex-col items-end leading-none">
-              <span className="text-[10px] font-bold tracking-wide text-muted">
-                상담 대표번호
-              </span>
-              <span className="mt-1 text-xl font-black tracking-tight text-brand-deep">
-                {SITE.tel}
-              </span>
-            </span>
-            <span className="flex size-9 items-center justify-center rounded-full bg-brand-light text-brand">
-              <Icon name="phone" size={18} />
-            </span>
-          </a>
-        </div>
-      </div>
-
-      {/* ── 2단: 내비 바 (데스크톱) / 컴팩트 바 (모바일) ───────────── */}
       <header
-        className={`sticky top-0 z-40 border-y border-line bg-white transition-shadow duration-300 ${
+        className={`sticky top-0 z-40 border-b border-line bg-white/95 backdrop-blur-md transition-shadow duration-300 ${
           scrolled ? "shadow-soft" : ""
         }`}
       >
-        {/* 데스크톱 내비 — 항목을 가로 균등 배치하고 CTA는 바 높이를 꽉 채운다 */}
-        <div className="mx-auto hidden max-w-6xl items-stretch px-4 lg:flex">
-          <nav aria-label="주요 메뉴" className="flex flex-1 items-stretch">
-            {NAV_ITEMS.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`group relative flex flex-1 items-center justify-center px-2 py-4 text-[0.95rem] font-bold transition-colors duration-200 ${
-                  isActive(item.href)
-                    ? "text-brand"
-                    : "text-slate-600 hover:text-brand"
-                }`}
-              >
-                {item.label}
-                <span
-                  className={`absolute inset-x-4 bottom-0 h-[3px] origin-center rounded-t-full bg-brand transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-                    isActive(item.href)
-                      ? "scale-x-100"
-                      : "scale-x-0 group-hover:scale-x-100"
-                  }`}
-                />
-              </Link>
-            ))}
+        {/* ── 데스크톱: 한 줄 ─────────────────────────────── */}
+        <div className="mx-auto hidden max-w-6xl items-center px-4 lg:flex">
+          <Link
+            href="/"
+            className="mr-5 flex shrink-0 items-center xl:mr-8"
+            aria-label={`${SITE.name} 홈`}
+          >
+            <Wordmark className="h-[38px]" />
+          </Link>
+
+          <nav aria-label="주요 메뉴" className="flex items-stretch">
+            {CARRIER_NAV.map(navLink)}
+            {/* 통신사 묶음과 게시판 묶음의 경계. 게시판이 비어 있으면 가를 것이 없다 */}
+            {BOARD_MENU.length > 0 && (
+              <span
+                aria-hidden="true"
+                className="my-auto h-4 w-px shrink-0 bg-line-strong"
+              />
+            )}
+            {BOARD_MENU.map(navLink)}
           </nav>
 
-          <a
-            // 메인·통신사 서브페이지 모두 #consult 앵커를 갖고 있어 상대 앵커로 둔다
-            href="#consult"
-            className="ml-4 flex shrink-0 items-center gap-2 bg-accent px-7 text-[0.95rem] font-black text-accent-ink transition-colors duration-200 hover:bg-accent-dark"
-          >
-            <Icon name="clipboard" size={17} />
-            상담 신청
-          </a>
+          <div className="ml-auto flex shrink-0 items-center gap-2 pl-3 xl:gap-3 xl:pl-4">
+            {/* 헤더 CTA 를 걷어내 자리가 생겼으므로 대표번호는 lg 부터 그대로 보인다 */}
+            {hasTel() && (
+            <a
+              href={`tel:${SITE.tel}`}
+              aria-label={`대표번호 ${SITE.tel} 로 전화하기`}
+              className="flex items-center gap-2 rounded-xl px-2 py-2 transition-colors duration-200 hover:bg-brand-soft"
+            >
+              <span className="flex size-8 items-center justify-center rounded-full bg-brand-light text-brand-deep">
+                <Icon name="phone" size={16} />
+              </span>
+              <span className="tabular text-lg font-black tracking-tight text-brand-deep">
+                {SITE.tel}
+              </span>
+            </a>
+            )}
+
+            {/* 대표번호가 없으면 헤더 우측에 전환 수단이 하나도 남지 않는다.
+                스크롤 위치와 무관하게 접수로 가는 길이 헤더에 항상 있어야 한다. */}
+            <a
+              href="#consult"
+              className="cta-fill flex items-center gap-1.5 rounded-xl px-5 py-2.5 text-[0.95rem] font-black whitespace-nowrap shadow-cta transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift active:translate-y-0"
+            >
+              <Icon name="clipboard" size={17} />
+              상담 신청
+            </a>
+          </div>
         </div>
 
-        {/* 모바일 컴팩트 바 — 로고 / 전화 / 햄버거 (기존 구조 유지) */}
+        {/* ── 모바일 컴팩트 바 ───────────────────────────── */}
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 lg:hidden">
           <Link
             href="/"
             className="flex shrink-0 items-center gap-2.5"
             aria-label={`${SITE.name} 홈`}
           >
-            <LogoMark />
-            <span className="text-xl font-black tracking-tight text-brand-deep">
-              {SITE.name}
-            </span>
+            <Wordmark className="h-[30px]" />
           </Link>
 
           <div className="flex items-center gap-2">
+            {hasTel() && (
             <a
               href={`tel:${SITE.tel}`}
-              className="flex items-center gap-1.5 rounded-xl bg-brand px-3.5 py-2.5 text-sm font-black text-white shadow-brand transition-colors duration-200 hover:bg-brand-dark sm:px-4"
+              className="flex items-center gap-1.5 rounded-xl bg-brand-dark px-3.5 py-2.5 text-sm font-black text-white shadow-brand transition-colors duration-200 hover:bg-brand-deep sm:px-4"
             >
               <Icon name="phone" size={16} />
-              <span className="hidden sm:inline">{SITE.tel}</span>
+              <span className="tabular hidden sm:inline">{SITE.tel}</span>
               <span className="sm:hidden">전화</span>
             </a>
+            )}
 
             <button
               type="button"
               onClick={() => setOpen(true)}
               aria-label="메뉴 열기"
               aria-expanded={open}
-              className="flex size-10 cursor-pointer items-center justify-center rounded-xl border border-line text-slate-700 transition-colors duration-200 hover:border-brand/40 hover:bg-brand-soft hover:text-brand"
+              className="flex size-10 cursor-pointer items-center justify-center rounded-xl border border-line-strong text-foreground transition-colors duration-200 hover:border-brand/40 hover:bg-brand-soft hover:text-brand-dark"
             >
               <Icon name="menu" size={22} />
             </button>
@@ -208,14 +191,14 @@ export default function Header() {
         </div>
       </header>
 
-      {/* 모바일 드로어 — 통신사·게시판 메뉴가 데스크톱에서만 보이던 문제를 해소 */}
+      {/* 모바일 드로어 */}
       <div
         className={`fixed inset-0 z-50 lg:hidden ${open ? "" : "pointer-events-none"}`}
         aria-hidden={!open}
       >
         <div
           onClick={() => setOpen(false)}
-          className={`absolute inset-0 bg-slate-900/45 transition-opacity duration-300 ${
+          className={`absolute inset-0 bg-brand-deep/45 transition-opacity duration-300 ${
             open ? "opacity-100" : "opacity-0"
           }`}
         />
@@ -226,32 +209,25 @@ export default function Header() {
           }`}
         >
           <div className="flex items-center justify-between border-b border-line px-5 py-4">
-            <span className="flex items-center gap-2.5">
-              <LogoMark />
-              <span className="text-lg font-black text-brand-deep">
-                {SITE.name}
-              </span>
-            </span>
+            <Wordmark className="h-[28px]" />
             <button
               type="button"
               onClick={() => setOpen(false)}
               aria-label="메뉴 닫기"
-              className="flex size-10 cursor-pointer items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-surface-muted hover:text-brand"
+              className="flex size-10 cursor-pointer items-center justify-center rounded-xl text-muted transition-colors hover:bg-surface-muted hover:text-brand-dark"
             >
               <Icon name="close" size={22} />
             </button>
           </div>
 
           <div className="flex-1 overflow-y-auto px-4 py-5">
-            <p className="px-2 pb-2 text-xs font-bold tracking-wide text-slate-400">
-              통신사
-            </p>
+            <p className="px-2 pb-2 text-xs font-bold text-muted">통신사</p>
             <ul className="mb-5 flex flex-col gap-1">
               {CARRIER_MENU.map((c) => (
                 <li key={c.slug}>
                   <Link
                     href={`/${c.slug}`}
-                    className="flex items-center justify-between rounded-xl px-3 py-3 font-bold text-slate-700 transition-colors hover:bg-brand-soft hover:text-brand"
+                    className="flex items-center justify-between rounded-xl px-3 py-3 font-bold text-foreground transition-colors hover:bg-brand-soft hover:text-brand-dark"
                   >
                     <span className="flex items-center gap-2.5">
                       <span
@@ -263,28 +239,28 @@ export default function Header() {
                     <Icon
                       name="chevronRight"
                       size={18}
-                      className="text-slate-300"
+                      className="text-line-strong"
                     />
                   </Link>
                 </li>
               ))}
             </ul>
 
-            <p className="px-2 pb-2 text-xs font-bold tracking-wide text-slate-400">
-              게시판
-            </p>
+            {BOARD_MENU.length > 0 && (
+              <p className="px-2 pb-2 text-xs font-bold text-muted">게시판</p>
+            )}
             <ul className="flex flex-col gap-1">
               {BOARD_MENU.map((m) => (
                 <li key={m.href}>
                   <Link
                     href={m.href}
-                    className="flex items-center justify-between rounded-xl px-3 py-3 font-bold text-slate-700 transition-colors hover:bg-brand-soft hover:text-brand"
+                    className="flex items-center justify-between rounded-xl px-3 py-3 font-bold text-foreground transition-colors hover:bg-brand-soft hover:text-brand-dark"
                   >
                     {m.label}
                     <Icon
                       name="chevronRight"
                       size={18}
-                      className="text-slate-300"
+                      className="text-line-strong"
                     />
                   </Link>
                 </li>
@@ -292,15 +268,17 @@ export default function Header() {
             </ul>
           </div>
 
+          {hasTel() && (
           <div className="border-t border-line p-4">
             <a
               href={`tel:${SITE.tel}`}
-              className="flex items-center justify-center gap-2 rounded-xl bg-brand py-3.5 font-black text-white shadow-brand"
+              className="flex items-center justify-center gap-2 rounded-xl bg-brand-dark py-3.5 font-black text-white shadow-brand"
             >
               <Icon name="phone" size={18} />
-              {SITE.tel}
+              <span className="tabular">{SITE.tel}</span>
             </a>
           </div>
+          )}
         </nav>
       </div>
     </>

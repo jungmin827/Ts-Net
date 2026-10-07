@@ -23,6 +23,12 @@ export default function PromoBand() {
   const { frames, holdMs, enabled } = PROMO_BAND;
   const [index, setIndex] = useState(0);
   const [reduced, setReduced] = useState(false);
+  /**
+   * 자동 순환 정지 수단 (WCAG 2.2.2 Pause, Stop, Hide).
+   * 5초 넘게 자동으로 바뀌는 내용에는 멈출 방법이 있어야 한다.
+   * 이 밴드는 2.4초마다 무한히 바뀌는데 그동안 멈출 수가 없었다.
+   */
+  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -33,13 +39,13 @@ export default function PromoBand() {
   }, []);
 
   useEffect(() => {
-    if (reduced || frames.length < 2) return;
+    if (reduced || paused || frames.length < 2) return;
     const id = window.setInterval(
       () => setIndex((v) => (v + 1) % frames.length),
       holdMs,
     );
     return () => window.clearInterval(id);
-  }, [reduced, frames.length, holdMs]);
+  }, [reduced, paused, frames.length, holdMs]);
 
   if (!enabled || frames.length === 0) return null;
 
@@ -47,61 +53,39 @@ export default function PromoBand() {
     .map((f) => f.words.map((w) => w.t).join(" "))
     .join(" ");
   const frame = frames[index];
-  const isBrand = frame.tone === "brand";
+  // tone 은 이제 면의 명암이 아니라 옅은 틴트 유무만 가른다.
+  // 예전엔 "brand" 프레임이 진초록 풀블리드였는데, 2.4초마다 퍼스트뷰 바로 아래가
+  // 통째로 초록으로 덮여 흰 면 기조가 무너졌다. 색은 강조 단어에만 남긴다.
+  const tinted = frame.tone === "brand";
 
   return (
     <section
       aria-label="안내 문구"
-      className={`relative overflow-hidden transition-colors duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-        // 밝은 면은 위아래 경계선을 줘야 흰 섹션들 사이에서 "밴드"로 읽힌다
-        isBrand ? "text-white" : "border-y border-line text-brand-deep"
-      }`}
+      className="relative overflow-hidden border-y border-line text-brand-deep transition-colors duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
       style={{
-        backgroundImage: isBrand
-          ? [
-              "radial-gradient(40rem 16rem at 18% -40%, rgba(163,240,180,0.38), transparent 65%)",
-              "linear-gradient(100deg, var(--brand-deep) 0%, var(--brand-dark) 60%, var(--brand) 100%)",
-            ].join(",")
-          : [
-              "radial-gradient(36rem 14rem at 82% 140%, rgba(47,158,82,0.18), transparent 65%)",
-              "linear-gradient(100deg, var(--brand-light) 0%, var(--brand-soft) 48%, var(--brand-light) 100%)",
-            ].join(","),
+        backgroundImage: tinted
+          ? "linear-gradient(100deg, var(--surface-muted) 0%, #fff 55%, var(--surface-muted) 100%)"
+          : "linear-gradient(100deg, #fff 0%, var(--surface-muted) 50%, #fff 100%)",
       }}
     >
-      {/* 얇은 세로 격자 — 남색 면에서만 쓴다.
-          밝은 면에 깔면 선이 글자보다 눈에 띄어 표처럼 읽혔다 (1차 검증) */}
-      {isBrand && (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-[0.06]"
-          style={{
-            backgroundImage:
-              "linear-gradient(to right, #fff 1px, transparent 1px)",
-            backgroundSize: "56px 56px",
-            maskImage:
-              "linear-gradient(to right, transparent, #000 25%, #000 75%, transparent)",
-          }}
-        />
-      )}
-
       {/* 스크린리더용 — 완성된 문장 한 줄 */}
       <p className="sr-only">{sentence}</p>
 
       <div
-        aria-hidden="true"
         className="relative mx-auto flex max-w-6xl items-center px-4"
-        style={{ minHeight: "clamp(7rem, 15vw, 11.5rem)" }}
+        style={{ minHeight: "clamp(5.5rem, 11vw, 8.5rem)" }}
       >
         {reduced ? (
           // 모션 최소화 — 순환 없이 전체 문장을 한 줄로
-          <p className="font-display py-8 text-2xl leading-tight md:text-4xl">
+          <p aria-hidden="true" className="font-display py-7 text-xl leading-tight md:text-3xl">
             {sentence}
           </p>
         ) : (
           <p
+            aria-hidden="true"
             // key 가 바뀌면 자식 span 들이 새로 마운트되며 등장 애니메이션이 다시 돈다
             key={index}
-            className="font-display flex flex-wrap items-baseline gap-x-[0.35em] gap-y-1 py-6 text-[clamp(2.25rem,7.5vw,5.25rem)] leading-[1.15] tracking-tight"
+            className="font-display flex flex-wrap items-baseline gap-x-[0.35em] gap-y-1 py-6 text-[clamp(1.75rem,5.2vw,3.5rem)] leading-[1.15] tracking-tight"
           >
             {frame.words.map((w, wi) => (
               <span
@@ -109,12 +93,17 @@ export default function PromoBand() {
                 className="animate-promo-word inline-block"
                 style={{ animationDelay: `${wi * 170}ms` }}
               >
+                {/* 강조는 색을 바꾸는 대신 초록 마커를 깐다.
+                    연초록 글자를 연초록 면에 얹었더니 강조 단어가 오히려 가장
+                    흐리게 읽혔다 (대비 2.6:1). 지금은 강조어가 가장 진하다 */}
                 <span
-                  className={
+                  className={w.accent ? "px-1" : undefined}
+                  style={
                     w.accent
-                      ? isBrand
-                        ? "text-accent"
-                        : "text-brand"
+                      ? {
+                          backgroundImage:
+                            "linear-gradient(transparent 62%, var(--brand-light) 62%, var(--brand-light) 94%, transparent 94%)",
+                        }
                       : undefined
                   }
                 >
@@ -128,17 +117,34 @@ export default function PromoBand() {
         {/* 진행 눈금 — 이 밴드가 "한 문장을 나눠 보여주는 중"임을 알린다.
             레퍼런스엔 없지만, 없으면 문장 일부만 깜빡이는 것처럼 읽힌다 */}
         {!reduced && frames.length > 1 && (
-          <span className="ml-auto hidden shrink-0 items-center gap-1.5 pl-6 sm:flex">
+          <span className="ml-auto flex shrink-0 items-center gap-2.5 pl-4 sm:gap-3 sm:pl-6">
             {frames.map((_, i) => (
               <span
                 key={i}
-                className={`h-1 rounded-full transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-                  i === index
-                    ? `w-7 ${isBrand ? "bg-white" : "bg-brand"}`
-                    : `w-2 ${isBrand ? "bg-white/35" : "bg-brand/25"}`
+                className={`h-1 rounded-full bg-brand transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                  i === index ? "w-7" : "w-2 opacity-25"
                 }`}
               />
             ))}
+            {/* 이 버튼만 aria-hidden 밖에 있어야 하므로, 바깥 래퍼의
+                aria-hidden 을 믿지 말고 여기서 직접 레이블을 단다 */}
+            <button
+              type="button"
+              onClick={() => setPaused((v) => !v)}
+              aria-label={paused ? "문구 자동 넘김 다시 시작" : "문구 자동 넘김 멈춤"}
+              className="flex size-7 cursor-pointer items-center justify-center rounded-full border border-line-strong bg-white text-brand-dark transition-colors hover:border-brand"
+            >
+              {paused ? (
+                <svg width="11" height="12" viewBox="0 0 11 12" fill="currentColor" aria-hidden="true">
+                  <path d="M1 1l9 5-9 5z" />
+                </svg>
+              ) : (
+                <svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor" aria-hidden="true">
+                  <rect x="0" y="0" width="3.2" height="12" rx="1" />
+                  <rect x="6.8" y="0" width="3.2" height="12" rx="1" />
+                </svg>
+              )}
+            </button>
           </span>
         )}
       </div>

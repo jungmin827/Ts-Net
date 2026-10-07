@@ -1,7 +1,12 @@
-import Image from "next/image";
-import { SITE } from "@/lib/site-config";
-import Icon from "@/components/ui/Icon";
+"use client";
 
+import Image from "next/image";
+import { useState } from "react";
+import { SITE, hasTel } from "@/lib/site-config";
+import Icon from "@/components/ui/Icon";
+import LeadForm from "@/components/forms/LeadForm";
+
+/** 폼 카드 아래 신뢰 문구 — 번호를 남길지 망설이는 순간에 읽히는 자리 */
 const TRUST_CHIPS = [
   { icon: "bolt" as const, label: "접수 후 순차 연락" },
   { icon: "compare" as const, label: "통신사 4사 조건 비교" },
@@ -9,29 +14,87 @@ const TRUST_CHIPS = [
 ];
 
 /**
- * 히어로 — 단색 그라데이션 한 장이던 것을 레이어로 쌓아 깊이를 만든다.
- * (1) 사선 그라데이션 → (2) 두 개의 방사형 광원 → (3) 격자 패턴 → (4) 하단 페이드
- * 배경 이미지를 넣을 경우 (1)과 (2) 사이 레이어로 삽입한다.
+ * 히어로 — 왼쪽은 브랜드 약속, 오른쪽은 접수 폼.
+ *
+ * 왼쪽 구성은 시안 `docs/태산넷 메인 좌측 영역.pdf` 를 옮긴 것이다.
+ * 시안을 이미지로 붙이지 않고 텍스트 + CSS 로 다시 그린 이유 —
+ * 문구 수정·모바일 줄바꿈·검색 노출이 전부 살아 있어야 하기 때문이다
+ * (`SITE.hero.background` 주석의 "글자가 박힌 이미지는 넣지 마라"와 같은 이유).
+ *
+ * 시안에서 뽑은 값
+ * - 글자색 `#1c2c24` → `--foreground`, 초록 `#24843c` → `--brand-dark`,
+ *   좌상단 바 `#2c9c54` → `--brand`, 점 격자 `#c4dccc` → `--line-strong`
+ * - 좌여백 8.8%, 제목:본문 잉크 높이 1.74:1, 블록 간격 5.3~7.9%
  */
+
+/** 시안 우상단의 점 격자. 6×5 로 깔고 오른쪽 위로 흐려지게 둔다 */
+function DotGrid() {
+  return (
+    <span
+      aria-hidden="true"
+      className="pointer-events-none absolute top-1 right-1 hidden h-[90px] w-[108px] lg:block"
+      style={{
+        backgroundImage:
+          "radial-gradient(circle, var(--line-strong) 1.5px, transparent 1.6px)",
+        backgroundSize: "18px 18px",
+      }}
+    />
+  );
+}
+
+/** 마무리 문구 오른쪽으로 뻗는 점선 화살표 — 시선을 폼 쪽으로 넘긴다 */
+function DashedArrow() {
+  return (
+    <span
+      aria-hidden="true"
+      className="hidden min-w-0 flex-1 items-center text-brand sm:flex"
+    >
+      {/* 선은 늘어나도 되지만 화살촉은 늘어나면 안 된다 — 둘을 분리한다 */}
+      <span className="h-0 flex-1 border-t-2 border-dashed border-current" />
+      <svg
+        width="13"
+        height="12"
+        viewBox="0 0 13 12"
+        className="-ml-px shrink-0"
+        fill="currentColor"
+      >
+        <path d="M0 0.5 L12.5 6 L0 11.5 Z" />
+      </svg>
+    </span>
+  );
+}
+
+/** 좁은 화면에서는 강제 줄바꿈을 풀고 자연 줄바꿈에 맡긴다 */
+function Lines({ lines }: { lines: readonly string[] }) {
+  return (
+    <>
+      {lines.map((line, i) => (
+        <span key={line}>
+          {line}
+          {i < lines.length - 1 && (
+            <>
+              {" "}
+              <br className="hidden md:inline" />
+            </>
+          )}
+        </span>
+      ))}
+    </>
+  );
+}
+
 export default function Hero() {
   const bg = SITE.hero.background;
-  const o = SITE.hero.overlay;
+  const scrim = SITE.hero.overlay;
+  const p = SITE.heroPitch;
+  const [carrier, setCarrier] = useState<string>("");
 
   return (
-    // 배경 이미지가 없으면 초록 그라데이션만 쓴다.
-    // 광원은 blur 필터가 아니라 radial-gradient 레이어로 만든다 —
-    // 같은 결과를 내면서 필터 합성 비용이 없다 (모바일 성능 요구사항).
     <section
-      className="relative isolate overflow-hidden text-white"
-      style={{
-        backgroundImage: [
-          "radial-gradient(55rem 38rem at 88% -12%, rgba(163,240,180,0.5), transparent 62%)",
-          "radial-gradient(42rem 32rem at -8% 118%, rgba(120,214,150,0.34), transparent 62%)",
-          "linear-gradient(135deg, var(--brand-deep) 0%, var(--brand-dark) 52%, var(--brand) 100%)",
-        ].join(","),
-      }}
+      id="consult"
+      className="relative isolate scroll-mt-20 overflow-hidden bg-white"
     >
-      {/* 운영자가 제작한 배경 템플릿. LCP 요소라 priority 로 먼저 받아온다 */}
+      {/* 배경 이미지를 쓰는 경우에만 깔린다. 흰 스크림을 덮어 본문이 검은 글씨로 읽히게 한다 */}
       {bg && (
         <>
           <Image
@@ -43,74 +106,137 @@ export default function Hero() {
             className="-z-10 object-cover"
             style={{ objectPosition: SITE.hero.backgroundPosition }}
           />
-          {/* 초록 오버레이 — 사진 위에서도 흰 글씨가 읽히게 한다.
-              왼쪽(글자가 놓이는 쪽)을 더 진하게 눌러 대비를 확보한다 */}
           <div
             aria-hidden="true"
             className="absolute inset-0 -z-10"
             style={{
-              background: `linear-gradient(100deg, rgba(20,83,43,${o}) 0%, rgba(35,128,63,${o * 0.85}) 55%, rgba(47,158,82,${o * 0.7}) 100%)`,
+              background: `linear-gradient(100deg, rgba(255,255,255,${scrim}) 0%, rgba(255,255,255,${Math.min(scrim + 0.14, 1)}) 48%, rgba(255,255,255,${scrim * 0.72}) 100%)`,
             }}
           />
         </>
       )}
-      {/* 격자 — 아주 옅게 깔아 면이 비어 보이지 않게 */}
+
+      {/* 면은 찬 뉴트럴로 아주 옅게만 깐다.
+          초록 워시를 큰 면적에 깔면 "흰 바탕 + 초록 점" 구조가 무너진다
+          (레퍼런스 실측: 배경 면적의 90%가 순백, 포인트색은 배경 상위 10위에 없음).
+          초록은 좌상단 바·점격자·강조 글자·CTA 네 군데에만 남긴다. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-[0.07]"
+        className="pointer-events-none absolute inset-0 -z-10"
         style={{
           backgroundImage:
-            "linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)",
-          backgroundSize: "48px 48px",
-          maskImage:
-            "radial-gradient(ellipse 80% 60% at 50% 40%, #000 40%, transparent 100%)",
+            "linear-gradient(180deg, #f7fafc 0%, #fdfefe 58%, #ffffff 100%)",
         }}
       />
 
-      <div className="relative mx-auto max-w-6xl px-4 py-16 md:py-24">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-3.5 py-1.5 text-xs font-bold backdrop-blur-sm">
-          <Icon name="bolt" size={14} />
-          KT · SK · LG · KT스카이라이프
-        </span>
+      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 md:py-16 lg:grid-cols-12 lg:gap-12 lg:py-16">
+        {/* ── 왼쪽: 브랜드 약속 (시안) ──────────────────── */}
+        <div className="relative flex flex-col lg:col-span-7">
+          <DotGrid />
 
-        <h1 className="mt-5 max-w-3xl text-[2rem] leading-[1.25] font-black md:text-5xl md:leading-[1.2]">
-          {SITE.hero.headline}
-        </h1>
-        <p className="mt-4 max-w-2xl text-base text-white/80 md:text-xl">
-          {SITE.hero.sub}
-        </p>
+          {/* 시안 좌상단의 짧은 초록 바 */}
+          <span
+            aria-hidden="true"
+            className="block h-1 w-12 rounded-full bg-brand"
+          />
 
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <a
-            href="#consult"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-7 py-4 text-lg font-black text-accent-ink shadow-accent transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:bg-accent-dark hover:shadow-float active:translate-y-0"
-          >
-            {SITE.hero.cta}
-            <Icon name="arrowRight" size={20} />
-          </a>
-          <a
-            href={`tel:${SITE.tel}`}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/10 px-7 py-4 text-lg font-bold text-white backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-white/50 hover:bg-white/20 active:translate-y-0"
-          >
-            <Icon name="phone" size={19} />
-            {SITE.tel}
-          </a>
+          <h1 className="mt-10 text-[1.75rem] leading-[1.3] font-black tracking-tight text-foreground md:mt-16 md:text-[2.25rem]">
+            {p.titleParts[0]}
+            <span className="text-brand-dark">{p.titleParts[1]}</span>
+            {p.titleParts[2]}
+          </h1>
+
+          <p className="mt-6 text-base leading-[1.7] text-foreground md:mt-8 md:text-[1.0625rem]">
+            <Lines lines={p.intro} />
+          </p>
+
+          {/* 이 두 줄이 카피에서 가장 센 부분이다 — 자신감의 근거라 굵게 간다 */}
+          <p className="mt-6 text-base leading-[1.7] font-bold text-foreground md:text-[1.0625rem]">
+            {p.emphasis.map(([accent, rest], i) => (
+              <span key={accent}>
+                <span className="text-brand-dark">{accent}</span>
+                {rest}
+                {i < p.emphasis.length - 1 && (
+                  <>
+                    {" "}
+                    <br className="hidden md:inline" />
+                  </>
+                )}
+              </span>
+            ))}
+          </p>
+
+          <p className="mt-6 text-base leading-[1.7] text-foreground md:text-[1.0625rem]">
+            <Lines lines={p.outro} />
+          </p>
+
+          <p className="mt-9 flex items-center gap-5 md:mt-11">
+            <span className="shrink-0 text-2xl font-black tracking-tight text-brand-dark md:text-[2rem]">
+              {p.closing}
+            </span>
+            <DashedArrow />
+          </p>
+
+          {/* 폼이 길어 좌측 열 아래에 372px 가 비었다 — 화면에서 가장 비싼 자리다.
+              전화 수단과 신뢰 문구를 여기로 내려 채운다. `mt-auto` 로 바닥에 붙여,
+              폼 높이가 바뀌어도 둘의 아랫선이 맞는다. 모바일에서는 세로로 쌓이므로
+              여분 높이가 없어 그냥 마지막 문구 뒤에 따라붙는다. */}
+          <div className="mt-10 lg:mt-auto lg:pt-12">
+            {/* 대표번호가 설정되지 않았으면 전화 수단을 아예 내린다 —
+                무효 번호로 연결되는 버튼은 없는 편이 낫다 */}
+            {hasTel() && (
+            <a
+              href={`tel:${SITE.tel}`}
+              className="inline-flex items-center gap-3 rounded-xl border-2 border-brand/30 bg-white px-6 py-3.5 transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:border-brand hover:shadow-card"
+            >
+              <span className="flex size-9 items-center justify-center rounded-full bg-brand-light text-brand-deep">
+                <Icon name="phone" size={18} />
+              </span>
+              <span className="flex flex-col items-start leading-none">
+                <span className="text-[11px] font-bold text-muted">
+                  통화가 편하시면
+                </span>
+                <span className="tabular mt-1 text-xl font-black text-brand-deep">
+                  {SITE.tel}
+                </span>
+              </span>
+            </a>
+            )}
+
+            <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2.5">
+              {TRUST_CHIPS.map((c) => (
+                <li
+                  key={c.label}
+                  className="flex items-center gap-1.5 text-[0.8125rem] font-medium text-muted"
+                >
+                  <Icon name={c.icon} size={15} className="text-brand-dark" />
+                  {c.label}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
-        {/* 신뢰 칩 — 히어로 하단의 빈 공간을 메우면서 불안 요소를 미리 해소 */}
-        <ul className="mt-10 flex flex-wrap gap-x-6 gap-y-3">
-          {TRUST_CHIPS.map((c) => (
-            <li
-              key={c.label}
-              className="flex items-center gap-2 text-sm font-medium text-white/85"
-            >
-              <span className="flex size-7 items-center justify-center rounded-lg bg-white/15">
-                <Icon name={c.icon} size={16} />
+        {/* ── 오른쪽: 접수 폼 ──────────────────────────── */}
+        <div className="lg:col-span-5">
+          <div className="rounded-panel border-2 border-line bg-white p-6 shadow-lift md:p-7">
+            <div className="mb-5 flex items-center gap-3">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-brand-dark text-white shadow-brand">
+                <Icon name="clipboard" size={22} />
               </span>
-              {c.label}
-            </li>
-          ))}
-        </ul>
+              <p className="text-xl leading-snug font-black text-foreground">
+                최적의 인터넷 요금 상담 받기
+              </p>
+            </div>
+
+            <LeadForm
+              variant="full"
+              carrier={carrier}
+              onCarrierChange={setCarrier}
+            />
+          </div>
+
+        </div>
       </div>
     </section>
   );

@@ -21,7 +21,7 @@ export default function SectionHeading({
           className={`mb-3 inline-block rounded-full px-3.5 py-1.5 text-xs font-bold tracking-wide ${
             tone === "dark"
               ? "bg-white/15 text-white"
-              : "bg-brand-light text-brand"
+              : "bg-brand-light text-brand-deep"
           }`}
         >
           {eyebrow}

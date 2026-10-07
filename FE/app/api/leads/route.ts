@@ -7,7 +7,7 @@ import {
   maskPhone,
 } from "@/lib/crypto";
 import { verifyTurnstile } from "@/lib/turnstile";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { publicClient } from "@/lib/supabase/public";
 
 // 접수 파이프라인 — docs/SPEC.md §2 순서 그대로. 하나라도 실패하면 즉시 중단.
 // 알림 발송 단계는 없다 (운영자가 어드민에서만 확인).
@@ -20,7 +20,31 @@ function clientIp(req: NextRequest): string | null {
   return fwd ? fwd.split(",")[0].trim() : null;
 }
 
+/**
+ * 어떤 예외가 나도 **JSON 으로 응답한다.**
+ *
+ * 예전에는 라우트 안에서 던져진 예외가 그대로 올라가 Next 기본 HTML 에러
+ * 페이지가 나갔다. 클라이언트는 `res.json()` 을 호출하므로 거기서 다시 터져,
+ * 사용자는 아무 안내 없이 폼이 멈춘 것처럼 보였다.
+ * 접수 실패는 조용히 끝나면 안 된다 — 이 사이트의 유일한 기능이기 때문이다.
+ */
 export async function POST(req: NextRequest) {
+  try {
+    return await handlePost(req);
+  } catch (e) {
+    // 전화번호 등 개인정보는 로그에 남기지 않는다 — 예외 메시지만
+    console.error(
+      "[/api/leads] 처리 중 예외:",
+      e instanceof Error ? e.message : String(e),
+    );
+    return NextResponse.json(
+      { ok: false, error: "접수에 실패했습니다. 잠시 후 다시 시도해 주세요" },
+      { status: 500 },
+    );
+  }
+}
+
+async function handlePost(req: NextRequest) {
   let body: unknown;
   try {
     body = await req.json();
@@ -56,23 +80,44 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const supabase = createAdminClient();
+  /**
+   * 접수 경로는 **anon 키 하나로 완결된다.**
+   *
+   * INSERT 는 `leads_public_insert` 정책이 허용하고, 레이트리밋 건수는
+   * `lead_rate_count()` (security definer, 정수만 반환) 가 돌려준다.
+   * 공개 엔드포인트가 RLS 를 통째로 우회하는 service_role 키를 쥘 이유가 없다.
+   *
+   * 예전에는 라우트 첫 줄에서 `createAdminClient()` 를 불러, 키가 없으면
+   * **접수 자체가 500 으로 전면 중단**됐다. 사이트의 유일한 목적이 연락처
+   * 수집인데 부가 통제 하나 때문에 본 기능이 죽는 구조였다.
+   */
+  const supabase = publicClient();
+  if (!supabase) {
+    console.error("[/api/leads] Supabase anon 키 미설정 — 접수 불가");
+    return NextResponse.json(
+      { ok: false, error: "접수에 실패했습니다. 잠시 후 다시 시도해 주세요" },
+      { status: 500 },
+    );
+  }
 
   // 4. Rate limit — 동일 IP 10분 내 3건 초과 시 429
   if (ip) {
     const since = new Date(Date.now() - RATE_LIMIT_WINDOW_MS).toISOString();
-    const { count, error: countError } = await supabase
-      .from("leads")
-      .select("id", { count: "exact", head: true })
-      .eq("ip", ip)
-      .gte("created_at", since);
+    const { data: recent, error: countError } = await supabase.rpc(
+      "lead_rate_count",
+      { p_ip: ip, p_since: since },
+    );
+
     if (countError) {
-      return NextResponse.json(
-        { ok: false, error: "일시적인 오류입니다. 잠시 후 다시 시도해 주세요" },
-        { status: 500 },
+      // 마이그레이션 006 미적용 등으로 함수를 못 부르는 경우.
+      // 접수를 막지는 않되 **조용히 넘어가지 않는다** — 통제가 꺼진 상태는
+      // 운영자가 반드시 알아야 한다 (console.warn 이 아니라 error).
+      console.error(
+        "[/api/leads] 레이트리밋 미작동 — lead_rate_count 호출 실패:",
+        countError.code,
+        countError.message,
       );
-    }
-    if ((count ?? 0) >= RATE_LIMIT_MAX) {
+    } else if ((recent ?? 0) >= RATE_LIMIT_MAX) {
       return NextResponse.json(
         { ok: false, error: "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요" },
         { status: 429 },

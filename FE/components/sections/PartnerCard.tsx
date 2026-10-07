@@ -15,7 +15,7 @@ export default function PartnerCard() {
       <div className="mx-auto max-w-6xl px-4">
         <div className="flex flex-col items-start gap-5 rounded-panel border border-brand/15 bg-brand-light/60 p-7 md:flex-row md:items-center md:justify-between md:p-8">
           <div className="flex items-start gap-4">
-            <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-brand text-white shadow-brand">
+            <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-brand-dark text-white shadow-brand">
               <Icon name="card" size={24} />
             </span>
             <div>
@@ -47,7 +47,7 @@ export default function PartnerCard() {
               <Icon
                 name="check"
                 size={17}
-                className="mt-0.5 shrink-0 text-brand"
+                className="mt-0.5 shrink-0 text-brand-dark"
               />
               {d}
             </li>

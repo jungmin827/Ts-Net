@@ -2,19 +2,23 @@
 
 /** 인풋·셀렉트 공통. 포커스 시 테두리 + 링이 함께 들어와 경계가 또렷해진다 */
 export const fieldBase =
-  "w-full rounded-xl border border-line-strong bg-white px-4 py-3.5 text-base text-foreground transition-all duration-200 outline-none placeholder:text-slate-400 hover:border-brand/40 focus:border-brand focus:ring-4 focus:ring-brand/15";
+  "w-full rounded-xl border border-line-strong bg-white px-4 py-3.5 text-base text-foreground transition-all duration-200 outline-none placeholder:text-faint hover:border-brand/40 focus:border-brand focus:ring-4 focus:ring-brand/15";
 
 export const fieldError =
   "border-red-400 focus:border-red-500 focus:ring-red-500/15";
 
-/** 셀렉트는 기본 화살표를 숨기고 커스텀 셰브론을 쓴다 */
-export const selectBase = `${fieldBase} cursor-pointer appearance-none bg-[url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")] bg-[length:20px] bg-[position:right_1rem_center] bg-no-repeat pr-11`;
+/** 셀렉트는 기본 화살표를 숨기고 커스텀 셰브론을 쓴다.
+    셰브론 자체는 globals.css 의 `.select-chevron` — Tailwind 임의값 URL 안 공백 때문에
+    유틸리티가 생성되지 않아 화살표가 사라지던 문제가 있었다. */
+export const selectBase = `${fieldBase} select-chevron cursor-pointer appearance-none pr-11`;
 
 interface ConsentProps {
   checked: boolean;
   onChange: (v: boolean) => void;
   required?: boolean;
   children: React.ReactNode;
+  /** 동의 문구 아래에 작게 깔리는 법정 고지 항목들 */
+  detail?: readonly string[];
 }
 
 /**
@@ -26,6 +30,7 @@ export function ConsentCheck({
   onChange,
   required = false,
   children,
+  detail,
 }: ConsentProps) {
   return (
     <label
@@ -43,11 +48,22 @@ export function ConsentCheck({
       />
       <span className={required ? "text-foreground" : "text-muted"}>
         <span
-          className={`mr-1 font-bold ${required ? "text-brand" : "text-slate-400"}`}
+          className={`mr-1 font-bold ${required ? "text-brand-dark" : "text-faint"}`}
         >
           [{required ? "필수" : "선택"}]
         </span>
         {children}
+        {/* 법정 고지는 동의 문구보다 한 단 작게 깔아 위계를 만든다.
+            작아도 읽히긴 해야 하므로 11px 아래로는 내리지 않는다 */}
+        {detail && (
+          <span className="mt-1.5 block text-[11px] leading-[1.6] text-muted">
+            {detail.map((d) => (
+              <span key={d} className="block">
+                {d}
+              </span>
+            ))}
+          </span>
+        )}
       </span>
     </label>
   );

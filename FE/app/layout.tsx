@@ -23,8 +23,8 @@ const jua = Jua({
 export const metadata: Metadata = {
   // TODO: 상호·대표 카피 확정 후 교체. metadataBase는 도메인 연결 시 설정
   title: {
-    default: "TS넷 — 인터넷·TV 가입 상담센터",
-    template: "%s | TS넷",
+    default: "TS-Net — 인터넷·TV 가입 상담센터",
+    template: "%s | TS-Net",
   },
   description:
     "KT · SK · LG · KT스카이라이프 인터넷/IPTV 신규가입 상담 접수",

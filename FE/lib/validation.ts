@@ -28,7 +28,12 @@ export const leadSchema = z.object({
   carrier: z.enum(CARRIERS).optional(),
   product: z.enum(PRODUCTS).optional(),
   memo: z.string().max(500).optional(),
-  consent_privacy: z.literal(true), // 개인정보 수집·이용 동의 — 필수
+  // 개인정보 수집·이용 동의 — 필수.
+  // 메시지를 지정하지 않으면 zod 기본 문구("Invalid input: expected true")가
+  // 그대로 사용자에게 노출된다. 한국어 UI 규칙 위반이자 무슨 뜻인지도 알 수 없다.
+  consent_privacy: z.literal(true, {
+    message: "개인정보 수집·이용에 동의해 주세요",
+  }),
   consent_marketing: z.boolean().default(false), // 마케팅 수신 동의 — 선택. 개인정보 동의와 체크박스 분리 필수
   turnstileToken: z.string().min(1),
   // honeypot — 봇이 채우는 숨김 필드. 값이 있으면 200 반환 후 조용히 폐기

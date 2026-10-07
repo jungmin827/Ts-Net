@@ -1,3 +1,19 @@
+-- ⚠⚠⚠ 폐기 (2026-10-08) — 실행하지 말 것 ⚠⚠⚠
+--
+-- 대체 파일: BE/supabase/seed/plans_damoa_2026-10-08.sql (72행, 이 파일은 50행)
+--
+-- 폐기 사유 2가지
+--  1) 이 파일의 description 컬럼에 레퍼런스 사이트의 마케팅 카피가 그대로
+--     들어 있었다. CLAUDE.md 규칙 5(레퍼런스의 문구를 복제하지 않는다) 위반이라
+--     2026-10-08 에 전부 NULL 로 비웠다. 금액 데이터는 손대지 않았다.
+--  2) 인터넷/TV 단독 요금 22행이 빠져 있다. 요금표에 없고 페이지 내 요금계산기
+--     JS 에만 있던 값이라, 신규 시드에서 보강했다.
+--
+-- 참고: 이 파일의 출처는 헤더에 "레퍼런스 사이트"로만 적혀 있었으나,
+--       신규 수집 결과 겹치는 50행의 금액이 인터넷다모아와 100% 일치했다.
+--       즉 원래부터 다모아 기준이었다.
+-- =====================================================================
+
 -- =====================================================================
 -- plans 시드 — 통신사 4사 요금표 (list_fee·tv_option 포함)
 --
@@ -27,9 +43,9 @@ insert into plans
   (carrier, category, name, speed, tv_option, monthly_fee, list_fee,
    contract_months, gift_amount, description, sort_order, is_active)
 values
-  ('KT', 'BUNDLE', '인터넷와이드', '500M+WIFI포함', 'TV베이직', 45100, 50600, 36, NULL, '끊김 없이, 빠르게! 유선통신 중심 DPS', 1, true),
-  ('KT', 'BUNDLE', 'KT 오피스넷', '500M', 'TV모든G', 50600, 56100, 36, NULL, '속도와 안정성의 만남, 유선 DPS 솔루션!', 2, true),
-  ('KT', 'BUNDLE', '프리미엄 결합', '1G', 'TV모든G', 55000, 60500, 36, NULL, '미세한 변화까지 감지하는 스마트 TPS!', 3, true),
+  ('KT', 'BUNDLE', '인터넷와이드', '500M+WIFI포함', 'TV베이직', 45100, 50600, 36, NULL, NULL, 1, true),
+  ('KT', 'BUNDLE', 'KT 오피스넷', '500M', 'TV모든G', 50600, 56100, 36, NULL, NULL, 2, true),
+  ('KT', 'BUNDLE', '프리미엄 결합', '1G', 'TV모든G', 55000, 60500, 36, NULL, NULL, 3, true),
   ('KT', 'BUNDLE', '100M+WIFI+TV베이직', '100M', 'TV베이직', 39600, 39600, 36, NULL, NULL, 10, true),
   ('KT', 'BUNDLE', '500M+WIFI+TV베이직', '500M', 'TV베이직', 45100, 50600, 36, NULL, NULL, 11, true),
   ('KT', 'BUNDLE', '1G+WIFI+TV베이직', '1G', 'TV베이직', 49500, 56000, 36, NULL, NULL, 12, true),
@@ -39,9 +55,9 @@ values
   ('KT', 'MOBILE', '거의 안씀(5G 슬림 4GB)', NULL, NULL, 24750, 27750, 36, NULL, NULL, 50, true),
   ('KT', 'MOBILE', '기본 데이터(5G 슬림 10GB)', NULL, NULL, 34750, 37500, 36, NULL, NULL, 51, true),
   ('KT', 'MOBILE', '완전 무제한(5G 베이직)', NULL, NULL, 53000, 60000, 36, NULL, NULL, 52, true),
-  ('SK', 'BUNDLE', '베이직 결합', '500M+WIFI포함', 'TV이코노미', 42900, 50600, 36, NULL, '끊김 없이, 빠르게! 유선통신 중심 DPS', 1, true),
-  ('SK', 'BUNDLE', '스탠다드 결합', '500M+WIFI포함', 'TV스탠다드', 46200, 53900, 36, NULL, '속도와 안정성의 만남, 유선 DPS 솔루션!', 2, true),
-  ('SK', 'BUNDLE', '프리미엄 결합', '1G+WIFI포함', 'TV올플', 60500, 68200, 36, NULL, '미세한 변화까지 감지하는 스마트 TPS!', 3, true),
+  ('SK', 'BUNDLE', '베이직 결합', '500M+WIFI포함', 'TV이코노미', 42900, 50600, 36, NULL, NULL, 1, true),
+  ('SK', 'BUNDLE', '스탠다드 결합', '500M+WIFI포함', 'TV스탠다드', 46200, 53900, 36, NULL, NULL, 2, true),
+  ('SK', 'BUNDLE', '프리미엄 결합', '1G+WIFI포함', 'TV올플', 60500, 68200, 36, NULL, NULL, 3, true),
   ('SK', 'BUNDLE', '100M+WIFI+TV이코노미', '100M', 'TV이코노미', 36300, 39600, 36, NULL, NULL, 10, true),
   ('SK', 'BUNDLE', '500M+WIFI+TV이코노미', '500M', 'TV이코노미', 48400, 50600, 36, NULL, NULL, 11, true),
   ('SK', 'BUNDLE', '1G+WIFI+TV이코노미', '1G', 'TV이코노미', 48400, 56100, 36, NULL, NULL, 12, true),
@@ -54,9 +70,9 @@ values
   ('SK', 'MOBILE', '거의 안씀(5G 컴팩트 6GB)', NULL, NULL, 29250, 39000, 36, NULL, NULL, 50, true),
   ('SK', 'MOBILE', '기본 데이터(5G 컴팩트플러스 8GB)', NULL, NULL, 33750, 45000, 36, NULL, NULL, 51, true),
   ('SK', 'MOBILE', '완전 무제한(5G 프라임)', NULL, NULL, 66750, 89000, 36, NULL, NULL, 52, true),
-  ('LG', 'BUNDLE', '베이직 결합', '500MB+WIFI포함', 'TV 실속형', 45100, 52800, 36, NULL, '끊김 없이, 빠르게! 유선통신 중심 DPS', 1, true),
-  ('LG', 'BUNDLE', '스탠다드 결합', '500MB+WIFI포함', 'TV 프리미엄', 48400, 57200, 36, NULL, '속도와 안정성의 만남, 유선 DPS 솔루션!', 2, true),
-  ('LG', 'BUNDLE', '프리미엄 결합', '1G+WIFI포함', 'TV 프리미엄', 53900, 61600, 36, NULL, '미세한 변화까지 감지하는 스마트 TPS!', 3, true),
+  ('LG', 'BUNDLE', '베이직 결합', '500MB+WIFI포함', 'TV 실속형', 45100, 52800, 36, NULL, NULL, 1, true),
+  ('LG', 'BUNDLE', '스탠다드 결합', '500MB+WIFI포함', 'TV 프리미엄', 48400, 57200, 36, NULL, NULL, 2, true),
+  ('LG', 'BUNDLE', '프리미엄 결합', '1G+WIFI포함', 'TV 프리미엄', 53900, 61600, 36, NULL, NULL, 3, true),
   ('LG', 'BUNDLE', '100M+WIFI+TV실속형', '100M', 'TV실속형', 29600, 41800, 36, NULL, NULL, 10, true),
   ('LG', 'BUNDLE', '500M+WIFI+TV실속형', '500M', 'TV실속형', 45100, 52800, 36, NULL, NULL, 11, true),
   ('LG', 'BUNDLE', '1G+WIFI+TV실속형', '1G', 'TV실속형', 49500, 58300, 36, NULL, NULL, 12, true),
@@ -66,9 +82,9 @@ values
   ('LG', 'MOBILE', '거의 안씀(5G 슬림+)', NULL, NULL, 35250, 47000, 36, NULL, NULL, 50, true),
   ('LG', 'MOBILE', '기본 데이터(5G 심플+)', NULL, NULL, 45750, 61000, 36, NULL, NULL, 51, true),
   ('LG', 'MOBILE', '완전 무제한(5G 프리미엄에센셜)', NULL, NULL, 63750, 85000, 36, NULL, NULL, 52, true),
-  ('SKYLIFE', 'BUNDLE', '베이직 결합', '500MB+WIFI포함', 'TV베이직', 37400, 40700, 36, NULL, '끊김 없이, 빠르게! 유선통신 중심 DPS', 1, true),
-  ('SKYLIFE', 'BUNDLE', '스탠다드 결합', '500MB+WIFI포함', 'TV플러스', 38500, 41800, 36, NULL, '속도와 안정성의 만남, 유선 DPS 솔루션!', 2, true),
-  ('SKYLIFE', 'BUNDLE', '프리미엄 결합', '1G+WIFI포함', 'TV플러스', 44000, 47300, 36, NULL, '미세한 변화까지 감지하는 스마트 TPS!', 3, true),
+  ('SKYLIFE', 'BUNDLE', '베이직 결합', '500MB+WIFI포함', 'TV베이직', 37400, 40700, 36, NULL, NULL, 1, true),
+  ('SKYLIFE', 'BUNDLE', '스탠다드 결합', '500MB+WIFI포함', 'TV플러스', 38500, 41800, 36, NULL, NULL, 2, true),
+  ('SKYLIFE', 'BUNDLE', '프리미엄 결합', '1G+WIFI포함', 'TV플러스', 44000, 47300, 36, NULL, NULL, 3, true),
   ('SKYLIFE', 'BUNDLE', '100M+WIFI+TV베이직', '100M', 'TV베이직', 30800, 34100, 36, NULL, NULL, 10, true),
   ('SKYLIFE', 'BUNDLE', '200M+WIFI+TV베이직', '200M', 'TV베이직', 31900, 35200, 36, NULL, NULL, 11, true),
   ('SKYLIFE', 'BUNDLE', '500M+WIFI+TV베이직', '500M', 'TV베이직', 37400, 40700, 36, NULL, NULL, 12, true),

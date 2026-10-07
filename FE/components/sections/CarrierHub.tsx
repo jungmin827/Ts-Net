@@ -29,7 +29,7 @@ export default function CarrierHub() {
                 />
                 <span
                   className="mb-1 flex size-10 items-center justify-center rounded-xl text-sm font-black text-white"
-                  style={{ backgroundColor: `var(${c.colorVar})` }}
+                  style={{ backgroundColor: `var(${c.inkVar})` }}
                   aria-hidden="true"
                 >
                   {c.code === "SKYLIFE" ? "SKY" : c.code}
@@ -40,7 +40,7 @@ export default function CarrierHub() {
                 <span className="text-sm leading-relaxed text-muted">
                   {c.tagline}
                 </span>
-                <span className="mt-3 flex items-center gap-1 text-sm font-bold text-brand">
+                <span className="mt-3 flex items-center gap-1 text-sm font-bold text-brand-dark">
                   상품 보기
                   <Icon
                     name="arrowRight"

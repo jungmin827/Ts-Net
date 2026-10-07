@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import { PRODUCTS } from "@/lib/validation";
-import { CONSENT, SITE } from "@/lib/site-config";
+import { CONSENT, SITE, hasTel } from "@/lib/site-config";
 import Icon from "@/components/ui/Icon";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
@@ -25,7 +25,7 @@ import { formatPhone, useLeadSubmit } from "./useLeadSubmit";
 const COLLAPSE_KEY = "tsnet_consultbar_collapsed";
 
 const barField =
-  "w-full rounded-lg border border-transparent bg-white px-3 py-2.5 text-sm text-foreground outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-white focus:ring-4 focus:ring-white/25";
+  "w-full rounded-lg border border-line-strong bg-white px-3 py-2.5 text-sm text-foreground outline-none transition-all duration-200 placeholder:text-faint focus:border-brand focus:ring-4 focus:ring-brand/15";
 
 export default function StickyConsultBar() {
   const [product, setProduct] = useState("");
@@ -42,10 +42,21 @@ export default function StickyConsultBar() {
   const [sheet, setSheet] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [detail, setDetail] = useState(false);
+  // 퍼스트뷰에는 이미 히어로 폼이 있다. 바가 처음부터 떠 있으면 히어로 하단을 가리고
+  // 같은 요청을 두 번 하는 꼴이라, 히어로를 지나친 뒤에 올라온다
+  const [visible, setVisible] = useState(false);
   const tsRef = useRef<TurnstileInstance | null>(null);
 
-  const { status, error, submit } = useLeadSubmit();
+  const { status, error, submit, fail } = useLeadSubmit();
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+
+  useEffect(() => {
+    const onScroll = () =>
+      setVisible(window.scrollY > window.innerHeight * 0.72);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   // 접기 상태는 세션 동안 유지 — 닫았는데 페이지마다 다시 뜨면 성가시다
   useEffect(() => {
@@ -67,6 +78,16 @@ export default function StickyConsultBar() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    // 주 CTA 를 회색으로 비활성화해 두지 않는다 — 이유를 알 수 없는 죽은 버튼이
+    // 전 페이지 하단에 상시 노출되는 셈이 된다
+    if (!privacy) {
+      fail("개인정보 수집·이용에 동의해 주세요");
+      return;
+    }
+    if (!token) {
+      fail("자동입력 방지 확인 중입니다. 잠시 후 다시 눌러주세요");
+      return;
+    }
     const ok = await submit({
       name,
       phone,
@@ -84,7 +105,10 @@ export default function StickyConsultBar() {
     tsRef.current?.reset();
   }
 
-  const canSubmit = privacy && !!token && status !== "loading";
+  /** 바가 화면 밖으로 내려가 있을 때 붙는 클래스. 등장은 위로 밀려 올라오는 모션 한 번 */
+  const shell = `transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+    visible ? "translate-y-0" : "translate-y-full"
+  }`;
 
   /**
    * Turnstile 위젯은 이 컴포넌트를 통틀어 **딱 하나만** 마운트한다.
@@ -142,13 +166,13 @@ export default function StickyConsultBar() {
       {turnstile}
 
       {/* ── 데스크톱: 한 줄 폼 ─────────────────────────────── */}
-      <div className="fixed inset-x-0 bottom-0 z-40 hidden lg:block">
+      <div className={`fixed inset-x-0 bottom-0 z-40 hidden lg:block ${shell}`}>
         {collapsed ? (
           <div className="flex justify-center">
             <button
               type="button"
               onClick={() => toggleCollapsed(false)}
-              className="flex cursor-pointer items-center gap-2 rounded-t-xl bg-brand-deep px-6 py-2.5 text-sm font-bold text-white shadow-float transition-colors hover:bg-brand-dark"
+              className="cta-fill flex cursor-pointer items-center gap-2 rounded-t-xl px-6 py-2.5 text-sm font-bold shadow-float transition-colors"
             >
               <Icon name="chat" size={16} />
               빠른 상담 신청
@@ -156,26 +180,33 @@ export default function StickyConsultBar() {
             </button>
           </div>
         ) : (
-          <div className="border-t border-white/10 bg-brand-deep/95 shadow-float backdrop-blur-md">
+          <div className="border-t-2 border-line bg-white/97 shadow-float backdrop-blur-md">
             <form
               onSubmit={handleSubmit}
               onFocusCapture={() => setEngaged(true)}
               className="relative mx-auto flex max-w-6xl items-center gap-2.5 px-4 py-3"
             >
-              <div className="flex shrink-0 items-center gap-2.5 pr-1 text-white">
-                <span className="flex size-9 items-center justify-center rounded-xl bg-white/15">
-                  <Icon name="phone" size={18} />
+              <div className="flex shrink-0 items-center gap-2.5 pr-1 text-foreground">
+                {/* 대표번호가 없으면 수화기 아이콘은 거짓말이 된다 */}
+                <span className="flex size-9 items-center justify-center rounded-xl bg-brand-light text-brand-deep">
+                  <Icon name={hasTel() ? "phone" : "chat"} size={18} />
                 </span>
                 <span>
-                  <span className="block text-[11px] leading-none text-white/60">
+                  <span className="block text-[11px] leading-none text-muted">
                     빠른 상담신청
                   </span>
-                  <a
-                    href={`tel:${SITE.tel}`}
-                    className="block text-lg leading-tight font-black hover:underline"
-                  >
-                    {SITE.tel}
-                  </a>
+                  {hasTel() ? (
+                    <a
+                      href={`tel:${SITE.tel}`}
+                      className="tabular block text-lg leading-tight font-black text-brand-deep hover:underline"
+                    >
+                      {SITE.tel}
+                    </a>
+                  ) : (
+                    <span className="block text-lg leading-tight font-black text-brand-deep">
+                      상담 신청
+                    </span>
+                  )}
                 </span>
               </div>
 
@@ -183,7 +214,7 @@ export default function StickyConsultBar() {
                 value={product}
                 onChange={(e) => setProduct(e.target.value)}
                 aria-label="관심상품 선택"
-                className={`${barField} w-36 cursor-pointer appearance-none bg-[url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")] bg-[length:18px] bg-[position:right_0.6rem_center] bg-no-repeat pr-8`}
+                className={`${barField} select-chevron-sm w-36 cursor-pointer appearance-none pr-8`}
               >
                 <option value="">관심상품</option>
                 {PRODUCTS.map((p) => (
@@ -217,30 +248,34 @@ export default function StickyConsultBar() {
 
               {hiddenHoneypot}
 
-              <label className="flex shrink-0 cursor-pointer items-center gap-2 text-xs font-medium text-white/85">
+              <label
+                className={`flex shrink-0 cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium text-muted transition-shadow duration-200 ${
+                  error && !privacy ? "ring-2 ring-red-500" : ""
+                }`}
+              >
                 <input
                   type="checkbox"
                   checked={privacy}
                   onChange={(e) => setPrivacy(e.target.checked)}
-                  className="size-4 cursor-pointer accent-accent"
+                  className="size-4 cursor-pointer accent-brand"
                 />
                 <span>
-                  <span className="font-bold text-accent">[필수]</span>{" "}
-                  {CONSENT.privacyLabel}
+                  <span className="font-bold text-brand-dark">[필수]</span>{" "}
+                  {CONSENT.privacyShort}
                 </span>
               </label>
               <button
                 type="button"
                 onClick={() => setDetail(true)}
-                className="shrink-0 cursor-pointer text-xs text-white/55 underline underline-offset-2 hover:text-white"
+                className="shrink-0 cursor-pointer text-xs text-muted underline underline-offset-2 hover:text-brand-dark"
               >
                 자세히
               </button>
 
               <button
                 type="submit"
-                disabled={!canSubmit}
-                className="ml-auto flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-accent px-5 py-2.5 text-sm font-black text-accent-ink shadow-accent transition-all duration-200 hover:-translate-y-0.5 hover:bg-accent-dark active:translate-y-0 disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-white/20 disabled:text-white/50 disabled:shadow-none"
+                disabled={status === "loading"}
+                className="ml-auto flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg cta-fill px-5 py-2.5 text-sm font-black shadow-cta transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 disabled:translate-y-0 disabled:cursor-wait"
               >
                 {status === "loading" ? (
                   <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -254,7 +289,7 @@ export default function StickyConsultBar() {
                 type="button"
                 onClick={() => toggleCollapsed(true)}
                 aria-label="상담 바 접기"
-                className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-white/55 transition-colors hover:bg-white/10 hover:text-white"
+                className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface-muted hover:text-brand-dark"
               >
                 <Icon name="chevronDown" size={18} />
               </button>
@@ -263,7 +298,7 @@ export default function StickyConsultBar() {
             {error && (
               <p
                 role="alert"
-                className="border-t border-white/10 bg-red-500/15 px-4 py-2 text-center text-sm font-medium text-red-100"
+                className="bg-red-600 px-4 py-2 text-center text-sm font-bold text-white"
               >
                 {error}
               </p>
@@ -277,24 +312,24 @@ export default function StickyConsultBar() {
         {sheet && (
           <div
             onClick={() => setSheet(false)}
-            className="fixed inset-0 z-40 bg-slate-900/45"
+            className="fixed inset-0 z-40 bg-brand-deep/45"
             aria-hidden="true"
           />
         )}
 
-        <div className="fixed inset-x-0 bottom-0 z-40">
+        <div className={`fixed inset-x-0 bottom-0 z-40 ${shell}`}>
           {sheet && (
             <div className="animate-slide-down max-h-[70vh] overflow-y-auto rounded-t-panel border-t border-line bg-white p-5 shadow-float">
               <div className="mb-4 flex items-center justify-between">
                 <p className="flex items-center gap-2 text-lg font-black">
-                  <Icon name="chat" size={20} className="text-brand" />
+                  <Icon name="chat" size={20} className="text-brand-dark" />
                   빠른 상담 신청
                 </p>
                 <button
                   type="button"
                   onClick={() => setSheet(false)}
                   aria-label="닫기"
-                  className="flex size-9 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-surface-muted hover:text-brand"
+                  className="flex size-9 cursor-pointer items-center justify-center rounded-lg text-faint transition-colors hover:bg-surface-muted hover:text-brand-dark"
                 >
                   <Icon name="close" size={20} />
                 </button>
@@ -311,7 +346,7 @@ export default function StickyConsultBar() {
                   aria-label="관심상품 선택"
                   className={selectBase}
                 >
-                  <option value="">관심상품 선택 (선택사항)</option>
+                  <option value="">관심상품 선택</option>
                   {PRODUCTS.map((p) => (
                     <option key={p} value={p}>
                       {p}
@@ -321,7 +356,7 @@ export default function StickyConsultBar() {
                 <input
                   className={fieldBase}
                   type="text"
-                  placeholder="이름"
+                  placeholder="이름을 입력해주세요."
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
@@ -332,7 +367,7 @@ export default function StickyConsultBar() {
                   className={fieldBase}
                   type="tel"
                   inputMode="numeric"
-                  placeholder="연락처 (010-0000-0000)"
+                  placeholder="연락처를 입력해주세요."
                   value={phone}
                   onChange={(e) => setPhone(formatPhone(e.target.value))}
                   required
@@ -350,8 +385,8 @@ export default function StickyConsultBar() {
                     className="mt-0.5 size-4 shrink-0 cursor-pointer accent-brand"
                   />
                   <span>
-                    <span className="mr-1 font-bold text-brand">[필수]</span>
-                    {CONSENT.privacyInline}{" "}
+                    <span className="mr-1 font-bold text-brand-dark">[필수]</span>
+                    {CONSENT.privacyLabel}{" "}
                     <button
                       type="button"
                       onClick={(e) => {
@@ -376,11 +411,10 @@ export default function StickyConsultBar() {
 
                 <Button
                   type="submit"
-                  variant="accent"
+                  variant="cta"
                   size="lg"
                   fullWidth
                   loading={status === "loading"}
-                  disabled={!canSubmit}
                 >
                   상담 신청하기
                 </Button>
@@ -390,16 +424,18 @@ export default function StickyConsultBar() {
 
           <nav
             aria-label="빠른 상담"
-            className="grid grid-cols-2 shadow-float"
+            className={`grid shadow-float ${hasTel() ? "grid-cols-2" : "grid-cols-1"}`}
             style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
           >
-            <a
-              href={`tel:${SITE.tel}`}
-              className="flex items-center justify-center gap-2 bg-brand-deep py-4 font-bold text-white transition-colors active:bg-brand-dark"
-            >
-              <Icon name="phone" size={18} />
-              전화 상담
-            </a>
+            {hasTel() && (
+              <a
+                href={`tel:${SITE.tel}`}
+                className="flex items-center justify-center gap-2 border-t-2 border-line bg-white py-4 font-black text-brand-deep transition-colors active:bg-surface-muted"
+              >
+                <Icon name="phone" size={18} />
+                전화 상담
+              </a>
+            )}
             <button
               type="button"
               onClick={() => {
@@ -407,7 +443,7 @@ export default function StickyConsultBar() {
                 setEngaged(true);
               }}
               aria-expanded={sheet}
-              className="flex cursor-pointer items-center justify-center gap-2 bg-accent py-4 font-bold text-accent-ink transition-colors active:bg-accent-dark"
+              className="cta-fill flex cursor-pointer items-center justify-center gap-2 py-4 font-bold transition-colors"
             >
               <Icon name="chat" size={18} />
               상담 신청
@@ -424,18 +460,12 @@ export default function StickyConsultBar() {
       <Modal
         open={detail}
         onClose={() => setDetail(false)}
-        title={CONSENT.privacyLabel}
+        title={CONSENT.privacyShort}
       >
+        {/* 항목이 ①②③④ 로 번호를 가지므로 체크 아이콘을 덧붙이지 않는다 */}
         <ul className="flex flex-col gap-3 text-sm leading-relaxed text-muted">
           {CONSENT.privacyDetail.map((d) => (
-            <li key={d} className="flex gap-2.5">
-              <Icon
-                name="check"
-                size={17}
-                className="mt-0.5 shrink-0 text-brand"
-              />
-              {d}
-            </li>
+            <li key={d}>{d}</li>
           ))}
         </ul>
       </Modal>

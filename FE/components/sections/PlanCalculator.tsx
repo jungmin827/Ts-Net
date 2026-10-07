@@ -7,6 +7,7 @@ import {
   formatWon,
   type Plan,
 } from "@/lib/plans";
+import { PRICE_BASIS_LINE } from "@/lib/legal-notices";
 import { PLAN_DISCLAIMER, type CarrierMenuItem } from "@/lib/site-config";
 import Icon from "@/components/ui/Icon";
 import SectionHeading from "@/components/ui/SectionHeading";
@@ -42,12 +43,12 @@ export default function PlanCalculator({
   const chip = (active: boolean) =>
     `cursor-pointer rounded-full border-2 px-4 py-2.5 text-sm font-bold transition-colors duration-200 ${
       active
-        ? "border-brand bg-brand text-white"
-        : "border-line bg-white text-slate-600 hover:border-brand hover:text-brand"
+        ? "border-brand bg-brand-dark text-white"
+        : "border-line bg-white text-muted hover:border-brand hover:text-brand-dark"
     }`;
 
   return (
-    <section className="bg-brand-soft py-16 md:py-20">
+    <section className="bg-surface-muted py-16 md:py-20">
       <div className="mx-auto max-w-5xl px-4">
         <SectionHeading
           title="내 요금 계산해보기"
@@ -158,7 +159,7 @@ export default function PlanCalculator({
             </div>
 
             {/* 합계 띠 — 이 화면에서 가장 먼저 눈에 들어와야 하는 값 */}
-            <div className="bg-brand px-6 py-5 text-white">
+            <div className="bg-brand-dark px-6 py-5 text-white">
               <p className="text-sm font-medium text-white/85">월 예상 요금</p>
               <p className="tabular mt-1 text-3xl font-black">
                 {total != null ? formatWon(total) : "상담 시 안내"}
@@ -175,9 +176,19 @@ export default function PlanCalculator({
           </div>
         </div>
 
-        <p className="mt-5 text-xs leading-relaxed text-slate-400">
-          {PLAN_DISCLAIMER}
-        </p>
+        {/* 계산 결과 바로 아래에 표시 전제를 붙인다. 금액만 떼어 보면 오해가 생긴다 */}
+        <div className="mt-5 flex flex-col gap-1.5 text-xs leading-relaxed text-muted">
+          <p>{PRICE_BASIS_LINE}</p>
+          <p>{PLAN_DISCLAIMER}</p>
+          <p>
+            <a
+              href="#plan-notice"
+              className="font-bold text-brand-dark underline underline-offset-2"
+            >
+              약정·설치비·사은품 조건 전체 보기
+            </a>
+          </p>
+        </div>
       </div>
     </section>
   );

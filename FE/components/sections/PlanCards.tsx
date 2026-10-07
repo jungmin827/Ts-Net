@@ -44,7 +44,7 @@ export default function PlanCards({
               <div className="flex flex-1 flex-col p-6">
                 <h3 className="text-lg font-bold">{p.name}</h3>
                 {p.speed && (
-                  <p className="mt-1 text-sm font-bold text-brand">{p.speed}</p>
+                  <p className="mt-1 text-sm font-bold text-brand-dark">{p.speed}</p>
                 )}
                 {p.description && (
                   <p className="mt-3 text-sm leading-relaxed text-muted">
@@ -53,6 +53,16 @@ export default function PlanCards({
                 )}
 
                 <dl className="mt-4 flex flex-col gap-1.5 text-sm">
+                  {/* TV 구성은 상품을 가르는 핵심 축인데 그동안 카드에 없었다.
+                      설명문이 비어 있으면(레퍼런스 카피 제거 후 전부 NULL) 카드가
+                      이름·속도·금액만 남아 무엇이 다른 상품인지 알 수 없다.
+                      지어낸 문장 대신 **DB 에 있는 사실**로 메운다. */}
+                  {p.tv_option && (
+                    <div className="flex justify-between gap-3">
+                      <dt className="shrink-0 text-muted">TV 구성</dt>
+                      <dd className="text-right font-medium">{p.tv_option}</dd>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <dt className="text-muted">약정</dt>
                     <dd className="tabular font-medium">
@@ -82,7 +92,7 @@ export default function PlanCards({
               </div>
 
               {/* 요금 띠 — 카드에서 가장 먼저 눈에 들어와야 하는 정보 */}
-              <div className="flex items-baseline justify-between gap-2 bg-brand px-6 py-4 text-white">
+              <div className="flex items-baseline justify-between gap-2 bg-brand-dark px-6 py-4 text-white">
                 <span className="text-sm font-medium text-white/85">월 요금</span>
                 <span className="flex items-baseline gap-2">
                   {p.list_fee != null && p.list_fee !== p.monthly_fee && (

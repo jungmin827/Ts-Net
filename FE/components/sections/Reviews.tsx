@@ -21,8 +21,16 @@ function formatDate(iso: string) {
   });
 }
 
+/**
+ * 평점 별. **평점이 없으면 아무것도 그리지 않는다.**
+ *
+ * 예전에는 `rating ?? 5` 로 NULL 을 만점으로 바꿔 그렸다. 평가가 없는 후기를
+ * 전부 별 다섯 개로 보이게 만드는 코드였고, CLAUDE.md 규칙 1(가짜 데이터를
+ * 생성하지 않는다)의 가장 명백한 위반이었다. 표시광고법 리스크이기도 하다.
+ */
 function Stars({ rating }: { rating: number | null }) {
-  const r = rating ?? 5;
+  if (rating === null || rating <= 0) return null;
+  const r = rating;
   return (
     <span className="flex gap-0.5" aria-label={`5점 만점에 ${r}점`}>
       {[1, 2, 3, 4, 5].map((n) => (
@@ -31,7 +39,7 @@ function Stars({ rating }: { rating: number | null }) {
           name="star"
           size={15}
           filled
-          className={n <= r ? "text-accent" : "text-slate-200"}
+          className={n <= r ? "text-accent" : "text-line-strong"}
         />
       ))}
     </span>
@@ -51,7 +59,7 @@ export default function Reviews({ reviews }: { reviews: ReviewItem[] }) {
           </div>
           <Link
             href="/review"
-            className="group flex shrink-0 items-center gap-1 text-sm font-bold text-brand"
+            className="group flex shrink-0 items-center gap-1 text-sm font-bold text-brand-dark"
           >
             후기 보러가기
             <Icon
@@ -71,19 +79,19 @@ export default function Reviews({ reviews }: { reviews: ReviewItem[] }) {
               >
                 {r.carrier && (
                   <span
-                    className={`mb-2.5 inline-block w-fit rounded-md px-2 py-0.5 text-[11px] font-black text-white ${CARRIER_COLOR[r.carrier] ?? "bg-slate-400"}`}
+                    className={`mb-2.5 inline-block w-fit rounded-md px-2 py-0.5 text-[11px] font-black text-white ${CARRIER_COLOR[r.carrier] ?? "bg-muted"}`}
                   >
                     {r.carrier === "SKYLIFE" ? "SKY" : r.carrier}
                   </span>
                 )}
-                <h3 className="mb-1.5 line-clamp-1 font-bold transition-colors group-hover:text-brand">
+                <h3 className="mb-1.5 line-clamp-1 font-bold transition-colors group-hover:text-brand-dark">
                   {r.title}
                 </h3>
                 <Stars rating={r.rating} />
                 <p className="mt-2.5 line-clamp-3 text-sm leading-relaxed text-muted">
                   {r.content}
                 </p>
-                <p className="mt-auto pt-4 text-xs text-slate-400">
+                <p className="mt-auto pt-4 text-xs text-faint">
                   {formatDate(r.created_at)}
                 </p>
               </Link>

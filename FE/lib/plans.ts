@@ -33,6 +33,27 @@ export const CATEGORY_LABEL: Record<PlanCategory, string> = {
  */
 export const TABLE_SORT_MIN = 10;
 
+/**
+ * 요금제 설명문 차단 스위치.
+ *
+ * 라이브 DB 에 적용된 시드가 폐기된 구 시드(50행)이고, 그중 12행의 `description` 에
+ * 레퍼런스 사이트의 마케팅 카피가 그대로 들어 있다 (CLAUDE.md 규칙 5 위반).
+ *
+ * 화면에서 가리는 것만으로는 부족하다 — 서버 컴포넌트가 클라이언트 컴포넌트로
+ * 넘기는 값은 **RSC 페이로드로 HTML 에 직렬화되어** 페이지 소스에 그대로 남는다.
+ * 그래서 조회 직후 데이터 단계에서 지운다.
+ *
+ * 신규 시드 `BE/supabase/seed/plans_damoa_2026-10-08.sql` 는 해당 행이 전부 NULL 이고
+ * 사실 정보 9건만 남아 있다. **재시드 후 false 로 되돌릴 것** (docs/GOAL_PLAN.md 블로커).
+ */
+export const SUPPRESS_PLAN_DESCRIPTION = true;
+
+/** 차단 스위치가 켜져 있으면 description 을 비운 사본을 돌려준다 */
+function stripDescription(rows: Plan[]): Plan[] {
+  if (!SUPPRESS_PLAN_DESCRIPTION) return rows;
+  return rows.map((r) => (r.description ? { ...r, description: null } : r));
+}
+
 /** 요금표에 실을 행만 추린다 (추천 카드 전용 행 제외) */
 export function tableRows(plans: Plan[]): Plan[] {
   return plans.filter((p) => (p.sort_order ?? 0) >= TABLE_SORT_MIN);
@@ -57,7 +78,7 @@ export async function getPlansByCarrier(carrier: string): Promise<Plan[]> {
     console.error("[plans] 조회 실패:", error.code, error.message);
     return [];
   }
-  return (data as Plan[]) ?? [];
+  return stripDescription((data as Plan[]) ?? []);
 }
 
 /** 카테고리 표시 순서를 고정해 묶는다 (빈 카테고리는 제외) */
@@ -128,4 +149,98 @@ export function findCombo(
   return (
     m.combos.find((p) => p.speed === speed && p.tv_option === tvOption) ?? null
   );
+}
+
+/** 통신사 비교 차트 한 칸 */
+export interface CarrierPrice {
+  carrier: string;
+  /** 그 통신사에서 같은 속도 결합 중 가장 낮은 월요금 */
+  monthly_fee: number;
+  /** 할인 전 총요금 (있으면 취소선으로) */
+  list_fee: number | null;
+  /** 어떤 TV 구성인지 — 같은 속도라도 TV 등급이 달라 반드시 밝혀야 한다 */
+  tv_option: string | null;
+  name: string;
+}
+
+/**
+ * 같은 인터넷 속도의 **인터넷+TV 결합** 중 통신사별 최저가를 모은다.
+ *
+ * 경쟁사가 아니라 **우리가 취급하는 4사끼리** 비교한다. 타사 대비 우위를
+ * 주장하지 않으므로 표시광고법 리스크가 없고, 방문자에게 실제로 쓸모가 있다.
+ *
+ * 통신사마다 TV 구성 등급 체계가 달라 금액을 그냥 나란히 두면 오해를 준다.
+ * 그래서 `tv_option` 을 함께 돌려주고 화면에서 반드시 같이 표기한다.
+ */
+export async function getCarrierPriceComparison(
+  speed = "500M",
+): Promise<CarrierPrice[]> {
+  const supabase = publicClient();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("plans")
+    .select("carrier, name, speed, tv_option, monthly_fee, list_fee, sort_order")
+    .eq("category", "BUNDLE")
+    .eq("speed", speed)
+    .eq("is_active", true)
+    .gte("sort_order", TABLE_SORT_MIN)
+    .not("monthly_fee", "is", null);
+
+  if (error) {
+    console.error("[plans] 비교 조회 실패:", error.code, error.message);
+    return [];
+  }
+
+  const cheapest = new Map<string, CarrierPrice>();
+  for (const row of (data ?? []) as Plan[]) {
+    const fee = row.monthly_fee;
+    if (fee === null) continue;
+    const cur = cheapest.get(row.carrier);
+    if (!cur || fee < cur.monthly_fee) {
+      cheapest.set(row.carrier, {
+        carrier: row.carrier,
+        monthly_fee: fee,
+        list_fee: row.list_fee,
+        tv_option: row.tv_option,
+        name: row.name,
+      });
+    }
+  }
+  return [...cheapest.values()].sort((a, b) => a.monthly_fee - b.monthly_fee);
+}
+
+/**
+ * 같은 카테고리 안에서 인터넷 속도별로 다시 묶는다 (100M < 200M < 500M < 1G).
+ *
+ * 결합표는 속도 × TV 구성의 곱이라 한 통신사에서 6~10행이 된다. 한 번에 다 쌓으면
+ * 읽히지 않으므로 화면에서는 속도 단위로 나눠 접는다. 속도가 없는 행(TV·휴대폰 단독)은
+ * `null` 키 하나로 모은다 — 쪼갤 축이 없는 데이터를 억지로 쪼개지 않는다.
+ */
+export function groupBySpeed(plans: Plan[]): [string | null, Plan[]][] {
+  const keys: (string | null)[] = [];
+  for (const p of plans) {
+    const k = p.speed ?? null;
+    if (!keys.includes(k)) keys.push(k);
+  }
+  keys.sort((a, b) => {
+    if (a === null) return 1;
+    if (b === null) return -1;
+    return speedRank(a) - speedRank(b);
+  });
+  return keys.map(
+    (k) =>
+      [k, plans.filter((p) => (p.speed ?? null) === k)] as [
+        string | null,
+        Plan[],
+      ],
+  );
+}
+
+/** 목록 안 최저 월요금. 값이 하나도 없으면 null (0 으로 둘러대지 않는다) */
+export function minMonthlyFee(plans: Plan[]): number | null {
+  const fees = plans
+    .map((p) => p.monthly_fee)
+    .filter((f): f is number => f != null);
+  return fees.length === 0 ? null : Math.min(...fees);
 }

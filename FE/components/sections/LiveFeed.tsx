@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react";
 import { CARRIER_COLOR } from "@/lib/site-config";
 import SectionHeading from "@/components/ui/SectionHeading";
+import DataPolicy from "./DataPolicy";
 
 // 실시간 신청현황 — 실제 접수 데이터만 마스킹해 노출 (CLAUDE.md 규칙 1).
-// API가 5건 미만이면 빈 배열을 주므로 이 컴포넌트는 섹션 자체를 렌더링하지 않는다.
+// API 가 5건 미만이면 빈 배열을 준다. 그때는 섹션을 비우는 대신
+// DataPolicy 로 교체한다 — 왜 비어 있는지를 말하는 쪽이 공백보다 낫다.
 
 interface FeedItem {
   applied_date: string;
@@ -17,9 +19,9 @@ interface FeedItem {
 
 /** 상태 라벨별 뱃지 색 — 완료 계열은 남색, 진행 계열은 중립 */
 function statusTone(label: string | null) {
-  if (label === "완료" || label === "설치완료") return "bg-brand text-white";
-  if (label === "진행중") return "bg-brand-light text-brand";
-  return "bg-slate-100 text-slate-600";
+  if (label === "완료" || label === "설치완료") return "bg-brand-dark text-white";
+  if (label === "진행중") return "bg-brand-light text-brand-deep";
+  return "bg-surface-muted text-muted";
 }
 
 export default function LiveFeed() {
@@ -32,13 +34,14 @@ export default function LiveFeed() {
       .catch(() => setItems([]));
   }, []);
 
-  if (items.length === 0) return null;
+  // 로딩 중과 '5건 미만'을 구분하지 않는다 — 어느 쪽이든 보여줄 실데이터가 없다
+  if (items.length === 0) return <DataPolicy />;
 
   // 세로 롤링 — 목록을 2배로 이어붙여 -50% 이동을 무한 반복
   const doubled = [...items, ...items];
 
   return (
-    <section className="bg-brand-soft py-16 md:py-20">
+    <section className="bg-surface-muted py-16 md:py-20">
       <div className="mx-auto max-w-4xl px-4">
         <SectionHeading
           title="실시간 신청 현황"
@@ -67,15 +70,15 @@ export default function LiveFeed() {
               {doubled.map((it, i) => (
                 <li
                   key={i}
-                  className="grid grid-cols-[4.5rem_3.5rem_1fr_5rem_4rem] items-center gap-2 border-b border-line/60 px-4 py-3.5 text-sm transition-colors hover:bg-brand-soft sm:grid-cols-[6rem_5rem_1fr_6rem_5rem] sm:px-5"
+                  className="grid grid-cols-[4.5rem_3.5rem_1fr_5rem_4rem] items-center gap-2 border-b border-line/60 px-4 py-3.5 text-sm transition-colors hover:bg-surface-muted sm:grid-cols-[6rem_5rem_1fr_6rem_5rem] sm:px-5"
                 >
-                  <span className="text-xs text-slate-400">
+                  <span className="text-xs text-faint">
                     {it.applied_date}
                   </span>
                   <span>
                     {it.carrier && (
                       <span
-                        className={`inline-block rounded-md px-1.5 py-0.5 text-[11px] font-black text-white ${CARRIER_COLOR[it.carrier] ?? "bg-slate-400"}`}
+                        className={`inline-block rounded-md px-1.5 py-0.5 text-[11px] font-black text-white ${CARRIER_COLOR[it.carrier] ?? "bg-muted"}`}
                       >
                         {it.carrier === "SKYLIFE" ? "SKY" : it.carrier}
                       </span>
