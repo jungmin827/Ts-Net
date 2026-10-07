@@ -129,9 +129,21 @@ export default function Hero() {
         }}
       />
 
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 md:py-16 lg:grid-cols-12 lg:gap-12 lg:py-16">
+      {/*
+        좁은 화면 폭 계산 — Turnstile 위젯이 바닥을 정한다.
+
+        `size: "flexible"` 의 **최소 폭이 300px** 이라 그보다 좁아지지 않는다.
+        360px 기기에서 거터 16px + 카드 패딩 24px + 테두리 2px 를 양쪽에 두면
+        카드가 352px 를 요구해 뷰포트를 8px 넘겼다(실측).
+        거터 12px + 카드 패딩 16px 로 줄이면 300 + 32 + 4 = 336 ≤ 336 으로 들어맞는다.
+
+        `min-w-0` 는 안전장치다 — 그리드 항목의 기본 `min-width: auto` 때문에
+        안쪽에 안 줄어드는 요소가 하나라도 생기면 **트랙 전체가 밀려** 페이지에
+        가로 스크롤이 생긴다. 0 으로 두면 페이지 대신 그 요소만 넘친다.
+      */}
+      <div className="mx-auto grid max-w-6xl gap-10 px-3 py-12 sm:px-4 md:py-16 lg:grid-cols-12 lg:gap-12 lg:py-16">
         {/* ── 왼쪽: 브랜드 약속 (시안) ──────────────────── */}
-        <div className="relative flex flex-col lg:col-span-7">
+        <div className="relative flex min-w-0 flex-col lg:col-span-7">
           <DotGrid />
 
           {/* 시안 좌상단의 짧은 초록 바 */}
@@ -218,8 +230,8 @@ export default function Hero() {
         </div>
 
         {/* ── 오른쪽: 접수 폼 ──────────────────────────── */}
-        <div className="lg:col-span-5">
-          <div className="rounded-panel border-2 border-line bg-white p-6 shadow-lift md:p-7">
+        <div className="min-w-0 lg:col-span-5">
+          <div className="rounded-panel border-2 border-line bg-white p-4 shadow-lift sm:p-6 md:p-7">
             <div className="mb-5 flex items-center gap-3">
               <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-brand-dark text-white shadow-brand">
                 <Icon name="clipboard" size={22} />

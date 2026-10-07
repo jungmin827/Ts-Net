@@ -222,7 +222,11 @@ export default function LeadForm({
       </div>
 
       {siteKey ? (
-        // 흰 카드 안에 검은 위젯이 박히지 않도록 라이트 테마로 맞춘다
+        // 흰 카드 안에 검은 위젯이 박히지 않도록 라이트 테마로 맞춘다.
+        // `flexible` 이어도 **최소 폭이 300px** 이라 그보다 좁은 자리에서는 줄지 않는다.
+        // 마지막 안전장치로 가로 스크롤 컨테이너에 담는다 — 더 좁아지는 기기가
+        // 나오더라도 페이지 레이아웃을 밀지 않고 이 칸 안에서만 넘친다.
+        <div className="w-full overflow-x-auto">
         <Turnstile
           ref={tsRef}
           siteKey={siteKey}
@@ -230,6 +234,7 @@ export default function LeadForm({
           onExpire={() => setToken("")}
           options={{ size: "flexible", theme: "light" }}
         />
+        </div>
       ) : (
         <p className="text-xs text-red-500">
           Turnstile 사이트 키가 설정되지 않았습니다 (.env.local)
