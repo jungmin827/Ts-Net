@@ -28,9 +28,15 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { carrier: slug } = await params;
   const info = carrierBySlug(slug);
   if (!info) return {};
+  // 한국어 메타 설명은 검색결과에서 약 80자까지 보인다. 기존 37자는 짧았다.
+  // 통신사마다 다른 사실(tagline)을 넣어 네 페이지가 같은 문장이 되지 않게 한다.
+  // ⚠ `fullLabel` 은 "KT 인터넷·IPTV" 처럼 이미 상품군을 포함한다 —
+  //   여기에 "인터넷·TV" 를 또 붙이면 "KT 인터넷·IPTV 인터넷·TV" 가 된다. `label` 을 쓴다.
   return {
     title: `${info.fullLabel} 가입 상담`,
-    description: `${info.label} 인터넷·TV 요금제와 약정 조건을 확인하고 상담을 신청하세요.`,
+    description:
+      `${info.label} 인터넷·TV 요금제를 3년 약정·휴대폰 1회선 결합·VAT 포함 기준으로 정리했습니다. ` +
+      `${info.tagline}.`,
   };
 }
 

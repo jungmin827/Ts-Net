@@ -26,8 +26,15 @@ export const metadata: Metadata = {
     default: "TS-Net — 인터넷·TV 가입 상담센터",
     template: "%s | TS-Net",
   },
+  /**
+   * 메타 설명. 한국어는 검색결과에서 대략 **80자**까지 보이고 그 뒤는 잘린다.
+   * 기존 29자는 절반도 못 쓰고 있었다. 그렇다고 넘기면 뒷부분이 안 보이므로
+   * 80자 언저리를 겨냥한다. 내용은 **확인된 사실만** — 근거 없는 지원금·보상률은
+   * 넣지 않는다 (CLAUDE.md 규칙 6).
+   */
   description:
-    "KT · SK · LG · KT스카이라이프 인터넷/IPTV 신규가입 상담 접수",
+    "KT·SK브로드밴드·LG유플러스·KT스카이라이프 인터넷·IPTV 가입 상담. " +
+    "3년 약정·휴대폰 1회선 결합 기준으로 4사 요금을 나란히 비교해 드립니다.",
 };
 
 export default function RootLayout({
