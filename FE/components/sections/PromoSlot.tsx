@@ -22,24 +22,51 @@ import { PROMO_IMAGES, type PromoSlotName } from "@/lib/site-config";
  *   (같은 검사가 `scripts/verify-goals.mjs` 에도 있다 — 화면에 뜨기 전에 걸린다)
  */
 export default function PromoSlot({ slot }: { slot: PromoSlotName }) {
-  const items = PROMO_IMAGES.filter((i) => {
-    if (!i.enabled || i.slot !== slot || !i.desktop) return false;
-    if (!i.alt.trim()) {
-      console.error(
-        `[PromoSlot] "${i.id}" 의 alt 가 비어 있어 렌더하지 않습니다 — ` +
-          "이미지 안의 핵심 문구를 그대로 옮겨 주세요 (docs/PROMO_IMAGE_GUIDE.md)",
-      );
-      return false;
-    }
-    return true;
-  });
+  const mine = PROMO_IMAGES.filter(
+    (i) => i.enabled && i.slot === slot && i.desktop,
+  );
+  /** alt 가 비어 렌더하지 않은 항목 — 개발 중에는 화면에 알린다 */
+  const missingAlt = mine.filter((i) => !i.alt.trim());
+  const items = mine.filter((i) => i.alt.trim());
+
+  for (const i of missingAlt) {
+    console.error(
+      `[PromoSlot] "${i.id}" 의 alt 가 비어 있어 렌더하지 않습니다 — ` +
+        "이미지 안의 핵심 문구를 그대로 옮겨 주세요 (docs/PROMO_IMAGE_GUIDE.md)",
+    );
+  }
+
+  /*
+   * 개발 중에는 **화면에** 알린다.
+   *
+   * `console.error` 만 남기던 때는 "조용히 통과시키지 않는다"는 목적은 달성했지만
+   * 대신 **원인을 알 수 없는 미렌더**를 만들었다. `PromoSlot` 은 서버 컴포넌트라
+   * 그 로그는 터미널로 가고, `site-config.ts` 를 고치고 브라우저를 새로고침하는
+   * 운영자 눈에는 아무것도 안 보인다. 섹션이 통째로 사라지니 경로 오타나
+   * `enabled` 를 의심하며 엉뚱한 데를 뒤지게 된다.
+   * 운영 빌드에서는 지금처럼 조용히 제외한다 — 방문자에게 보일 내용이 아니다.
+   */
+  const notice =
+    process.env.NODE_ENV !== "production" && missingAlt.length > 0 ? (
+      <p className="mx-auto max-w-6xl rounded-panel border-2 border-dashed border-red-400 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+        [개발 전용] {missingAlt.map((i) => `"${i.id}"`).join(", ")} 의 alt 가 비어
+        있어 렌더하지 않았습니다. `FE/lib/site-config.ts` 의 `PROMO_IMAGES` 에서
+        이미지 안의 핵심 문구를 그대로 옮겨 주세요.
+      </p>
+    ) : null;
 
   // 슬롯이 비면 섹션 자체가 없다 — 빈 여백을 남기지 않는다
-  if (items.length === 0) return null;
+  if (items.length === 0) {
+    if (!notice) return null;
+    return (
+      <section className="bg-white px-4 py-6">{notice}</section>
+    );
+  }
 
   return (
     <section className="bg-white py-8 md:py-12">
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4">
+        {notice}
         {items.map((it) => {
           const hasMobile = Boolean(it.mobile);
           const img = (

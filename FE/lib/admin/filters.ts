@@ -39,11 +39,31 @@ const dateString = z
   .regex(/^\d{4}-\d{2}-\d{2}$/, "날짜는 YYYY-MM-DD 형식이어야 합니다")
   .refine(
     (v) => {
-      const d = new Date(`${v}T00:00:00Z`);
-      return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
+      /*
+       * ⚠ 왕복은 **값을 실제로 쓰는 쪽과 같은 방법**으로 해야 한다.
+       *
+       * 처음에는 `new Date("YYYY-MM-DDT00:00:00Z")` 로 봤다. 그런데 정작 조회
+       * 구간을 만드는 `kstRangeToUtc` 는 `Date.UTC(y, m-1, d)` 를 쓴다.
+       * 둘은 **같은 문자열을 다른 날로 읽는다** — `Date.UTC` 는 연도 0~99 를
+       * 1900~1999 로 옮긴다. `0026-01-01` 이 검사를 통과하고 실제로는
+       * 1926년을 조회한다. "문자열이 가리키는 날과 조회되는 날이 같다"는
+       * 이 검사의 존재 이유가 바로 거기서 깨진다.
+       */
+      const [y, m, d] = v.split("-").map(Number);
+      const dt = new Date(Date.UTC(y, m - 1, d));
+      if (Number.isNaN(dt.getTime())) return false;
+      if (dt.getUTCFullYear() !== y) return false; // 0~99 보정에 걸린 경우
+      if (dt.getUTCMonth() !== m - 1 || dt.getUTCDate() !== d) return false;
+      return true;
     },
     { message: "달력에 없는 날짜입니다" },
-  );
+  )
+  .refine((v) => {
+    // 접수 데이터가 존재할 수 있는 구간 밖은 애초에 입력이 아니다.
+    // 범위를 안 걸면 `9999-12-31` 같은 값이 통과해 조회가 무의미해진다.
+    const y = Number(v.slice(0, 4));
+    return y >= 2000 && y <= 2100;
+  }, "2000~2100년 사이 날짜만 조회할 수 있습니다");
 
 /** 이름·번호뒷자리 검색어 — PostgREST or() 문법을 깨뜨리는 문자를 애초에 제거한다 */
 const searchTerm = z

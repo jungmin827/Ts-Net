@@ -69,6 +69,9 @@ const bad = [
   ["2월 31일", { period: "custom", from: "2026-02-01", to: "2026-02-31" }],
   // Invalid Date → kstRangeToUtc 의 toISOString() 이 RangeError 를 던진다
   ["13월", { period: "custom", from: "2026-13-01", to: "2026-13-05" }],
+  // Date.UTC 가 연도 0~99 를 1900~1999 로 옮긴다 — 검사와 변환이 어긋나던 자리
+  ["0026년", { period: "custom", from: "0026-01-01", to: "0026-12-31" }],
+  ["9999년", { period: "custom", from: "9999-01-01", to: "9999-12-31" }],
   ["형식 오류", { period: "custom", from: "2026/03/01", to: "2026-03-02" }],
   ["없는 프리셋", { period: "forever" }],
   ["없는 통신사", { period: "30d", carrier: "EVIL" }],
