@@ -112,7 +112,11 @@ export default function PriceBars({ items }: { items: CarrierPrice[] }) {
                   className={`bar-fill w-full shrink-0 rounded-t-md ${
                     // 막대는 '내용 이해에 필요한 그래픽'이라 흰 배경 대비 3:1 이 필요하다.
                     // --brand(2.88:1)·--line-strong(1.49:1) 은 둘 다 미달이었다.
-                    best ? "bg-[var(--cta-to)]" : "bg-chart-neutral"
+                    // `--cta-to` 를 쓰다가 분리했다. CTA 면이 쨍한 `--brand`(#07b040)
+                    // 로 바뀌었는데, 그 색은 흰 배경 대비 2.88:1 이라 **비문자 요소
+                    // 3:1 기준(SC 1.4.11)에 미달**한다. 막대는 내용 이해에 필요한
+                    // 그래픽이므로 버튼과 다른 축으로 둔다.
+                    best ? "bg-brand-dark" : "bg-chart-neutral"
                   }`}
                   style={{ height: h }}
                 />
