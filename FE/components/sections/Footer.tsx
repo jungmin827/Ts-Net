@@ -98,8 +98,12 @@ export default function Footer() {
               const pending = isPlaceholder(value);
               return (
                 <div key={label} className="flex gap-2">
-                  <dt className="shrink-0 text-faint">{label}</dt>
-                  <dd className={pending ? "text-faint italic" : undefined}>
+                  {/* 전자상거래법 표기 항목이다. `--faint` 로 깔면 이 옅은 면
+                      (#f5f8fa) 위에서 4.52:1 — 기준을 0.02 차로 넘긴다.
+                      법으로 보이라고 요구하는 정보를 그 여유로 두지 않는다.
+                      `--muted` 는 같은 면 위에서 5.8:1 이다. */}
+                  <dt className="shrink-0 text-muted">{label}</dt>
+                  <dd className={pending ? "text-muted italic" : undefined}>
                     {pending ? "등록 전" : value}
                   </dd>
                 </div>
@@ -115,7 +119,7 @@ export default function Footer() {
             </p>
           )}
 
-          <p className="mt-5 border-t border-line pt-5 text-xs leading-relaxed text-faint">
+          <p className="mt-5 border-t border-line pt-5 text-xs leading-relaxed text-muted">
             본 사이트는 통신사 공식 대리점/판매점의 가입 상담 접수 페이지이며,
             계약 체결은 각 통신사 절차에 따릅니다.{hasTel() ? ` 대표번호 ${SITE.tel}` : ""}
           </p>
