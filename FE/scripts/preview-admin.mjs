@@ -26,6 +26,21 @@ import { pathToFileURL } from "node:url";
 const FE = join(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = join(FE, "public", "_admin-preview.html");
 
+/** dev 서버가 지금 쓰는 CSS 경로를 읽어온다.
+    해시를 박아 두면 globals.css 를 고친 순간 **옛 파일을 가리켜**
+    스타일이 통째로 빠진 화면을 보게 된다 (실제로 한 번 당했다). */
+async function devCssHref() {
+  try {
+    const html = await (await fetch("http://localhost:3100/")).text();
+    const m = html.match(/href="(\/_next\/static\/[^"]+\.css[^"]*)"/);
+    if (m) return m[1];
+  } catch {
+    /* dev 서버가 꺼져 있으면 아래 경고로 넘어간다 */
+  }
+  console.warn("  ⚠ dev 서버에서 CSS 경로를 읽지 못했습니다 — 스타일 없이 생성됩니다");
+  return "";
+}
+
 if (process.argv.includes("--rm")) {
   if (existsSync(OUT)) unlinkSync(OUT);
   console.log("미리보기 삭제됨");
@@ -83,7 +98,7 @@ const blocks = cases
   })
   .join("\n");
 
-const css = "/_next/static/chunks/%5Broot-of-the-server%5D__6ac7c0e2._.css";
+const css = await devCssHref();
 writeFileSync(
   OUT,
   `<!doctype html><html lang="ko"><head><meta charset="utf-8">

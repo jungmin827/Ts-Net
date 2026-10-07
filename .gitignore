@@ -18,3 +18,6 @@ FE/.export-check-*.mjs
 FE/.preview-entry-*.tsx
 FE/.preview-bundle-*.mjs
 FE/public/_admin-preview.html
+FE/public/_reviews-preview.html
+FE/.rv-entry-*.tsx
+FE/.rv-bundle-*.mjs

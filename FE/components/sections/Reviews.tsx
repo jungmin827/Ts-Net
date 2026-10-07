@@ -39,7 +39,9 @@ function Stars({ rating }: { rating: number | null }) {
           name="star"
           size={15}
           filled
-          className={n <= r ? "text-accent" : "text-line-strong"}
+          // 채운 별은 `--star`(흰 배경 4.56:1 · 빈 별 3.07:1). `--accent` 는
+          // 1.97:1 이라 비문자 3:1 에 미달한다 — globals.css 토큰 주석 참고.
+          className={n <= r ? "text-star" : "text-line-strong"}
         />
       ))}
     </span>
