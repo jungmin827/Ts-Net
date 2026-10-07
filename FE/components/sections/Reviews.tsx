@@ -32,7 +32,10 @@ function Stars({ rating }: { rating: number | null }) {
   if (rating === null || rating <= 0) return null;
   const r = rating;
   return (
-    <span className="flex gap-0.5" aria-label={`5점 만점에 ${r}점`}>
+    // `role="img"` 가 있어야 `aria-label` 이 이름으로 쓰인다 —
+    // 역할이 generic 인 요소의 aria-label 은 상당수 스크린리더가 무시한다.
+    // 별 5개가 각각 읽히는 대신 "5점 만점에 N점" 한 번으로 읽혀야 한다.
+    <span role="img" className="flex gap-0.5" aria-label={`5점 만점에 ${r}점`}>
       {[1, 2, 3, 4, 5].map((n) => (
         <Icon
           key={n}

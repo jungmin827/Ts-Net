@@ -105,11 +105,36 @@ function compact(raw: RawParams): Record<string, string> {
 }
 
 export function parseLeadFilter(raw: RawParams): LeadFilter {
-  const parsed = leadFilterSchema
-    .superRefine(rangeOrdered)
-    .safeParse(compact(raw));
-  // 잘못된 쿼리스트링으로 화면이 깨지지 않도록 기본 필터로 복구한다
-  return parsed.success ? parsed.data : leadFilterSchema.parse({});
+  const cleaned = compact(raw);
+  const parsed = leadFilterSchema.superRefine(rangeOrdered).safeParse(cleaned);
+  if (parsed.success) return parsed.data;
+
+  /*
+   * 한 칸이 틀렸다고 **전부 버리지 않는다.**
+   *
+   * 예전에는 실패하면 `leadFilterSchema.parse({})` 로 기본 필터(최근 30일·전체)를
+   * 돌려줬다. 그러면 날짜 한 칸을 잘못 적은 순간 통신사·상태·사은품·검색어까지
+   * 통째로 날아가고, 화면은 **아무 설명 없이** 다른 목록을 보여준다.
+   * 운영자는 자기가 건 조건이 왜 사라졌는지 알 수 없다.
+   *
+   * 문제가 된 키만 떼어내고 나머지로 다시 파싱한다. 날짜가 틀렸으면 기간만
+   * 기본값으로 돌아가고 통신사·상태·검색어는 살아남는다.
+   */
+  const badKeys = new Set(
+    parsed.error.issues.map((i) => String(i.path[0] ?? "")).filter(Boolean),
+  );
+  // 기간 관련 문제면 period 까지 함께 되돌린다 — from/to 만 빼면 custom 이 남아
+  // 또 걸린다
+  if (badKeys.has("from") || badKeys.has("to")) {
+    badKeys.add("from");
+    badKeys.add("to");
+    badKeys.add("period");
+  }
+  const rest = Object.fromEntries(
+    Object.entries(cleaned).filter(([k]) => !badKeys.has(k)),
+  );
+  const retry = leadFilterSchema.superRefine(rangeOrdered).safeParse(rest);
+  return retry.success ? retry.data : leadFilterSchema.parse({});
 }
 
 export function parseExportFilter(raw: RawParams) {

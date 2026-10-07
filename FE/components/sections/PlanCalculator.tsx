@@ -194,9 +194,15 @@ export default function PlanCalculator({
 
             {/* 합계 띠 — 이 화면에서 가장 먼저 눈에 들어와야 하는 값.
                 라벨이 금액의 범위를 정확히 말해야 한다. 휴대폰을 안 고른 상태의
-                금액은 "월 예상 요금"이 아니라 인터넷+TV 몫일 뿐이다 */}
-            <div className="bg-brand-dark px-6 py-5 text-white">
-              <p className="text-sm font-medium text-white/95">
+                금액은 "월 예상 요금"이 아니라 인터넷+TV 몫일 뿐이다.
+
+                면은 **옅은 틴트**다. 추천 카드의 요금 띠를 같은 이유로 내렸는데
+                (진한 면 + 그 아래 진한 버튼 = 한 덩어리에 진한 면 둘) 이 패널만
+                진초록으로 남아 있었다. 같은 페이지에서 "월 요금" 이 한 곳은 틴트,
+                한 곳은 진초록이면 방문자는 둘이 다른 종류의 값이라고 배운다.
+                금액이 먼저 읽히는 건 크기(3xl)와 굵기(black)가 만든다. */}
+            <div className="bg-brand-light px-6 py-5 text-brand-deep">
+              <p className="text-sm font-bold">
                 {total == null
                   ? "월 예상 요금"
                   : mobile
@@ -207,7 +213,7 @@ export default function PlanCalculator({
                 {total != null ? formatWon(total) : "상담 시 안내"}
               </p>
               {/* 어느 상태인지 금액 바로 아래에서 한 줄로 못 박는다 */}
-              <p className="mt-2 text-xs leading-relaxed text-white/95">
+              <p className="mt-2 text-xs leading-relaxed">
                 {noBundle
                   ? "휴대폰을 결합하지 않는 경우의 금액은 요금표에 없어 상담 시 안내해 드립니다."
                   : mobile

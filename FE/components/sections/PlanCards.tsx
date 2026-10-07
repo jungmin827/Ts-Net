@@ -123,8 +123,14 @@ export default function PlanCards({
                       70% 로 내렸더니 3.96:1 이 됐다(본문 4.5 미달).
                       취소선과 작은 크기가 이미 "지난 값"이라고 말한다.
                       같은 실수를 요금 띠 흰 글자(text-white/85)에서도 한 번 했다. */}
+                  {/* 할인 전과 월 요금이 같은 색이면 두 금액이 한 덩어리로 읽힌다.
+                      흰 글자였을 때는 95%/100% 로 갈렸는데 틴트로 내리며 그 구분이
+                      사라졌다. 취소선·크기에 더해 **색상으로도** 가른다 —
+                      중립 회색이라 초록 금액과 한눈에 갈린다.
+                      (`--brand-dark` 로 해 봤더니 틴트 위 4.37:1 로 본문 기준 미달이었다.
+                       `--muted` 는 5.19:1.) */}
                   {p.list_fee != null && p.list_fee !== p.monthly_fee && (
-                    <span className="tabular text-sm line-through">
+                    <span className="tabular text-sm text-muted line-through">
                       {formatWon(p.list_fee)}
                     </span>
                   )}
