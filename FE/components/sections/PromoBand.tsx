@@ -18,6 +18,12 @@ import { PROMO_BAND } from "@/lib/site-config";
  * - prefers-reduced-motion 이면 회전을 멈추고 전체 문장을 한 번에 보여준다.
  *   자동 순환 자체가 모션이라 duration 만 0 으로 줄이는 걸론 부족하다.
  * - 스크린리더에는 완성된 문장 한 줄만 읽힌다 (애니메이션 레이어는 aria-hidden).
+ * - **기본 상태는 완성된 문장이다.** 순환은 마운트 뒤에만 시작한다.
+ *   예전에는 SSR 이 `frames[0]` 한 장만 그렸다. 스크립트가 막히면 그 한 조각이
+ *   영구히 남아, 문장의 앞부분만 덩그러니 놓인 화면이 된다
+ *   (완성 문장은 `sr-only` 에만 있어 눈으로는 볼 수 없었다).
+ *   화면에 보이는 기본값은 언제나 "다 보여준 상태"여야 하고,
+ *   애니메이션은 그 위에 얹는 것이어야 한다.
  */
 export default function PromoBand() {
   const { frames, holdMs, enabled } = PROMO_BAND;
@@ -29,6 +35,10 @@ export default function PromoBand() {
    * 이 밴드는 2.4초마다 무한히 바뀌는데 그동안 멈출 수가 없었다.
    */
   const [paused, setPaused] = useState(false);
+  /** 하이드레이션 완료 여부. false 인 동안에는 순환 없이 전체 문장을 보여준다 */
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -39,13 +49,13 @@ export default function PromoBand() {
   }, []);
 
   useEffect(() => {
-    if (reduced || paused || frames.length < 2) return;
+    if (!mounted || reduced || paused || frames.length < 2) return;
     const id = window.setInterval(
       () => setIndex((v) => (v + 1) % frames.length),
       holdMs,
     );
     return () => window.clearInterval(id);
-  }, [reduced, paused, frames.length, holdMs]);
+  }, [mounted, reduced, paused, frames.length, holdMs]);
 
   if (!enabled || frames.length === 0) return null;
 
@@ -57,6 +67,8 @@ export default function PromoBand() {
   // 예전엔 "brand" 프레임이 진초록 풀블리드였는데, 2.4초마다 퍼스트뷰 바로 아래가
   // 통째로 초록으로 덮여 흰 면 기조가 무너졌다. 색은 강조 단어에만 남긴다.
   const tinted = frame.tone === "brand";
+  /** 순환을 돌리지 않는 상태 — 마운트 전이거나 모션 최소화 설정 */
+  const still = !mounted || reduced;
 
   return (
     <section
@@ -75,8 +87,8 @@ export default function PromoBand() {
         className="relative mx-auto flex max-w-6xl items-center px-4"
         style={{ minHeight: "clamp(5.5rem, 11vw, 8.5rem)" }}
       >
-        {reduced ? (
-          // 모션 최소화 — 순환 없이 전체 문장을 한 줄로
+        {still ? (
+          // 순환 없이 전체 문장을 한 줄로 (하이드레이션 전 · 모션 최소화)
           <p aria-hidden="true" className="font-display py-7 text-xl leading-tight md:text-3xl">
             {sentence}
           </p>
@@ -116,7 +128,7 @@ export default function PromoBand() {
 
         {/* 진행 눈금 — 이 밴드가 "한 문장을 나눠 보여주는 중"임을 알린다.
             레퍼런스엔 없지만, 없으면 문장 일부만 깜빡이는 것처럼 읽힌다 */}
-        {!reduced && frames.length > 1 && (
+        {!still && frames.length > 1 && (
           <span className="ml-auto flex shrink-0 items-center gap-2.5 pl-4 sm:gap-3 sm:pl-6">
             {frames.map((_, i) => (
               <span

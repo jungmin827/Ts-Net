@@ -119,7 +119,15 @@ export default function StickyConsultBar() {
     tsRef.current?.reset();
   }
 
-  /** 바가 화면 밖으로 내려가 있을 때 붙는 클래스. 등장은 위로 밀려 올라오는 모션 한 번 */
+  /**
+   * 바가 화면 밖으로 내려가 있을 때 붙는 클래스. 등장은 위로 밀려 올라오는 모션 한 번.
+   *
+   * ⚠ `transform` 은 요소를 접근성 트리에서 빼지 않는다. 클래스만으로 내려두면
+   *   화면 상단에서 Tab 을 눌렀을 때 **화면 밖에 있는 입력칸·버튼 7개로 포커스가
+   *   들어간다** — 키보드 사용자는 포커스가 어디에도 보이지 않는 상태가 된다
+   *   (WCAG 2.4.3 / 2.4.7). 그래서 컨테이너에 `inert` 를 함께 건다.
+   *   시트가 열려 있는 동안에는 걸지 않는다 — 열린 시트를 닫지 못하게 된다.
+   */
   const shell = `transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
     visible ? "translate-y-0" : "translate-y-full"
   }`;
@@ -180,7 +188,10 @@ export default function StickyConsultBar() {
       {turnstile}
 
       {/* ── 데스크톱: 한 줄 폼 ─────────────────────────────── */}
-      <div className={`fixed inset-x-0 bottom-0 z-40 hidden lg:block ${shell}`}>
+      <div
+        inert={!visible}
+        className={`fixed inset-x-0 bottom-0 z-40 hidden lg:block ${shell}`}
+      >
         {collapsed ? (
           <div className="flex justify-center">
             <button
@@ -333,7 +344,10 @@ export default function StickyConsultBar() {
           />
         )}
 
-        <div className={`fixed inset-x-0 bottom-0 z-40 ${shell}`}>
+        <div
+          inert={!visible && !sheet}
+          className={`fixed inset-x-0 bottom-0 z-40 ${shell}`}
+        >
           {sheet && (
             <div className="animate-slide-down max-h-[70vh] overflow-y-auto rounded-t-panel border-t border-line bg-white p-5 shadow-float">
               <div className="mb-4 flex items-center justify-between">

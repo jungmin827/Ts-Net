@@ -28,6 +28,10 @@ export default function BackToTop() {
     <button
       type="button"
       aria-label="맨 위로"
+      // 안 보이는 동안 탭 순서에서 뺀다. `opacity-0` 만으로는 포커스가 들어온다 —
+      // 하단 고정바에서 고친 것과 같은 결함을 신설 컴포넌트에서 반복했었다.
+      // `hidden` 대신 `inert` 를 쓰는 이유는 사라지는 모션을 유지하기 위해서다.
+      inert={!show}
       onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
       className={`fixed right-4 bottom-[11rem] z-30 flex size-11 cursor-pointer items-center justify-center rounded-full border border-line bg-white/95 text-brand shadow-lift transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:border-brand/40 hover:text-brand-dark ${
         show ? "opacity-100" : "pointer-events-none translate-y-2 opacity-0"
