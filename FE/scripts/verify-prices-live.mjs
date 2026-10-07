@@ -72,24 +72,42 @@ function seedAmounts() {
   return { file, by };
 }
 
+/**
+ * 라이브 금액을 **두 갈래로 나눠** 돌려준다.
+ *
+ *   posted  — `…원` 이 붙어 화면에 **게시된** 금액. 근거가 가장 단단하다.
+ *   literal — `<script>` 안의 숫자 리터럴. 요금계산기가 선택에 따라 띄우는 값이라
+ *             화면에 `원` 과 함께 나오지는 않지만 실제 가격이다.
+ *
+ * 왜 나누는가 — 예전에는 둘을 한 집합에 쏟아붓고 "전부 실재한다" 한 줄로 찍었다.
+ * 그런데 숫자 훑기를 HTML 전체에 돌려 **CSS·속성값까지** 집어넣고 있었고,
+ * 실제로 `67,429` 같은 비가격이 네 페이지 모두에 들어왔다. 그러면 통과의 의미가
+ * "같은 정수가 HTML 어딘가에 있다" 로 묽어진다 — 다모아가 어떤 금액을 내려도
+ * 그 자리에 우연히 같은 정수가 남아 있으면 통과한다.
+ * 이제 리터럴 훑기는 `<script>` 블록 안으로 한정하고, 어느 쪽으로 확인됐는지
+ * 보고에 분리해 적는다.
+ */
 async function liveAmounts(path) {
   const res = await fetch(`${BASE}/${path}`, {
     headers: { "User-Agent": "Mozilla/5.0 (compatible; TSNet-price-check)" },
   });
   if (!res.ok) throw new Error(`${path} → HTTP ${res.status}`);
   const html = await res.text();
-  const set = new Set();
-  // 본문에 보이는 금액
-  for (const m of html.match(MONEY) ?? []) set.add(m);
-  // 요금계산기 리터럴 (콤마 없이 박혀 있다)
-  for (const m of html.match(/\b\d{4,6}\b/g) ?? []) {
-    const n = Number(m);
-    if (n >= 4000 && n <= 150000) set.add(n.toLocaleString("en-US"));
-  }
+
+  const posted = new Set();
+  for (const m of html.match(MONEY) ?? []) posted.add(m);
   // 원문 구분자 오타 정규화 (36.300 → 36,300)
   for (const m of html.match(/(?<![\d.])\d{2}\.\d{3}(?=원)/g) ?? [])
-    set.add(m.replace(".", ","));
-  return set;
+    posted.add(m.replace(".", ","));
+
+  const literal = new Set();
+  for (const block of html.match(/<script\b[^>]*>[\s\S]*?<\/script>/gi) ?? []) {
+    for (const m of block.match(/\b\d{4,6}\b/g) ?? []) {
+      const n = Number(m);
+      if (n >= 4000 && n <= 150000) literal.add(n.toLocaleString("en-US"));
+    }
+  }
+  return { posted, literal };
 }
 
 const { file, by } = seedAmounts();
@@ -101,27 +119,37 @@ let failed = false;
 const rows = [];
 
 for (const [carrier, path] of PAGES) {
-  let live;
+  let posted, literal;
   try {
-    live = await liveAmounts(path);
+    ({ posted, literal } = await liveAmounts(path));
   } catch (e) {
     console.error(`  ${carrier}: 수집 실패 — ${e.message}`);
     failed = true;
     continue;
   }
   const seed = by[carrier] ?? new Set();
-  const onlySeed = [...seed].filter((v) => !live.has(v));
-  const onlyLive = [...live].filter((v) => !seed.has(v));
+  const byPosted = [...seed].filter((v) => posted.has(v));
+  const byLiteral = [...seed].filter((v) => !posted.has(v) && literal.has(v));
+  const onlySeed = [...seed].filter((v) => !posted.has(v) && !literal.has(v));
+  const onlyLive = [...posted].filter((v) => !seed.has(v));
   onlySeedTotal += onlySeed.length;
-  rows.push({ carrier, seed: seed.size, live: live.size, onlySeed, onlyLive });
+  rows.push({
+    carrier, seed: seed.size, live: posted.size + literal.size,
+    byPosted: byPosted.length, byLiteral, onlySeed, onlyLive,
+  });
 }
 
 for (const r of rows) {
   const mark = r.onlySeed.length === 0 ? "통과" : "실패";
   console.log(
-    `  ${mark}  ${r.carrier.padEnd(8)} 시드 ${String(r.seed).padStart(3)}개 · 라이브 ${String(r.live).padStart(3)}개 · ` +
-      `시드에만 ${r.onlySeed.length}개${r.onlySeed.length ? " → " + r.onlySeed.join(", ") : ""}`,
+    `  ${mark}  ${r.carrier.padEnd(8)} 시드 ${String(r.seed).padStart(3)}개 — ` +
+      `게시(…원)로 확인 ${String(r.byPosted).padStart(2)} · 계산기 리터럴로만 ${String(r.byLiteral.length).padStart(2)} · ` +
+      `미확인 ${r.onlySeed.length}${r.onlySeed.length ? " → " + r.onlySeed.join(", ") : ""}`,
   );
+  if (r.byLiteral.length)
+    console.log(
+      `        리터럴로만 확인된 값(화면에 '원' 과 함께 안 나온다 — 눈으로 볼 것): ${r.byLiteral.join(", ")}`,
+    );
   const rej = REJECTED[r.carrier] ?? {};
   const deliberate = r.onlyLive.filter((v) => rej[v]);
   const unknown = r.onlyLive.filter((v) => !rej[v]);
@@ -146,7 +174,7 @@ if (onlySeedTotal > 0) {
   );
   process.exit(1);
 }
-console.log("시드 금액이 전부 다모아 라이브에 실재한다.");
+console.log("시드 금액이 전부 다모아 라이브에 실재한다 (게시 금액 또는 계산기 리터럴).");
 const stillLive = rows.flatMap((r) =>
   (r.onlyLive ?? []).filter((v) => (REJECTED[r.carrier] ?? {})[v]).map((v) => `${r.carrier} ${v}`),
 );

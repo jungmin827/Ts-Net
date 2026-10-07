@@ -157,8 +157,11 @@ function PlanRows({ list, cols }: { list: Plan[]; cols: Cols }) {
                 <td className="px-5 py-3.5 text-center text-muted">
                   {formatContract(p.contract_months)}
                 </td>
+                {/* 사은품 금액은 공개 페이지에 남아 있던 마지막 암버 계열이었다.
+                    짝이 되는 암버 면이 사라진 뒤로는 거의 검정으로만 읽혀
+                    색이 아무것도 말하지 않았다. '혜택' 이므로 브랜드 초록으로 묶는다. */}
                 {cols.gift && (
-                  <td className="px-5 py-3.5 text-right font-bold text-accent-ink">
+                  <td className="px-5 py-3.5 text-right font-bold text-brand-dark">
                     {p.gift_amount == null
                       ? "-"
                       : `최대 ${formatWon(p.gift_amount)}`}

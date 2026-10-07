@@ -10,6 +10,18 @@ const VARIANTS: Record<Variant, string> = {
   cta: "cta-fill shadow-cta hover:-translate-y-0.5 hover:shadow-lift active:translate-y-0 active:shadow-soft disabled:shadow-none disabled:translate-y-0",
   primary:
     "bg-brand-dark text-white shadow-brand hover:bg-brand-deep hover:-translate-y-0.5 hover:shadow-lift active:translate-y-0 active:shadow-soft disabled:bg-line disabled:text-faint disabled:shadow-none disabled:translate-y-0",
+  /**
+   * ⚠ **어드민 전용.** 공개 페이지에 쓰지 말 것.
+   *
+   * 암버는 포인트색이 둘이 되는 순간 CTA 를 묻는다(globals.css `--accent` 주석).
+   * 공개 페이지의 암버 면은 전부 초록으로 합쳤고, 남은 유일한 자리는
+   * 어드민의 "엑셀 내보내기" 다 — 번호를 복호화해 파일로 반출하는 동작이라
+   * 옆의 '검색' 과 색으로 구분되는 편이 맞다.
+   *
+   * 지금 이 변형을 쓰는 곳은 0 곳이다. 지우지 않고 남겨 두는 이유는
+   * 어드민에서 같은 성격의 버튼이 더 생길 때 쓸 자리이기 때문이고,
+   * 그때 공개 페이지로 새어 나가지 않도록 여기 못 박아 둔다.
+   */
   accent:
     "bg-accent text-accent-ink shadow-accent hover:bg-accent-dark hover:-translate-y-0.5 hover:shadow-lift active:translate-y-0 active:shadow-soft disabled:bg-line disabled:text-faint disabled:shadow-none disabled:translate-y-0",
   outline:
