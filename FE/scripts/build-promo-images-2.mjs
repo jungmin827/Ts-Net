@@ -5,7 +5,7 @@
  *
  * 만드는 것 (슬롯 → 파일)
  *   afterPromoBand   public/promo/what-we-do.png        / -m.png
- *   afterCarrierHub  public/promo/choose-criteria.png   / -m.png
+ *   afterPriceCompare  public/promo/choose-criteria.png / -m.png
  *   beforeFooter     public/promo/before-call.png       / -m.png
  *
  * `scripts/build-promo-image.mjs`(1차, check-three) 와 같은 방식이다 —
@@ -29,26 +29,17 @@ import { fileURLToPath } from "node:url";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = join(ROOT, "public", "promo");
 
-/* globals.css :root 토큰과 같은 값. 사이트와 이미지의 초록이 어긋나면 바로 티가 난다 */
-const C = {
-  ink: "#17191c",
-  muted: "#5b6670",
-  faint: "#687380",
-  brand: "#07b040",
-  brandDark: "#0a8230",
-  brandLight: "#dff7e6",
-  line: "#e4eaf0",
-  surface: "#f5f8fa",
-  white: "#ffffff",
-};
-const FONT = "Apple SD Gothic Neo";
+/* 팔레트·폰트·측정 도구는 공용 모듈 한 곳에서 온다 (scripts/promo-kit.mjs).
+   예전에는 생성기마다 복제해 두었고, 그러다 `faint` 가 어긋나
+   1차 생성기가 만든 이미지의 마무리 문장만 2.87:1 로 찍혔다. */
+import { C, FONT, esc, fit, finish } from "./promo-kit.mjs";
 
 /* =====================================================================
    COPY — 운영자가 고치는 유일한 자리
    ===================================================================== */
 
 const COPY = {
-  /* A. afterCarrierHub — 통신사 4카드 바로 아래.
+  /* A. afterPriceCompare — 요금 비교표 아래 (통신사 4카드 바로 밑이 아니다).
      "KT? SK? 뭘 골라야 하지"에서 막힌 방문자에게 **고르는 기준**만 준다.
      어느 통신사가 더 낫다는 말은 한 줄도 쓰지 않는다 (비교 광고 회피). */
   chooseCriteria: {
@@ -176,36 +167,7 @@ const COPY = {
    조판 헬퍼
    ===================================================================== */
 
-const esc = (s) =>
-  String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-const WARN = [];
-
-/** 글자 폭 추정. SVG 에는 측정 API 가 없어 글리프 종류별 평균폭으로 근사한다 */
-function charW(ch, size) {
-  const cp = ch.codePointAt(0);
-  if (ch === " ") return size * 0.27;
-  if (cp >= 0xac00 && cp <= 0xd7a3) return size * 1.0; // 한글 음절
-  if (cp >= 0x3130 && cp <= 0x318f) return size * 1.0; // 한글 자모
-  if (cp >= 0x4e00 && cp <= 0x9fff) return size * 1.0; // 한자
-  if ("·.,'\"()[]:;!|".includes(ch)) return size * 0.4;
-  if ("—–~".includes(ch)) return size * 0.75;
-  if (/[A-Z]/.test(ch)) return size * 0.7;
-  if (/[a-z0-9]/.test(ch)) return size * 0.58;
-  return size * 0.55;
-}
-const textW = (s, size) => [...String(s)].reduce((a, c) => a + charW(c, size), 0);
-
-/** 상자 폭을 넘는 줄을 잡아낸다. 넘으면 콘솔 경고 — 줄을 더 끊으라는 신호 */
-function fit(label, s, size, maxW) {
-  const w = textW(s, size);
-  if (w > maxW) {
-    WARN.push(
-      `  넘침  ${label}  "${s}"  추정 ${Math.round(w)}px > 허용 ${Math.round(maxW)}px`,
-    );
-  }
-  return w;
-}
 
 const T = (x, y, s, { size, weight = 400, fill = C.ink, anchor = "start" }) =>
   `<text x="${x}" y="${y}" text-anchor="${anchor}" font-family="${FONT}" font-weight="${weight}" font-size="${size}" fill="${fill}">${esc(s)}</text>`;
@@ -569,9 +531,4 @@ for (const [name, svg] of JOBS) {
   console.log(`public/promo/${name}  ${info.width}x${info.height}`);
 }
 
-if (WARN.length) {
-  console.log("\nFIT 경고 — 줄을 더 끊으세요:");
-  console.log([...new Set(WARN)].join("\n"));
-} else {
-  console.log("\nFIT 검사 통과 — 상자를 넘는 줄 없음");
-}
+finish();

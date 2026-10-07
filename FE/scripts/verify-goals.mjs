@@ -184,6 +184,12 @@ async function g5() {
   const used = (page.match(/<PromoSlot slot=/g) ?? []).length;
   check("G5", "슬롯 정의 = 삽입 지점", slots > 0 && slots === used, `정의 ${slots} · 삽입 ${used}`);
   check("G5", "빈 슬롯은 섹션 미렌더", read("FE/components/sections/PromoSlot.tsx").includes("return null"), "");
+
+  // alt 가 비어 있으면 그 이미지는 보조기기에서 통째로 사라진다. 화면에 뜨기 전에 잡는다.
+  // (`PromoSlot` 도 런타임에 막지만, 막혀서 안 보이는 것보다 여기서 걸리는 편이 낫다)
+  const emptyAlt = [...cfg.matchAll(/id:\s*"([^"]+)"[\s\S]{0,420}?alt:\s*"(\s*)"/g)].map((m) => m[1]);
+  check("G5", "모든 홍보 이미지에 alt", emptyAlt.length === 0,
+    emptyAlt.length ? `빈 alt: ${emptyAlt.join(", ")}` : `${used}개 슬롯 전부 채움`);
   check("G5", "데스크톱/모바일 소스 분리", cfg.includes("mobileWidth"), "");
   check("G5", "운영자 가이드", has("docs/PROMO_IMAGE_GUIDE.md"), "");
 

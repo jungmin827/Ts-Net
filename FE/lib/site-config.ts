@@ -269,11 +269,25 @@ export const PARTNER_CARD = {
    홍보 이미지 슬롯 — 외부 디자인 툴 산출물을 코드 수정 없이 꽂는 자리
    ===================================================================== */
 
-/** 이미지를 넣을 수 있는 위치. 메인 페이지의 섹션 경계와 1:1 대응한다 */
+/**
+ * 이미지를 넣을 수 있는 위치. 메인 페이지의 섹션 경계와 1:1 대응한다.
+ *
+ * ⚠ 이름이 실제 위치와 어긋나면 안 된다. `afterCarrierHub` 라는 이름이
+ *   한동안 붙어 있었는데, 실제 삽입 지점은 통신사 4카드 바로 아래가 아니라
+ *   `CarrierMatrix` · `PriceCompare` 를 지난 **요금 비교표 아래**였다.
+ *   운영자는 이름을 보고 자리를 고르므로, 이름이 거짓이면 배포해서
+ *   눈으로 봐야만 알아챈다. 삽입 지점을 옮기면 이름도 함께 바꿀 것.
+ *
+ *   실제 순서 (`app/(site)/page.tsx`) —
+ *     Hero → **afterHero** → PromoBand → **afterPromoBand** → LiveFeed →
+ *     CarrierHub → CarrierMatrix → PriceCompare → **afterPriceCompare** →
+ *     Journey → **afterJourney** → ConsultGuide → Reviews → Faq →
+ *     PrivacyPromise → **beforeFooter** → (푸터)
+ */
 export type PromoSlotName =
   | "afterHero"
   | "afterPromoBand"
-  | "afterCarrierHub"
+  | "afterPriceCompare"
   | "afterJourney"
   | "beforeFooter";
 
@@ -305,7 +319,7 @@ export interface PromoImage {
  *
  * 예시 —
  *   {
- *     id: "gift-2026q4", slot: "afterCarrierHub",
+ *     id: "gift-2026q4", slot: "afterPriceCompare",
  *     desktop: "/promo/gift-2026q4.png",  mobile: "/promo/gift-2026q4-m.png",
  *     width: 2240, height: 900, mobileWidth: 750, mobileHeight: 900,
  *     alt: "4분기 가전 사은품 안내 — 자세한 조건은 상담 시 안내",
@@ -341,7 +355,7 @@ export const PROMO_IMAGES: PromoImage[] = [
   },
   {
     id: "choose-criteria",
-    slot: "afterCarrierHub",
+    slot: "afterPriceCompare",
     desktop: "/promo/choose-criteria.png",
     mobile: "/promo/choose-criteria-m.png",
     width: 2240,

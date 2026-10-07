@@ -13,11 +13,26 @@ import { PROMO_IMAGES, type PromoSlotName } from "@/lib/site-config";
  * 글자가 박힌 이미지는 한 장을 축소하면 모바일(약 358px)에서 읽히지 않는다.
  * `mobile` 을 비워두면 데스크톱 소스를 그대로 쓰되, 글자가 있는 이미지라면
  * 반드시 따로 넣어야 한다 (가이드: docs/PROMO_IMAGE_GUIDE.md).
+ *
+ * ⚠ `alt` 가 비어 있으면 **그 항목을 렌더하지 않는다.**
+ *   `alt=""` 는 "이건 장식이니 건너뛰라"는 적극적 선언이라, 본문이 통째로 그림 안에
+ *   들어 있는 이 이미지들에서는 내용 전체가 보조기기에서 사라진다.
+ *   `href` 까지 있으면 **이름 없는 링크**가 되어 WCAG 2.4.4·4.1.2 를 함께 깬다.
+ *   운영자가 "나중에 채우지" 하고 비워두면 아무도 못 잡으므로, 조용히 통과시키지 않는다.
+ *   (같은 검사가 `scripts/verify-goals.mjs` 에도 있다 — 화면에 뜨기 전에 걸린다)
  */
 export default function PromoSlot({ slot }: { slot: PromoSlotName }) {
-  const items = PROMO_IMAGES.filter(
-    (i) => i.enabled && i.slot === slot && i.desktop,
-  );
+  const items = PROMO_IMAGES.filter((i) => {
+    if (!i.enabled || i.slot !== slot || !i.desktop) return false;
+    if (!i.alt.trim()) {
+      console.error(
+        `[PromoSlot] "${i.id}" 의 alt 가 비어 있어 렌더하지 않습니다 — ` +
+          "이미지 안의 핵심 문구를 그대로 옮겨 주세요 (docs/PROMO_IMAGE_GUIDE.md)",
+      );
+      return false;
+    }
+    return true;
+  });
 
   // 슬롯이 비면 섹션 자체가 없다 — 빈 여백을 남기지 않는다
   if (items.length === 0) return null;
@@ -57,6 +72,13 @@ export default function PromoSlot({ slot }: { slot: PromoSlotName }) {
               className="block rounded-panel transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5"
             >
               {img}
+              {/*
+                링크의 접근 가능한 이름은 alt 전문이다 — 이미지를 **설명하는** 글이라
+                "눌렀을 때 어디로 가는지"를 말하지 않는다. 스크린리더 링크 목록에
+                200자가 넘는 항목만 늘어서고 목적지는 어디에도 없다(WCAG 2.4.4).
+                설명은 alt 가 맡고, 목적지는 이 한 줄이 맡는다.
+              */}
+              <span className="sr-only">— 상담 신청하러 가기</span>
             </Link>
           ) : (
             <div key={it.id}>{img}</div>

@@ -25,19 +25,10 @@ import { fileURLToPath } from "node:url";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = join(ROOT, "public", "promo");
 
-// globals.css 토큰과 같은 값 — 사이트와 이미지의 초록이 어긋나면 바로 티가 난다
-const C = {
-  ink: "#17191c",
-  muted: "#5b6670",
-  faint: "#8e9aa6",
-  brand: "#07b040",
-  brandDark: "#0a8230",
-  brandLight: "#dff7e6",
-  line: "#e4eaf0",
-  surface: "#f5f8fa",
-  white: "#ffffff",
-};
-const FONT = "Apple SD Gothic Neo";
+// 팔레트·폰트는 공용 모듈 한 곳에서 온다 (scripts/promo-kit.mjs).
+// 예전에는 생성기마다 복제해 두었고, 그러다 `faint` 가 어긋나
+// 이 파일이 만든 이미지의 마무리 문장만 2.87:1 로 찍혔다.
+import { C, FONT, esc, fit, finish } from "./promo-kit.mjs";
 
 const COPY = {
   eyebrow: "상담 전에 알려드립니다",
@@ -62,9 +53,6 @@ const COPY = {
   ],
   footer: "숫자부터 말하지 않습니다. 조건부터 말씀드립니다.",
 };
-
-const esc = (s) =>
-  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 /** 여러 줄 텍스트. SVG 는 자동 줄바꿈이 없어 tspan 으로 직접 쌓는다 */
 const lines = (arr, x, y, lh, attrs) =>
@@ -97,6 +85,11 @@ function cardHeight(lineCount, w, numSize, titleSize, bodySize) {
 /** 카드 한 장 */
 function card(x, y, w, h, c, numSize, titleSize, bodySize) {
   const pad = Math.round(w * 0.082);
+  // 가로 넘침 검사. 이 생성기에는 폭 검사가 아예 없었는데, 정작 과거에
+  // 글자가 잘린 사고(모바일 카드 3번째 줄)가 난 쪽이 여기다.
+  // 제목은 번호 원 오른쪽부터, 본문은 좌우 패딩 안쪽이 쓸 수 있는 폭이다.
+  fit(`카드 제목 "${c.title}"`, c.title, titleSize, w - pad * 2);
+  for (const b of c.body) fit(`카드 본문 "${c.title}"`, b, bodySize, w - pad * 2);
   return `
     <g>
       <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${Math.round(w * 0.055)}"
@@ -188,3 +181,6 @@ for (const [name, svg] of [
     .toFile(join(OUT, name));
   console.log(`public/promo/${name}  ${info.width}x${info.height}`);
 }
+
+// 넘침이 하나라도 있으면 0 이 아닌 코드로 끝낸다 (scripts/promo-kit.mjs)
+finish();

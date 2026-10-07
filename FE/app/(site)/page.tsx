@@ -62,7 +62,7 @@ export default async function HomePage() {
       <ConsultCue>
         표시된 금액은 조건에 따라 달라집니다. 어떤 구성이 맞는지 확인해 드립니다.
       </ConsultCue>
-      <PromoSlot slot="afterCarrierHub" />
+      <PromoSlot slot="afterPriceCompare" />
       <Journey />
       <ConsultCue>
         어느 단계든 궁금한 점은 상담 때 먼저 짚어 드립니다.
