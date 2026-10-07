@@ -34,14 +34,14 @@ export default async function PriceCompare() {
             <h3 className="text-base font-black text-foreground md:text-lg">
               인터넷 {SPEED} + TV · 월 납부요금
             </h3>
-            <p className="text-[11px] text-muted md:text-xs">
+            <p className="text-xs text-muted">
               단위: 원/월 · 3년 약정 · 휴대폰 1회선 결합 · VAT 포함
             </p>
           </div>
 
           <PriceBars items={items} />
 
-          <p className="mt-7 border-t border-line pt-5 text-[11px] leading-relaxed text-muted md:text-xs">
+          <p className="mt-7 border-t border-line pt-5 text-xs leading-relaxed text-muted">
             통신사마다 TV 구성 등급 체계가 달라 같은 금액이라도 채널 수와 부가서비스가
             다릅니다. 막대 아래 구성명을 함께 확인해 주세요. {PLAN_DISCLAIMER}
           </p>

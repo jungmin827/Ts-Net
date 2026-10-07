@@ -20,7 +20,7 @@ import sharp from "sharp";
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { C, FONT, esc, fit, finish } from "./promo-kit.mjs";
+import { C, FONT, esc, fit, finish, assertFit } from "./promo-kit.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = join(ROOT, "public", "promo");
@@ -104,11 +104,15 @@ function mobile() {
   </svg>`;
 }
 
-mkdirSync(OUT, { recursive: true });
-for (const [name, svg] of [
+// SVG 를 먼저 전부 만들고, 넘쳤으면 파일을 한 장도 쓰지 않고 끊는다
+const JOBS = [
   ["compare-four.png", desktop()],
   ["compare-four-m.png", mobile()],
-]) {
+];
+assertFit();
+
+mkdirSync(OUT, { recursive: true });
+for (const [name, svg] of JOBS) {
   const info = await sharp(Buffer.from(svg))
     .png({ compressionLevel: 9 })
     .toFile(join(OUT, name));

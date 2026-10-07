@@ -79,7 +79,7 @@ export default function ConsultGuide() {
                 {CONSULT_GUIDE.notes.map((n) => (
                   <li
                     key={n}
-                    className="text-[11px] leading-relaxed text-muted md:text-xs"
+                    className="text-xs leading-relaxed text-muted"
                   >
                     {n}
                   </li>

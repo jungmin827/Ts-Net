@@ -39,6 +39,15 @@ export default function LiveFeed() {
   const [items, setItems] = useState<FeedItem[]>([]);
   /** 서버 렌더·첫 페인트는 항상 "아직 모름" 이다 — 단정하지 않는다 */
   const [state, setState] = useState<FeedState>("loading");
+  /**
+   * 롤링 정지 (WCAG 2.2.2 Pause, Stop, Hide).
+   * 32초짜리 무한 애니메이션이라 "자동으로 시작해 5초를 넘기는 움직임"에 해당한다.
+   * 호버 일시정지만 있었는데 **그건 포인터가 있는 사람만 쓸 수 있는 수단**이다 —
+   * 키보드·터치 사용자에게는 멈출 방법이 없었다. 홍보 밴드에서 같은 이유로
+   * 이미 한 번 버튼을 달았는데, 이쪽은 데이터가 0건이라 렌더된 적이 없어
+   * 그때 함께 잡히지 않았다.
+   */
+  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     fetch("/api/feed/live")
@@ -68,6 +77,27 @@ export default function LiveFeed() {
           description="실제 접수된 상담 신청만 마스킹해 표시합니다"
         />
 
+        <div className="mb-3 flex justify-end">
+          <button
+            type="button"
+            onClick={() => setPaused((v) => !v)}
+            aria-pressed={paused}
+            className="flex cursor-pointer items-center gap-1.5 rounded-full border border-line-strong bg-white px-3 py-1.5 text-xs font-bold text-muted transition-colors hover:border-brand hover:text-brand-dark"
+          >
+            {paused ? (
+              <svg width="11" height="12" viewBox="0 0 11 12" fill="currentColor" aria-hidden="true">
+                <path d="M1 1l9 5-9 5z" />
+              </svg>
+            ) : (
+              <svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor" aria-hidden="true">
+                <rect x="0" y="0" width="3.2" height="12" rx="1" />
+                <rect x="6.8" y="0" width="3.2" height="12" rx="1" />
+              </svg>
+            )}
+            {paused ? "다시 흐르게" : "목록 멈춤"}
+          </button>
+        </div>
+
         <div className="overflow-hidden rounded-panel border border-line bg-white shadow-card">
           {/* 표 머리 — 각 열이 무엇인지 알려줘야 나열이 정보로 읽힌다 */}
           <div className="grid grid-cols-[4.5rem_3.5rem_1fr_5rem_4rem] items-center gap-2 border-b border-line bg-surface-muted px-4 py-3 text-xs font-bold text-muted sm:grid-cols-[6rem_5rem_1fr_6rem_5rem] sm:px-5">
@@ -86,7 +116,11 @@ export default function LiveFeed() {
                 "linear-gradient(to bottom, transparent, #000 8%, #000 92%, transparent)",
             }}
           >
-            <ul className="animate-feed-scroll group-hover:[animation-play-state:paused]">
+            {/* 호버 정지는 포인터 전용이라 수단이 되지 못한다 — 위 버튼이 본 수단이다 */}
+            <ul
+              className="animate-feed-scroll group-hover:[animation-play-state:paused]"
+              style={paused ? { animationPlayState: "paused" } : undefined}
+            >
               {doubled.map((it, i) => (
                 <li
                   key={i}

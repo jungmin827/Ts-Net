@@ -51,7 +51,7 @@ export default function PrivacyPromise() {
             {CONSENT.privacyDetail.map((d) => (
               <li
                 key={d}
-                className="text-[11px] leading-relaxed text-muted md:text-xs"
+                className="text-xs leading-relaxed text-muted"
               >
                 {d}
               </li>

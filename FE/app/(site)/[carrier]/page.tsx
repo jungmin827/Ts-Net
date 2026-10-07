@@ -90,8 +90,21 @@ export default async function CarrierPage({ params }: Params) {
         id="consult"
         className="scroll-mt-24 bg-surface-muted py-16 md:py-20"
       >
-        <div className="mx-auto max-w-xl px-4">
-          <div className="rounded-panel border border-line bg-white p-6 shadow-float md:p-8">
+        {/*
+          히어로와 같은 폭 계산을 여기에도 적용한다.
+          `LeadForm` 안의 Turnstile 은 `size:"flexible"` 이어도 **최소 300px** 이다.
+          거터 16 + 카드 패딩 24 + 테두리 1 을 양쪽에 두면 360px 기기에서
+          내부가 278px 밖에 안 남아 위젯이 22px 잘린다.
+          거터 12 + 패딩 16 으로 줄이면 302px 가 되어 들어맞는다.
+
+          ⚠ 히어로만 고치고 여기를 놓쳤었다. 그때 "통신사 4페이지 360px 넘침 0건"
+            으로 통과시켰는데, 그 0 을 만든 건 같은 작업에서 넣은
+            `overflow-x-auto` 래퍼였다 — **내가 넣은 안전장치가 내 측정 지표를
+            무력화한 것**이다. 페이지 넘침이 아니라 **위젯이 제 칸에 들어가는지**를
+            따로 재야 한다.
+        */}
+        <div className="mx-auto max-w-xl px-3 sm:px-4">
+          <div className="rounded-panel border border-line bg-white p-4 shadow-float sm:p-6 md:p-8">
             <SectionHeading
               title={`${info.label} 가입 상담 신청`}
               description="남겨주신 연락처로 확인 후 순차적으로 연락드립니다"

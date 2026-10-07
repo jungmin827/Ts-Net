@@ -76,11 +76,23 @@ export function fit(label, s, size, maxW) {
 }
 
 /**
- * 생성 끝에 부른다. **넘침이 있으면 0 이 아닌 코드로 끝낸다.**
+ * **PNG 를 쓰기 전에** 부른다. 넘침이 있으면 아무것도 쓰지 않고 끝낸다.
  *
- * 예전에는 경고만 찍고 정상 종료했다. 그러면 CI 도 사람도 그냥 지나치고,
- * 글자가 잘린 PNG 가 그대로 커밋된다 — 실제로 모바일판 카드의 3번째 줄이
- * 통째로 잘려 나간 적이 있다. 경고를 실패로 승격시킨다.
+ * `finish()` 만 있던 시절의 구멍 — 종료 코드는 1 이 됐지만 그건
+ * `toFile()` 루프가 **이미 다 돌고 난 뒤**였다. 잘린 PNG 가 디스크에 남고
+ * 종료 코드만 1 이라, 막겠다고 선언한 "잘린 PNG 커밋" 을 정작 못 막았다.
+ * SVG 를 다 만든 직후(= fit 호출이 전부 끝난 시점) 여기서 끊는다.
+ */
+export function assertFit() {
+  if (WARN.length === 0) return;
+  console.error("\nFIT 실패 — 줄을 더 끊으세요. **파일을 쓰지 않았습니다.**");
+  console.error([...new Set(WARN)].join("\n"));
+  process.exit(1);
+}
+
+/**
+ * 생성 끝에 부른다. 여기까지 왔으면 넘침이 없다는 뜻이다.
+ * (`assertFit()` 이 앞에서 끊으므로 이 함수는 통과 메시지만 찍는다.)
  */
 export function finish() {
   if (WARN.length === 0) {

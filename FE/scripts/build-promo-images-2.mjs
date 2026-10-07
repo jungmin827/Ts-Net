@@ -32,7 +32,7 @@ const OUT = join(ROOT, "public", "promo");
 /* 팔레트·폰트·측정 도구는 공용 모듈 한 곳에서 온다 (scripts/promo-kit.mjs).
    예전에는 생성기마다 복제해 두었고, 그러다 `faint` 가 어긋나
    1차 생성기가 만든 이미지의 마무리 문장만 2.87:1 로 찍혔다. */
-import { C, FONT, esc, fit, finish } from "./promo-kit.mjs";
+import { C, FONT, esc, fit, finish, assertFit } from "./promo-kit.mjs";
 
 /* =====================================================================
    COPY — 운영자가 고치는 유일한 자리
@@ -524,6 +524,9 @@ const JOBS = [
   [`${COPY.beforeCall.base}.png`, cardsDesktop(COPY.beforeCall, 4, 40)],
   [`${COPY.beforeCall.base}-m.png`, cardsMobile(COPY.beforeCall)],
 ];
+
+// JOBS 를 만드는 동안 fit 검사가 끝난다. 넘쳤으면 파일을 쓰지 않고 끊는다.
+assertFit();
 
 mkdirSync(OUT, { recursive: true });
 for (const [name, svg] of JOBS) {

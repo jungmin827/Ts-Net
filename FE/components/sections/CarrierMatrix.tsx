@@ -124,7 +124,7 @@ export default async function CarrierMatrix() {
           ))}
         </ul>
 
-        <p className="mt-6 text-[11px] leading-relaxed text-muted md:text-xs">
+        <p className="mt-6 text-xs leading-relaxed text-muted">
           월 요금은 등록된 인터넷+TV 결합 상품의 최저·최고 금액이며, 3년 약정 ·
           휴대폰 1회선 결합 · VAT 포함 기준입니다. 통신사마다 TV 구성 등급 체계가
           달라 같은 금액이라도 채널 수와 부가서비스가 다릅니다. {PLAN_DISCLAIMER}

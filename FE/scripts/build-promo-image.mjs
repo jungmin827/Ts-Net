@@ -28,7 +28,7 @@ const OUT = join(ROOT, "public", "promo");
 // 팔레트·폰트는 공용 모듈 한 곳에서 온다 (scripts/promo-kit.mjs).
 // 예전에는 생성기마다 복제해 두었고, 그러다 `faint` 가 어긋나
 // 이 파일이 만든 이미지의 마무리 문장만 2.87:1 로 찍혔다.
-import { C, FONT, esc, fit, finish } from "./promo-kit.mjs";
+import { C, FONT, esc, fit, finish, assertFit } from "./promo-kit.mjs";
 
 const COPY = {
   eyebrow: "상담 전에 알려드립니다",
@@ -171,11 +171,16 @@ function mobileSvg() {
   </svg>`;
 }
 
-mkdirSync(OUT, { recursive: true });
-for (const [name, svg] of [
+// SVG 를 **먼저 전부** 만든다 — fit 검사가 이 시점에 모두 끝난다
+const JOBS = [
   ["check-three.png", desktopSvg()],
   ["check-three-m.png", mobileSvg()],
-]) {
+];
+// 넘쳤으면 여기서 끊는다. 파일은 한 장도 쓰지 않는다.
+assertFit();
+
+mkdirSync(OUT, { recursive: true });
+for (const [name, svg] of JOBS) {
   const info = await sharp(Buffer.from(svg))
     .png({ compressionLevel: 9 })
     .toFile(join(OUT, name));
