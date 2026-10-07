@@ -29,6 +29,14 @@ import SectionHeading from "@/components/ui/SectionHeading";
  *
  * 열 구성은 **월 요금을 두 번째 열**로 둔다. 좁은 화면에서 가로 스크롤 전에
  * 보이는 두 열이 `상품명 / 월 요금` 이어야 가격 페이지로서 성립한다.
+ *
+ * TV 구성 열은 **정보를 더할 때만** 세운다.
+ * 통신사에 따라 상품명이 이미 구성을 품고 있다(`100M+WIFI+TV베이직`).
+ * 그럴 때 열을 하나 더 세우면 같은 글자가 한 줄에 두 번 나오고,
+ * 모바일에서는 표 최소 폭만 130px 늘어 가로 스크롤이 길어진다.
+ * 반대로 이름이 구성을 말해주지 않는 통신사에서는, 설명문까지 비어 있으면
+ * (레퍼런스 카피 제거 후 전부 NULL) 금액이 다른 행 여럿만 남고
+ * **왜 다른지가 화면 어디에도 없다.** 그 경우에만 DB 값을 열로 세운다.
  */
 
 /** 이 행 수를 넘고 속도 축이 2개 이상일 때만 속도별로 접는다 */
@@ -36,6 +44,8 @@ const ACCORDION_MIN_ROWS = 6;
 
 interface Cols {
   speed: boolean;
+  /** TV 구성 열. 상품명이 이미 그 구성을 품고 있으면 중복이므로 숨긴다 */
+  tv: boolean;
   /** 할인 전 금액 열. 전 행이 할인 전·후가 같으면 숨긴다 */
   discount: boolean;
   gift: boolean;
@@ -47,6 +57,7 @@ const COL_WIDTH = {
   fee: 120,
   discount: 110,
   speed: 90,
+  tv: 130,
   contract: 90,
   gift: 120,
 } as const;
@@ -58,6 +69,7 @@ function tableMinWidth(cols: Cols): number {
     COL_WIDTH.contract +
     (cols.discount ? COL_WIDTH.discount : 0) +
     (cols.speed ? COL_WIDTH.speed : 0) +
+    (cols.tv ? COL_WIDTH.tv : 0) +
     (cols.gift ? COL_WIDTH.gift : 0)
   );
 }
@@ -91,6 +103,11 @@ function PlanRows({ list, cols }: { list: Plan[]; cols: Cols }) {
               {cols.speed && (
                 <th scope="col" className="px-5 py-3.5 font-bold">
                   속도
+                </th>
+              )}
+              {cols.tv && (
+                <th scope="col" className="px-5 py-3.5 font-bold">
+                  TV 구성
                 </th>
               )}
               <th scope="col" className="px-5 py-3.5 text-center font-bold">
@@ -132,6 +149,11 @@ function PlanRows({ list, cols }: { list: Plan[]; cols: Cols }) {
                 {cols.speed && (
                   <td className="px-5 py-3.5 text-muted">{p.speed ?? "-"}</td>
                 )}
+                {cols.tv && (
+                  <td className="px-5 py-3.5 whitespace-nowrap text-muted">
+                    {p.tv_option ?? "-"}
+                  </td>
+                )}
                 <td className="px-5 py-3.5 text-center text-muted">
                   {formatContract(p.contract_months)}
                 </td>
@@ -172,6 +194,19 @@ function CategoryBlock({
   // 속도별로 접은 경우 한 묶음 안의 행은 모두 같은 속도라, 속도 열은 요약줄과 중복된다.
   const cols: Cols = {
     speed: !useAccordion && list.some((p) => p.speed != null),
+    // 이름에 이미 들어 있는 행은 열이 필요 없다. 한 행이라도 이름만으로
+    // 구성을 알 수 없으면 그 묶음 전체에 열을 세운다 (묶음마다 열 수가
+    // 달라지면 비교가 안 되므로 판정은 그룹 단위다).
+    //
+    // 비교 전에 공백을 지운다 — `TV 이코노미`(상품명)와 `TV이코노미`(구성값)는
+    // 같은 것을 가리키는데 글자만 보면 어긋나, 쓸데없는 열이 하나 생긴다.
+    // 반대로 `500M+WIFI+T스탠다드`(원문 오타를 보존한 행)처럼 **정말로** 이름이
+    // 등급을 말해주지 않는 경우는 그대로 걸러져 열이 선다.
+    tv: list.some((p) => {
+      if (!p.tv_option) return false;
+      const flat = (v: string) => v.replace(/\s+/g, "");
+      return !flat(p.name).includes(flat(p.tv_option));
+    }),
     discount: list.some(
       (p) => p.list_fee != null && p.list_fee !== p.monthly_fee,
     ),

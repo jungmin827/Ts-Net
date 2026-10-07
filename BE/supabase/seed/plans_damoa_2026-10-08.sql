@@ -108,7 +108,7 @@ values
   -- KT 인터넷 + TV 결합
   ('KT', 'BUNDLE', '100M+WIFI+TV베이직',          '100M', 'TV베이직', 39600, 39600, 36, NULL, NULL, 10, true),
   ('KT', 'BUNDLE', '500M+WIFI+TV베이직',          '500M', 'TV베이직', 45100, 50600, 36, NULL, NULL, 11, true),
-  ('KT', 'BUNDLE', '1G+WIFI+TV베이직',            '1G',   'TV베이직', 49500, 56000, 36, NULL, NULL, 12, true),  -- 불일치 A
+  ('KT', 'BUNDLE', '1G+WIFI+TV베이직',            '1G',   'TV베이직', 49500, 55000, 36, NULL, NULL, 12, true),  -- A 판정: 다모아 표기오류(56,000) 교정
   ('KT', 'BUNDLE', '100M+WIFI+TV모든G',           '100M', 'TV모든G',  45100, 45100, 36, NULL, NULL, 13, true),
   ('KT', 'BUNDLE', '500M+WIFI+TV모든G',           '500M', 'TV모든G',  50600, 56100, 36, NULL, NULL, 14, true),
   ('KT', 'BUNDLE', '1G+WIFI+TV모든G',             '1G',   'TV모든G',  55000, 60500, 36, NULL, NULL, 15, true),
@@ -121,7 +121,7 @@ values
   ('KT', 'TV', 'TV 모든G',  NULL, 'TV모든G',  22000, NULL, 36, NULL, '250개 채널 / TV 추가 1대당 월 10,670원', 41, true),
   -- KT 휴대폰 정액 결합
   ('KT', 'MOBILE', '거의 안씀(5G 슬림 4GB)',      NULL, NULL, 24750, 27750, 36, NULL, NULL, 50, true),
-  ('KT', 'MOBILE', '기본 데이터(5G 슬림 10GB)',   NULL, NULL, 34750, 37500, 36, NULL, NULL, 51, true),  -- 불일치 H
+  ('KT', 'MOBILE', '기본 데이터(5G 슬림 10GB)',   NULL, NULL, 34750, 37500, 36, NULL, NULL, 51, true),  -- H 미확정: 요금표 34,750 유지(계산기 34,500)
   ('KT', 'MOBILE', '완전 무제한(5G 베이직)',      NULL, NULL, 53000, 60000, 36, NULL, NULL, 52, true),
 
   -- ===================== SK =====================
@@ -130,11 +130,11 @@ values
   ('SK', 'BUNDLE', '프리미엄 결합',               '1G+WIFI포함',   'TV올플',      60500, 68200, 36, NULL, NULL, 3, true),
   -- SK 인터넷 + TV 결합
   ('SK', 'BUNDLE', '100M+WIFI+TV이코노미',        '100M', 'TV이코노미', 36300, 39600, 36, NULL, NULL, 10, true),
-  ('SK', 'BUNDLE', '500M+WIFI+TV이코노미',        '500M', 'TV이코노미', 48400, 50600, 36, NULL, NULL, 11, true),  -- 불일치 B
+  ('SK', 'BUNDLE', '500M+WIFI+TV이코노미',        '500M', 'TV이코노미', 42900, 50600, 36, NULL, NULL, 11, true),  -- B 판정: 다모아 표기오류(48,400) 교정
   ('SK', 'BUNDLE', '1G+WIFI+TV이코노미',          '1G',   'TV이코노미', 48400, 56100, 36, NULL, NULL, 12, true),
   ('SK', 'BUNDLE', '100M+WIFI+TV스탠다드',        '100M', 'TV스탠다드', 39600, 42900, 36, NULL, NULL, 13, true),
-  ('SK', 'BUNDLE', '500M+WIFI+T스탠다드',         '500M', 'TV스탠다드', 50600, 56100, 36, NULL, NULL, 14, true),  -- 불일치 C, name 원문 보존
-  ('SK', 'BUNDLE', '1G+WIFI+TV스탠다드',          '1G',   'TV스탠다드', 51700, 53900, 36, NULL, NULL, 15, true),  -- 불일치 D
+  ('SK', 'BUNDLE', '500M+WIFI+T스탠다드',         '500M', 'TV스탠다드', 46200, 53900, 36, NULL, NULL, 14, true),  -- C 판정: 다모아 표기오류 교정 / name 원문 보존
+  ('SK', 'BUNDLE', '1G+WIFI+TV스탠다드',          '1G',   'TV스탠다드', 51700, 53900, 36, NULL, NULL, 15, true),  -- D 미확정: 게시값 유지(정합값 59,400 미게시)
   ('SK', 'BUNDLE', '100M+WIFI+TV올플',            '100M', 'TV올플',     48400, 51700, 36, NULL, NULL, 16, true),
   ('SK', 'BUNDLE', '500M+WIFI+TV올플',            '500M', 'TV올플',     55000, 62700, 36, NULL, NULL, 17, true),
   ('SK', 'BUNDLE', '1G+WIFI+TV올플',              '1G',   'TV올플',     60500, 68200, 36, NULL, NULL, 18, true),
@@ -156,11 +156,11 @@ values
   ('LG', 'BUNDLE', '스탠다드 결합',               '500MB+WIFI포함', 'TV프리미엄', 48400, 57200, 36, NULL, NULL, 2, true),
   ('LG', 'BUNDLE', '프리미엄 결합',               '1G+WIFI포함',    'TV프리미엄', 53900, 61600, 36, NULL, NULL, 3, true),
   -- LG 인터넷 + TV 결합
-  ('LG', 'BUNDLE', '100M+WIFI+TV실속형',          '100M', 'TV실속형',   29600, 41800, 36, NULL, NULL, 10, true),  -- 불일치 E
+  ('LG', 'BUNDLE', '100M+WIFI+TV실속형',          '100M', 'TV실속형',   39600, 41800, 36, NULL, NULL, 10, true),  -- E 판정: 다모아 표기오류(29,600) 교정
   ('LG', 'BUNDLE', '500M+WIFI+TV실속형',          '500M', 'TV실속형',   45100, 52800, 36, NULL, NULL, 11, true),
   ('LG', 'BUNDLE', '1G+WIFI+TV실속형',            '1G',   'TV실속형',   49500, 58300, 36, NULL, NULL, 12, true),
-  ('LG', 'BUNDLE', '100M+WIFI+TV프리미엄',        '100M', 'TV프리미엄', 42900, 46200, 36, NULL, NULL, 13, true),  -- 불일치 F
-  ('LG', 'BUNDLE', '500M+WIFI+TV프리미엄',        '500M', 'TV프리미엄', 48400, 57200, 36, NULL, NULL, 14, true),  -- 불일치 F
+  ('LG', 'BUNDLE', '100M+WIFI+TV프리미엄',        '100M', 'TV프리미엄', 42900, 46200, 36, NULL, NULL, 13, true),  -- F 판정: 요금표 값 채택(계산기 합 45,100)
+  ('LG', 'BUNDLE', '500M+WIFI+TV프리미엄',        '500M', 'TV프리미엄', 48400, 57200, 36, NULL, NULL, 14, true),  -- F 판정: 요금표+추천카드 2:1 로 57,200 채택
   ('LG', 'BUNDLE', '1G+WIFI+TV프리미엄',          '1G',   'TV프리미엄', 53900, 61600, 36, NULL, NULL, 15, true),
   -- LG 인터넷 단독
   ('LG', 'INTERNET', '인터넷 100메가+WIFI',       '100M', NULL, 22000, NULL, 36, NULL, NULL, 30, true),
@@ -186,7 +186,7 @@ values
   ('SKYLIFE', 'BUNDLE', '100M+WIFI+TV플러스',     '100M', 'TV플러스', 31900, 35200, 36, NULL, NULL, 14, true),
   ('SKYLIFE', 'BUNDLE', '200M+WIFI+TV플러스',     '200M', 'TV플러스', 33000, 36300, 36, NULL, NULL, 15, true),
   ('SKYLIFE', 'BUNDLE', '500M+WIFI+TV플러스',     '500M', 'TV플러스', 38500, 41800, 36, NULL, NULL, 16, true),
-  ('SKYLIFE', 'BUNDLE', '1G+WIFI+TV플러스',       '1G',   'TV플러스', 44000, 47400, 36, NULL, NULL, 17, true),  -- 불일치 G
+  ('SKYLIFE', 'BUNDLE', '1G+WIFI+TV플러스',       '1G',   'TV플러스', 44000, 47300, 36, NULL, NULL, 17, true),  -- G 판정: 다모아 표기오류(47,400) 교정
   -- 스카이라이프 인터넷 단독
   ('SKYLIFE', 'INTERNET', '인터넷 100메가+WIFI',  '100M', NULL, 24200, NULL, 36, NULL, NULL, 30, true),
   ('SKYLIFE', 'INTERNET', '인터넷 200메가+WIFI',  '200M', NULL, 25300, NULL, 36, NULL, NULL, 31, true),

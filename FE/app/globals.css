@@ -227,6 +227,63 @@ h3 {
   color: #fff;
 }
 
+/* 주 CTA 주목 연출 — 빛이 한 번 훑고 지나간다.
+   레퍼런스는 같은 자리에 pulse·shine·화살표 흔들림 **세 개를 무한 반복**으로 건다.
+   그건 WCAG 2.2.2(Pause, Stop, Hide) 대상이 되고 — 자동으로 시작해 5초를 넘기는
+   움직임에는 멈출 수단이 있어야 한다 — 화면에 정지 버튼을 또 하나 늘린다.
+
+   그래서 **유한하게** 둔다. 2회 × 2.2초 = 4.4초면 5초를 넘지 않아 정지 컨트롤이
+   필요 없고, 주목시키는 일은 그대로 한다. 끝나면 버튼은 조용해진다.
+   모션 최소화 설정에서는 아래 `prefers-reduced-motion` 블록이 1회로 줄인다. */
+@keyframes cta-shine {
+  0% {
+    transform: translateX(-130%) skewX(-18deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(240%) skewX(-18deg);
+    opacity: 0;
+  }
+}
+.cta-fill {
+  position: relative;
+  overflow: hidden;
+}
+.cta-fill::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 38%;
+  background-image: linear-gradient(
+    100deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.34) 50%,
+    transparent 100%
+  );
+  /* 포커스 윤곽선은 outline 이라 overflow 에 잘리지 않는다. 포인터도 통과시킨다 */
+  pointer-events: none;
+  /* ⚠ **기본 상태가 보이지 않는 상태여야 한다.**
+     `animation-fill-mode` 를 주지 않았으므로 재생이 끝나면 여기 적힌 값으로
+     되돌아간다. opacity 를 적어 두지 않으면 기본값 1 로 돌아가,
+     연출이 끝난 뒤 **38% 폭짜리 흰 띠가 모든 CTA 왼쪽에 영구히 남는다.**
+     (실측으로 잡았다 — 끝난 뒤 transform=none / opacity=1 이었다.) */
+  opacity: 0;
+  transform: translateX(-130%) skewX(-18deg);
+  animation: cta-shine 2.2s ease-in-out 0.45s 2;
+}
+/* 비활성 버튼은 주목시킬 일이 없다 */
+.cta-fill:disabled::after {
+  animation: none;
+  content: none;
+}
+
 /* 요금 비교 막대 — 최종 상태가 '기본값'이고 애니메이션은 덧칠이다.
    height 전환은 메인스레드 작업이라 탭이 비포커스면 중간에 멈추는 것을 확인했다
    (높이 145px 지정인데 46px 에서 정지). 그래서 높이는 처음부터 제 값으로 두고,
