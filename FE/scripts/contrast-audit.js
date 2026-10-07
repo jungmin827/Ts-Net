@@ -1,98 +1,129 @@
 /**
- * 대비 감사 스니펫 — 브라우저 DevTools 콘솔에 붙여넣고 실행한다.
+ * 대비 감사기 — DevTools 콘솔에 통째로 붙여넣어 실행한다.
  *
- *   1. 검사할 페이지를 연다 (http://localhost:3100/ , /kt , /admin/login ...)
- *   2. 이 파일 전체를 콘솔에 붙여넣는다
- *   3. 위반이 있으면 표로 출력된다. 0건이면 "위반 없음"
+ * 왜 캔버스로 합성하는가 —
+ *   이전 판은 `getComputedStyle(el).color` 를 정규식 `[\d.]+` 으로 파싱했다.
+ *   Tailwind v4 의 `text-white/95` 는 `oklab(0.999994 0.0000455678 … / 0.95)`
+ *   로 계산되므로 그 정규식은 첫 세 숫자를 r,g,b 로 읽어 **거의 검정**으로
+ *   오판한다. 그 탓에 통과한 자리를 17건 위반으로 보고했다.
+ *   캔버스에 실제로 칠하면 색 공간·알파 합성을 브라우저가 처리해 준다.
  *
- * 왜 정적 검사가 아니라 이 방식인가 —
- * 토큰 조합표를 눈으로 세는 방식으로 19곳을 고쳤는데 그때 5곳을 놓쳤다.
- * 실제로 중요한 건 "어떤 토큰이 위험한가"가 아니라 "그 조합이 **지금 화면 어디에
- * 실제로 쓰이고 있는가**" 다. 배경이 상속·중첩되고 틴트 면 위에서 대비가 또
- * 달라지기 때문에(흰 배경 4.63:1 → 푸터 #f5f8fa 4.34:1), 렌더된 DOM 을 봐야 한다.
+ * 배경 판정 —
+ *   · 불투명한 배경색을 만날 때까지 부모를 거슬러 올라간다.
+ *   · 그라디언트를 만나면 **모든 색 정지점**을 뽑아 가장 나쁜 쪽으로 판정한다.
+ *     CTA 버튼처럼 위아래 밝기가 다른 면은 밝은 끝이 기준이 되어야 한다.
+ *   · 완전 투명한 정지점은 건너뛴다. 밑줄·형광펜 효과
+ *     (`linear-gradient(transparent 62%, #dff7e6 62%)`)의 투명 구간을
+ *     검정으로 세면 멀쩡한 글자가 위반으로 잡힌다.
  *
- * 판정 기준 (WCAG 2.2 AA)
- *   - 일반 텍스트 4.5:1
- *   - 큰 텍스트(24px 이상, 또는 18.66px 이상 + 700 굵기) 3:1
- *   - 그라데이션 배경 위 텍스트는 건너뛴다 (단색 환산이 불가 — .cta-fill 은 별도 검증됨)
+ * 기준 — 본문 4.5:1 / 큰 글씨 3:1 (24px 이상, 또는 18.66px 이상 굵게).
+ *   18px 굵은 글씨는 **큰 글씨가 아니다.** 반올림해 통과시키지 말 것.
  */
 (() => {
+  const cv = document.createElement("canvas");
+  cv.width = cv.height = 1;
+  const ctx = cv.getContext("2d", { willReadFrequently: true });
+
+  const px = (bg, fg) => {
+    ctx.clearRect(0, 0, 1, 1);
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, 1, 1);
+    if (fg) {
+      ctx.fillStyle = fg;
+      ctx.fillRect(0, 0, 1, 1);
+    }
+    const d = ctx.getImageData(0, 0, 1, 1).data;
+    return [d[0], d[1], d[2]];
+  };
   const lum = ([r, g, b]) => {
     const f = (v) => {
       v /= 255;
-      return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+      return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
     };
     return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
   };
   const ratio = (a, b) => {
-    const [x, y] = [lum(a), lum(b)];
-    return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+    const l1 = lum(a);
+    const l2 = lum(b);
+    return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
   };
-  const parse = (s) => {
-    const m = s.match(/rgba?\(([^)]+)\)/);
-    if (!m) return null;
-    const p = m[1].split(",").map(Number);
-    return { rgb: [p[0], p[1], p[2]], a: p.length > 3 ? p[3] : 1 };
+  /** 두 다른 바탕 위에 칠해 같은 값이 나오면 불투명 */
+  const opaque = (c) => {
+    const a = px("rgb(255,0,255)", c);
+    const b = px("rgb(0,255,0)", c);
+    return a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
   };
-  // 실제로 보이는 배경을 찾아 올라간다. 반투명은 건너뛰고, 그라데이션은 판정 보류.
-  const bgOf = (el) => {
-    let e = el;
-    while (e && e !== document.documentElement) {
-      const cs = getComputedStyle(e);
-      if (cs.backgroundImage?.includes("gradient")) return "GRADIENT";
-      const c = parse(cs.backgroundColor);
-      if (c && c.a > 0.85) return c.rgb;
-      e = e.parentElement;
-    }
-    return [255, 255, 255];
+  /** 완전 투명(알파 0)인가 */
+  const transparent = (c) => {
+    ctx.clearRect(0, 0, 1, 1);
+    ctx.fillStyle = c;
+    ctx.fillRect(0, 0, 1, 1);
+    return ctx.getImageData(0, 0, 1, 1).data[3] === 0;
   };
 
-  const rows = [];
-  const seen = new Set();
+  const bad = [];
+  /** 콘솔에서 바로 집어볼 수 있게 요소 참조는 표와 분리해 둔다 */
+  const elements = [];
   for (const el of document.querySelectorAll("body *")) {
-    // 자식 엘리먼트가 아니라 **이 엘리먼트가 직접 가진 텍스트**만 본다
-    const text = [...el.childNodes]
-      .filter((n) => n.nodeType === 3)
-      .map((n) => n.textContent.trim())
-      .join("")
-      .trim();
-    if (!text) continue;
-
-    const r = el.getBoundingClientRect();
-    if (r.width < 4 || r.height < 4) continue;
+    // 자기 자신이 직접 글자를 갖는 요소만 — 컨테이너는 자식이 따로 검사된다
+    if (![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim()))
+      continue;
     const cs = getComputedStyle(el);
-    if (cs.visibility === "hidden" || cs.opacity === "0") continue;
+    if (cs.visibility === "hidden" || cs.display === "none" || +cs.opacity === 0)
+      continue;
+    const box = el.getBoundingClientRect();
+    if (!box.width || !box.height) continue;
 
-    const bg = bgOf(el);
-    if (bg === "GRADIENT") continue;
-    const fg = parse(cs.color);
-    if (!fg) continue;
+    let n = el;
+    let stops = null;
+    while (n && n !== document.documentElement) {
+      const c = getComputedStyle(n);
+      if (c.backgroundImage && c.backgroundImage !== "none") {
+        const m = c.backgroundImage.match(/rgba?\([^)]+\)|#[0-9a-f]{3,8}/gi);
+        const solid = (m ?? []).filter((s) => !transparent(s));
+        if (solid.length) {
+          stops = solid;
+          break;
+        }
+      }
+      if (opaque(c.backgroundColor)) {
+        stops = [c.backgroundColor];
+        break;
+      }
+      n = n.parentElement;
+    }
+    if (!stops) stops = ["rgb(255,255,255)"];
 
     const size = parseFloat(cs.fontSize);
     const weight = parseInt(cs.fontWeight) || 400;
-    const large = size >= 24 || (size >= 18.66 && weight >= 700);
-    const need = large ? 3 : 4.5;
-    const cr = ratio(fg.rgb, bg);
-    if (cr >= need) continue;
+    const need = size >= 24 || (size >= 18.66 && weight >= 700) ? 3 : 4.5;
 
-    const key = `${cs.color}|${size}|${el.className}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    rows.push({
-      글자: text.slice(0, 24),
-      색: cs.color,
-      크기: `${size}px/${weight}`,
-      대비: +cr.toFixed(2),
-      필요: need,
-      클래스: String(el.className).split(" ").slice(0, 3).join(" "),
-    });
+    let worst = Infinity;
+    let worstStop = "";
+    for (const st of stops) {
+      const r = ratio(px(st, cs.color), px(st));
+      if (r < worst) {
+        worst = r;
+        worstStop = st;
+      }
+    }
+    if (worst < need) {
+      bad.push({
+        ratio: +worst.toFixed(2),
+        need,
+        size,
+        weight,
+        bg: worstStop,
+        text: el.textContent.trim().slice(0, 40),
+      });
+      elements.push(el);
+    }
   }
 
-  if (rows.length === 0) {
-    console.log("%c대비 위반 없음", "color:#0a8230;font-weight:bold");
-  } else {
-    console.warn(`대비 위반 ${rows.length}건`);
-    console.table(rows.sort((a, b) => a.대비 - b.대비));
+  console.log(`대비 위반 ${bad.length}건 (본문 4.5 / 큰 글씨 3)`);
+  if (bad.length) {
+    console.table(bad);
+    console.log("위반 요소들:", elements);
   }
-  return rows;
+  return { findings: bad, elements };
 })();

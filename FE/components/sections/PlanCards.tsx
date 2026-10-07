@@ -93,10 +93,10 @@ export default function PlanCards({
 
               {/* 요금 띠 — 카드에서 가장 먼저 눈에 들어와야 하는 정보 */}
               <div className="flex items-baseline justify-between gap-2 bg-brand-dark px-6 py-4 text-white">
-                <span className="text-sm font-medium text-white/85">월 요금</span>
+                <span className="text-sm font-medium text-white/95">월 요금</span>
                 <span className="flex items-baseline gap-2">
                   {p.list_fee != null && p.list_fee !== p.monthly_fee && (
-                    <span className="tabular text-sm text-white/65 line-through">
+                    <span className="tabular text-sm text-white/95 line-through">
                       {formatWon(p.list_fee)}
                     </span>
                   )}

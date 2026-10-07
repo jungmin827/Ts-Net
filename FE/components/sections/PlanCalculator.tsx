@@ -17,6 +17,21 @@ import SectionHeading from "@/components/ui/SectionHeading";
  *
  * 값은 전부 `plans` 결합표에서 찾는다. 표에 없는 조합은 **계산하지 않고**
  * 상담 안내로 대체한다. 없는 값을 보간해 만들어내면 그 숫자는 근거가 없다.
+ *
+ * ── 휴대폰 축을 세 상태로 나눈 이유 ──────────────────────────
+ * 처음에는 기본값이 "미포함"이었고, 그 상태에서 인터넷 금액을 그대로 보여줬다.
+ * 그런데 `combos` 의 `monthly_fee` 는 **휴대폰 1회선 결합 할인이 이미 반영된**
+ * 값이다 (바로 아래 각주 `PRICE_BASIS_LINE` 이 그렇게 적고 있다).
+ * 즉 같은 카드 안에서 "휴대폰 미포함"이라 써 놓고 결합가를 보여주고 있었다 —
+ * 결합 없이는 존재하지 않는 금액이다. 휴대폰을 고르면 그 위에 요금을 더하니
+ * 기본 상태는 실제보다 낮고 선택 상태는 전제가 어긋난 채로 높았다.
+ *
+ * 고칠 방향은 데이터가 정한다. 시드에 **결합 미적용가가 없다.** 그러므로
+ *   · 미선택 — 인터넷+TV 금액(결합 기준)만. 휴대폰 요금은 별도라고 명시
+ *   · 요금제 선택 — 인터넷+TV + 휴대폰 = 월 합계
+ *   · 결합 안 함 — 근거가 되는 금액이 없으므로 **금액을 비우고** 상담 안내
+ * 세 가지로 나눈다. 없는 값을 지어내지 않으면서 어느 상태에서도 거짓을
+ * 말하지 않는 배치는 이것뿐이다.
  */
 export default function PlanCalculator({
   plans,
@@ -29,14 +44,23 @@ export default function PlanCalculator({
 
   const [speed, setSpeed] = useState(m.speeds[0] ?? "");
   const [tv, setTv] = useState(m.tvOptions[0] ?? "");
-  const [mobileId, setMobileId] = useState<number | null>(null);
+  /**
+   * `null` = 아직 고르지 않음 · `"none"` = 결합하지 않음 · 숫자 = 해당 요금제 id.
+   * "아직 안 고름"과 "안 쓰기로 함"은 보여줄 금액이 다르므로 같은 값으로 묶지 않는다.
+   */
+  const [mobileId, setMobileId] = useState<number | "none" | null>(null);
 
   if (m.speeds.length === 0 || m.tvOptions.length === 0) return null;
 
   const combo = findCombo(m, speed, tv);
-  const mobile = m.mobiles.find((p) => p.id === mobileId) ?? null;
+  const mobile =
+    typeof mobileId === "number"
+      ? (m.mobiles.find((p) => p.id === mobileId) ?? null)
+      : null;
+  /** 결합을 안 하기로 한 상태 — 표에 그 금액이 없으므로 합계를 내지 않는다 */
+  const noBundle = mobileId === "none";
   const total =
-    combo?.monthly_fee != null
+    combo?.monthly_fee != null && !noBundle
       ? combo.monthly_fee + (mobile?.monthly_fee ?? 0)
       : null;
 
@@ -95,18 +119,12 @@ export default function PlanCalculator({
             {m.mobiles.length > 0 && (
               <fieldset>
                 <legend className="mb-3 font-bold">
-                  휴대폰 결합{" "}
-                  <span className="text-sm font-medium text-muted">(선택)</span>
+                  결합할 휴대폰 요금제{" "}
+                  <span className="text-sm font-medium text-muted">
+                    (표시 요금은 1회선 결합 기준)
+                  </span>
                 </legend>
                 <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setMobileId(null)}
-                    aria-pressed={mobileId === null}
-                    className={chip(mobileId === null)}
-                  >
-                    미포함
-                  </button>
                   {m.mobiles.map((p) => (
                     <button
                       key={p.id}
@@ -118,6 +136,16 @@ export default function PlanCalculator({
                       {p.name}
                     </button>
                   ))}
+                  {/* "미포함"이 아니라 "결합하지 않음" 이다 —
+                      고르면 금액을 비운다. 결합 미적용가는 표에 없다 */}
+                  <button
+                    type="button"
+                    onClick={() => setMobileId("none")}
+                    aria-pressed={mobileId === "none"}
+                    className={chip(mobileId === "none")}
+                  >
+                    결합하지 않음
+                  </button>
                 </div>
               </fieldset>
             )}
@@ -145,8 +173,14 @@ export default function PlanCalculator({
                     )}
                   <div className="flex items-baseline justify-between gap-3">
                     <dt className="text-muted">휴대폰</dt>
+                    {/* "미포함" 이라고 쓰면 위 금액이 휴대폰 없이 나오는 값처럼
+                        읽힌다. 실제로는 1회선 결합이 전제된 금액이다 */}
                     <dd className="tabular font-bold">
-                      {mobile ? formatWon(mobile.monthly_fee) : "미포함"}
+                      {mobile
+                        ? formatWon(mobile.monthly_fee)
+                        : noBundle
+                          ? "결합 안 함"
+                          : "미선택 (별도)"}
                     </dd>
                   </div>
                 </dl>
@@ -158,11 +192,27 @@ export default function PlanCalculator({
               )}
             </div>
 
-            {/* 합계 띠 — 이 화면에서 가장 먼저 눈에 들어와야 하는 값 */}
+            {/* 합계 띠 — 이 화면에서 가장 먼저 눈에 들어와야 하는 값.
+                라벨이 금액의 범위를 정확히 말해야 한다. 휴대폰을 안 고른 상태의
+                금액은 "월 예상 요금"이 아니라 인터넷+TV 몫일 뿐이다 */}
             <div className="bg-brand-dark px-6 py-5 text-white">
-              <p className="text-sm font-medium text-white/85">월 예상 요금</p>
+              <p className="text-sm font-medium text-white/95">
+                {total == null
+                  ? "월 예상 요금"
+                  : mobile
+                    ? "월 예상 합계 (인터넷+TV+휴대폰)"
+                    : "인터넷 + TV 월 요금"}
+              </p>
               <p className="tabular mt-1 text-3xl font-black">
                 {total != null ? formatWon(total) : "상담 시 안내"}
+              </p>
+              {/* 어느 상태인지 금액 바로 아래에서 한 줄로 못 박는다 */}
+              <p className="mt-2 text-xs leading-relaxed text-white/95">
+                {noBundle
+                  ? "휴대폰을 결합하지 않는 경우의 금액은 요금표에 없어 상담 시 안내해 드립니다."
+                  : mobile
+                    ? "휴대폰 1회선을 결합했을 때의 월 합계입니다."
+                    : "휴대폰 1회선 결합을 전제한 인터넷·TV 요금입니다. 휴대폰 요금은 별도이며, 요금제를 고르시면 합계로 바뀝니다."}
               </p>
             </div>
 
