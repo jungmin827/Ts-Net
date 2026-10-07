@@ -39,7 +39,7 @@ export default function Journey() {
               <span className="relative mb-4 flex size-14 items-center justify-center rounded-2xl bg-brand-light text-brand-deep">
                 <Icon name={s.icon as IconName} size={26} />
               </span>
-              <h3 className="relative mb-2 text-lg font-bold">
+              <h3 className="relative mb-2 text-[1.375rem] font-bold">
                 <span className="sr-only">{i + 1}단계. </span>
                 {s.title}
               </h3>

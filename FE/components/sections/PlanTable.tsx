@@ -215,7 +215,7 @@ function CategoryBlock({
 
   return (
     <div>
-      <h3 className="mb-3 flex items-center gap-2 text-lg font-bold">
+      <h3 className="mb-3 flex items-center gap-2 text-[1.375rem] font-bold">
         <span className="h-4 w-1 rounded-full bg-brand" />
         {CATEGORY_LABEL[category]}
       </h3>

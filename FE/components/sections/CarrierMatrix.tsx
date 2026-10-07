@@ -78,7 +78,8 @@ export default async function CarrierMatrix() {
               <dl className="flex flex-1 flex-col gap-4 px-5 py-5">
                 <div>
                   <dt className="text-xs font-bold text-muted">월 요금</dt>
-                  <dd className="tabular mt-1 text-lg leading-snug font-black text-foreground">
+                  {/* 요금 범위가 이 표의 핵심 값이다 — 중간 단계로 세운다 */}
+                  <dd className="tabular mt-1 text-[1.375rem] leading-snug font-black text-foreground">
                     {feeRange(data)}
                   </dd>
                 </div>

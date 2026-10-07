@@ -34,7 +34,10 @@ export default function CarrierHub() {
                 >
                   {c.code === "SKYLIFE" ? "SKY" : c.code}
                 </span>
-                <span className="text-lg font-black text-foreground">
+                {/* 카드의 주 식별자. 18px 이면 아래 tagline(13px)과 한 덩어리로
+                    읽혀 "어느 통신사 카드인지"가 먼저 들어오지 않는다.
+                    섹션 제목(40px)과 본문 사이의 중간 단계이기도 하다. */}
+                <span className="text-[1.375rem] font-black text-foreground">
                   {c.label}
                 </span>
                 <span className="text-sm leading-relaxed text-muted">

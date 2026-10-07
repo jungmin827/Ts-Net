@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import { PRODUCTS, type Carrier } from "@/lib/validation";
 import { CARRIER_MENU, CONSENT } from "@/lib/site-config";
@@ -35,6 +35,26 @@ export default function LeadForm({
   const [token, setToken] = useState("");
   const tsRef = useRef<TurnstileInstance | null>(null);
   const consentRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * 아주 좁은 화면에서는 Turnstile 을 `compact`(150×140)로 떨어뜨린다.
+   *
+   * `flexible` 의 **최소 폭이 300px** 이라 320px 기기에서는 어떤 여백 조합으로도
+   * 들어가지 않는다 — 거터·패딩·테두리를 다 합쳐 양쪽 10px 안에 끝내야 하는데
+   * 그런 카드는 만들 수 없다. 실측 가용폭 260px, 40px 모자란다.
+   *
+   * 지금은 `overflow-x-auto` 가 받아내 페이지는 안 깨지지만, **가로로 밀어야
+   * 풀 수 있는 캡차**가 된다. 이 사이트의 유일한 폼에서 그건 전환 차단이다.
+   * compact 는 Cloudflare 가 공식 지원하는 크기라 안전하게 작아진다.
+   */
+  const [compactTs, setCompactTs] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 359px)");
+    const apply = () => setCompactTs(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
 
   // 통신사는 controlled(히어로 칩 연동) / uncontrolled(단독 사용) 양쪽을 지원한다
   const controlled = carrierProp !== undefined;
@@ -232,7 +252,7 @@ export default function LeadForm({
           siteKey={siteKey}
           onSuccess={setToken}
           onExpire={() => setToken("")}
-          options={{ size: "flexible", theme: "light" }}
+          options={{ size: compactTs ? "compact" : "flexible", theme: "light" }}
         />
         </div>
       ) : (
