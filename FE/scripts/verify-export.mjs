@@ -34,7 +34,8 @@ writeFileSync(
   srcFile,
   `export { resolvePeriod, parseExportFilter, PERIODS } from "@/lib/admin/filters";
 export { buildLeadsWorkbook } from "@/lib/admin/excel";
-export { todayKst } from "@/lib/kst";
+export { buildLeadQuery, LEAD_EXPORT_COLUMNS } from "@/lib/admin/leads";
+export { todayKst, kstRangeToUtc } from "@/lib/kst";
 `,
 );
 execSync(
@@ -63,6 +64,11 @@ console.log(out.join("\n")); out.length = 0;
 console.log("\n[입력 검증] 조작된 쿼리를 거르는가");
 const bad = [
   ["기간 역전", { period: "custom", from: "2026-03-01", to: "2026-01-01" }],
+  // 달력에 없는 날. 형식만 보면 통과하는데 Date 가 조용히 다음 달로 민다
+  ["윤년 아닌 2/29", { period: "custom", from: "2026-02-01", to: "2026-02-29" }],
+  ["2월 31일", { period: "custom", from: "2026-02-01", to: "2026-02-31" }],
+  // Invalid Date → kstRangeToUtc 의 toISOString() 이 RangeError 를 던진다
+  ["13월", { period: "custom", from: "2026-13-01", to: "2026-13-05" }],
   ["형식 오류", { period: "custom", from: "2026/03/01", to: "2026-03-02" }],
   ["없는 프리셋", { period: "forever" }],
   ["없는 통신사", { period: "30d", carrier: "EVIL" }],
@@ -73,6 +79,52 @@ for (const [name, raw] of bad) {
 }
 const good = m.parseExportFilter({ period: "7d", carrier: "KT", exported: "no" });
 check("정상 입력", good.success, good.success ? "수용" : "거부됨 ⚠");
+console.log(out.join("\n")); out.length = 0;
+
+console.log("\n[기간 필터] 버튼이 고른 기간이 실제 쿼리에 실리는가");
+// supabase-js 쿼리 빌더는 실행 전에 URL 을 들고 있다. DB 없이 **무엇을 물어볼
+// 작정인지**를 그대로 읽을 수 있다 — 기간 필터의 유일한 실체가 이 쿼리다.
+{
+  const seen = [];
+  const fakeBuilder = {
+    _p: [],
+    select(c, o) { this._p.push(["select", c, JSON.stringify(o ?? null)]); return this; },
+    gte(k, v) { this._p.push(["gte", k, v]); return this; },
+    lte(k, v) { this._p.push(["lte", k, v]); return this; },
+    eq(k, v) { this._p.push(["eq", k, v]); return this; },
+    is(k, v) { this._p.push(["is", k, String(v)]); return this; },
+    not(k, op, v) { this._p.push(["not", k, `${op}.${v}`]); return this; },
+    or(e) { this._p.push(["or", "", e]); return this; },
+  };
+  const fakeClient = { from(t) { seen.push(t); fakeBuilder._p = []; return fakeBuilder; } };
+
+  const cases = [
+    ["today", {}],
+    ["custom", { from: "2026-02-01", to: "2026-02-28" }],
+    ["30d", { carrier: "KT", exported: "no" }],
+  ];
+  for (const [period, extra] of cases) {
+    const parsed = m.parseExportFilter({ period, ...extra });
+    if (!parsed.success) { check(`기간 ${period}`, false, "필터 거부됨"); continue; }
+    const range = m.resolvePeriod(parsed.data);
+    const q = m.buildLeadQuery(fakeClient, m.LEAD_EXPORT_COLUMNS, parsed.data, range);
+    const parts = Object.fromEntries(q._p.map((x) => [x[0] + ":" + x[1], x[2]]));
+    const { startIso, endIso } = m.kstRangeToUtc(range.from, range.to);
+    const okRange =
+      parts["gte:created_at"] === startIso && parts["lte:created_at"] === endIso;
+    const detail = `${range.from}~${range.to} → gte ${parts["gte:created_at"]} / lte ${parts["lte:created_at"]}`;
+    check(`${period} 구간이 쿼리에`, okRange, detail);
+    if (extra.carrier)
+      check(`${period} 통신사 조건`, parts["eq:carrier"] === extra.carrier, `eq carrier=${parts["eq:carrier"]}`);
+    if (extra.exported === "no")
+      check(`${period} 미내보냄 조건`, parts["is:exported_at"] === "null", `is exported_at=${parts["is:exported_at"]}`);
+  }
+  // KST 경계: 하루를 고르면 UTC 로는 전날 15:00 ~ 당일 14:59:59 여야 한다
+  const oneDay = m.resolvePeriod(m.parseExportFilter({ period: "custom", from: "2026-03-10", to: "2026-03-10" }).data);
+  const { startIso, endIso } = m.kstRangeToUtc(oneDay.from, oneDay.to);
+  check("KST 하루 경계", startIso.startsWith("2026-03-09T15:00") && endIso.startsWith("2026-03-10T14:59"),
+    `${startIso} ~ ${endIso}`);
+}
 console.log(out.join("\n")); out.length = 0;
 
 console.log("\n[엑셀 생성] 실제 파일이 만들어지는가");

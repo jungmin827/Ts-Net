@@ -20,9 +20,30 @@ export const PERIOD_LABEL: Record<Period, string> = {
   custom: "직접입력",
 };
 
+/**
+ * 달력에 **실재하는** 날짜만 통과시킨다.
+ *
+ * 형식 검사만 하면 `2026-02-29` 가 그대로 지나간다. 2026 년은 윤년이 아니라
+ * 그런 날이 없는데, `Date.UTC(2026, 1, 29)` 는 **조용히 3월 1일로 밀어** 버린다.
+ * 운영자는 2월까지를 골랐다고 믿는데 실제 조회는 3월 1일까지 간다 (실측 확인).
+ * `2026-02-31` 은 3월 3일까지 밀린다.
+ *
+ * 더 나쁜 쪽은 `2026-13-01` 이다 — `Date` 가 Invalid 가 되고
+ * `kstRangeToUtc` 의 `toISOString()` 이 **RangeError 를 던진다.**
+ * 어드민 목록·내보내기가 통째로 500 이 된다.
+ *
+ * 그래서 문자열 → 날짜 → 문자열 왕복이 **같은 값으로 돌아오는지**까지 본다.
+ */
 const dateString = z
   .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, "날짜는 YYYY-MM-DD 형식이어야 합니다");
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "날짜는 YYYY-MM-DD 형식이어야 합니다")
+  .refine(
+    (v) => {
+      const d = new Date(`${v}T00:00:00Z`);
+      return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
+    },
+    { message: "달력에 없는 날짜입니다" },
+  );
 
 /** 이름·번호뒷자리 검색어 — PostgREST or() 문법을 깨뜨리는 문자를 애초에 제거한다 */
 const searchTerm = z
