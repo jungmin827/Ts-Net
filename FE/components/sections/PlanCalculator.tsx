@@ -218,7 +218,9 @@ export default function PlanCalculator({
 
             <a
               href="#consult"
-              className="flex items-center justify-center gap-1.5 bg-accent py-4 font-bold text-accent-ink transition-colors duration-200 hover:bg-accent-dark"
+              // 이 버튼도 `#consult` 로 가는 상담 버튼이다. 헤더·히어로의 주 CTA 와
+              // 같은 동작인데 색만 달랐다 — 같은 일을 하는 것은 같게 보여야 배운다.
+              className="cta-fill flex items-center justify-center gap-1.5 py-4 font-bold transition-colors duration-200"
             >
               이 구성으로 상담 신청
               <Icon name="arrowRight" size={17} />

@@ -101,7 +101,8 @@ export default function PlanCards({
                 <div className="mt-auto pt-6">
                   <a
                     href="#consult"
-                    className="flex items-center justify-center gap-1.5 rounded-xl bg-accent py-3.5 font-bold text-accent-ink transition-colors duration-200 hover:bg-accent-dark"
+                    // 주 CTA 와 같은 동작(#consult)이므로 같은 색을 쓴다
+                    className="cta-fill flex items-center justify-center gap-1.5 rounded-xl py-3.5 font-bold transition-colors duration-200"
                   >
                     이 상품 상담하기
                     <Icon name="arrowRight" size={17} />
@@ -109,12 +110,21 @@ export default function PlanCards({
                 </div>
               </div>
 
-              {/* 요금 띠 — 카드에서 가장 먼저 눈에 들어와야 하는 정보 */}
-              <div className="flex items-baseline justify-between gap-2 bg-brand-dark px-6 py-4 text-white">
-                <span className="text-sm font-medium text-white/95">월 요금</span>
+              {/* 요금 띠 — 카드에서 가장 먼저 눈에 들어와야 하는 정보.
+                  **옅은 면**에 진한 글자로 둔다. 예전에는 진초록 면이었는데,
+                  바로 위 상담 버튼도 진초록이라 카드마다 진한 색면이 둘씩 쌓였다.
+                  통신사 페이지 전체 초록 색면이 3.08% 까지 올라가 CLAUDE.md 가
+                  못 박은 상한(1.22%)을 넘겼고, 보기에도 무거웠다.
+                  금액이 먼저 읽히는 건 면의 진하기가 아니라 **크기와 굵기**가 만든다. */}
+              <div className="flex items-baseline justify-between gap-2 bg-brand-light px-6 py-4 text-brand-deep">
+                <span className="text-sm font-bold">월 요금</span>
                 <span className="flex items-baseline gap-2">
+                  {/* 할인 전 금액. 흐리게 하려고 opacity 를 쓰지 않는다 —
+                      70% 로 내렸더니 3.96:1 이 됐다(본문 4.5 미달).
+                      취소선과 작은 크기가 이미 "지난 값"이라고 말한다.
+                      같은 실수를 요금 띠 흰 글자(text-white/85)에서도 한 번 했다. */}
                   {p.list_fee != null && p.list_fee !== p.monthly_fee && (
-                    <span className="tabular text-sm text-white/95 line-through">
+                    <span className="tabular text-sm line-through">
                       {formatWon(p.list_fee)}
                     </span>
                   )}

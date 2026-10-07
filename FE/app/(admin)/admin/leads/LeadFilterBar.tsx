@@ -119,11 +119,15 @@ export default function LeadFilterBar({ filter, range, exportFields }: Props) {
         </label>
 
         <label className="flex flex-col gap-1">
-          <span className="text-[11px] font-bold text-muted">내보내기</span>
+          {/* 라벨이 "내보내기" 였다. 바로 옆에 "엑셀 내보내기" **버튼**이 있어서
+              거르는 조건인지 실행하는 버튼인지 한눈에 갈리지 않았다.
+              표의 열 이름이 "내보냄" 이므로 같은 말로 맞춘다 —
+              한 흐름 안에서 같은 것을 같은 이름으로 부른다. */}
+          <span className="text-[11px] font-bold text-muted">내보냄 여부</span>
           <select name="exported" defaultValue={filter.exported} className={selectCls}>
             <option value="all">전체</option>
-            <option value="no">미내보내기만</option>
-            <option value="yes">내보낸 건만</option>
+            <option value="no">아직 안 내보냄</option>
+            <option value="yes">내보냄</option>
           </select>
         </label>
 
