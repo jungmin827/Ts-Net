@@ -76,6 +76,27 @@ export const PRICE_SOURCE = {
 } as const;
 
 /**
+ * 화면에 적는 **출처 서술**. `verified` 상태에 따라 갈린다.
+ *
+ * 왜 상수로 빼는가 —
+ *   고지 문구가 "통신사 공개 요금표" 라고 단언하고 있었다. 그런데 같은 파일
+ *   위쪽 주석과 `BE/supabase/seed/plans_damoa_2026-10-08.sql` 헤더는 출처를
+ *   "타사가 게시한 가격" 이라고 적는다. **코드가 자기 주석으로 아는 사실을
+ *   화면에서는 더 권위 있는 쪽으로 승격시키고 있었다.**
+ *
+ *   출처를 실제보다 권위 있게 적는 것은 표시광고법상 허위·과장 표시가 될 수
+ *   있고, 금액이 틀렸을 때 "통신사 자료를 믿었다"는 방어가 성립하지 않는다.
+ *   근거와 표기가 달라서는 안 된다 (CLAUDE.md 규칙 6).
+ *
+ *   경쟁사 이름을 화면에 적을 일도 아니므로, **publisher 를 특정하지 않는
+ *   정확한 서술**을 쓴다. 재검증이 끝나 `verified: true` 가 되면 그때 비로소
+ *   통신사 계약 조건을 근거로 말할 수 있다.
+ */
+export const PRICE_SOURCE_LABEL = PRICE_SOURCE.verified
+  ? "통신사 계약 조건으로 확인한 값"
+  : "공개된 요금 안내 자료를 수집해 정리한 값";
+
+/**
  * 요금표·계산기 바로 아래 한 줄로 붙는 핵심 전제.
  *
  * 근거: 시드 헤더 22~24행 — 원문 각주 4개 페이지 공통
@@ -86,7 +107,7 @@ export const PRICE_BASIS_LINE =
   "표시 금액은 36개월 약정 · 휴대폰 1회선 결합 할인 적용 · 부가세(VAT) 포함 기준입니다.";
 
 /** 출처·기준일 한 줄 (요금표 각주용) */
-export const PRICE_SOURCE_LINE = `요금 기준일 ${PRICE_SOURCE.basisDateLabel}. 통신사 공개 요금표를 정리한 값으로, 실제 적용 금액은 상담 시 확정해 드립니다.`;
+export const PRICE_SOURCE_LINE = `요금 기준일 ${PRICE_SOURCE.basisDateLabel}. ${PRICE_SOURCE_LABEL}으로, 실제 적용 금액은 상담 시 확정해 드립니다.`;
 
 /** 모바일 가로 스크롤 안내 — 표가 화면보다 넓을 때 노출 */
 export const TABLE_SCROLL_HINT = "표를 좌우로 밀면 요금·약정 항목까지 볼 수 있습니다.";
@@ -117,11 +138,11 @@ export const PLAN_NOTICE_BLOCKS: LegalNoticeBlock[] = [
       { text: "표시 금액은 부가세(VAT)가 포함된 금액입니다." },
       // 근거: 시드 헤더 1~9행 (출처·수집일) + 18~20행 (재검증 경고)
       {
-        text: `요금 기준일은 ${PRICE_SOURCE.basisDateLabel}이며, 통신사가 공개한 요금표를 정리한 값입니다. 통신사 정책 변경에 따라 사전 공지 없이 바뀔 수 있습니다.`,
+        text: `요금 기준일은 ${PRICE_SOURCE.basisDateLabel}이며, ${PRICE_SOURCE_LABEL}입니다. 통신사 정책 변경에 따라 사전 공지 없이 바뀔 수 있습니다.`,
       },
       // 근거: 시드 헤더 41~66행 — 교차검증 불일치 8건(A~H), 운영자 판정 전
       {
-        text: "일부 구성은 통신사 공개 자료 사이에서도 금액이 서로 다르게 안내되고 있습니다. 해당 구성의 최종 금액은 상담 시 확인해 안내해 드립니다.",
+        text: "일부 구성은 수집한 자료 사이에서도 금액이 서로 다르게 안내되고 있습니다. 해당 구성의 최종 금액은 상담 시 확인해 안내해 드립니다.",
         pending: true,
       },
       // 근거: 시드 description 필드 — 상품명에 '+WIFI포함' 표기가 있는 행만 와이파이 포함
