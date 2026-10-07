@@ -328,6 +328,23 @@ export interface PromoImage {
  */
 export const PROMO_IMAGES: PromoImage[] = [
   {
+    // 히어로 바로 아래. 왼쪽 카피가 "다른 곳과 비교하고 오셔도 됩니다"로 끝나므로,
+    // **비교하라고 해놓고 무엇을 비교할지는 안 알려주는 공백**을 이 자리에서 메운다.
+    // 다른 홍보 이미지(1,000~1,900px)보다 얇게(620px) 만들었다 —
+    // 메인이 이미 레퍼런스보다 길어서 덩치를 더 얹으면 길이만 늘고 밀도는 떨어진다.
+    id: "compare-four",
+    slot: "afterHero",
+    desktop: "/promo/compare-four.png",
+    mobile: "/promo/compare-four-m.png",
+    width: 2240,
+    height: 620,
+    mobileWidth: 750,
+    mobileHeight: 1215,
+    alt: "다른 곳과 비교하실 때 이 네 가지를 같이 보세요 — 월 요금은 약정·결합 조건을 맞춰야 같은 비교가 되고, 약정 기간은 중간에 해지하면 할인반환금이 생기며, 설치비·장비는 설치 환경과 구성에 따라 달라지고, 사은품은 지급 시점과 반환 조건까지 확인해야 합니다. 비교해 보신 뒤에 결정하셔도 됩니다",
+    href: "#consult",
+    enabled: true,
+  },
+  {
     id: "check-three",
     slot: "afterJourney",
     desktop: "/promo/check-three.png",
