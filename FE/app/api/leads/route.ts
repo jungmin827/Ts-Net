@@ -8,6 +8,7 @@ import {
 } from "@/lib/crypto";
 import { verifyTurnstile } from "@/lib/turnstile";
 import { publicClient } from "@/lib/supabase/public";
+import { clientIp as sharedClientIp } from "@/lib/client-ip";
 
 // 접수 파이프라인 — docs/SPEC.md §2 순서 그대로. 하나라도 실패하면 즉시 중단.
 // 알림 발송 단계는 없다 (운영자가 어드민에서만 확인).
@@ -24,9 +25,15 @@ import { publicClient } from "@/lib/supabase/public";
 const RATE_LIMIT_WINDOW_MIN = 10;
 const RATE_LIMIT_MAX = 3;
 
+/**
+ * 접수 레이트리밋·기록용 IP.
+ *
+ * `x-forwarded-for` 맨 앞 값만 보면 클라이언트가 매 요청 다른 값을 적어
+ * 레이트리밋 키를 무한히 회전시킬 수 있다. 플랫폼이 직접 쓰는 헤더를
+ * 먼저 본다 (`lib/client-ip.ts`).
+ */
 function clientIp(req: NextRequest): string | null {
-  const fwd = req.headers.get("x-forwarded-for");
-  return fwd ? fwd.split(",")[0].trim() : null;
+  return sharedClientIp(req.headers).ip ?? null;
 }
 
 /**

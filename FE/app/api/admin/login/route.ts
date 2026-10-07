@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { logAccessSoft, requestIp } from "@/lib/admin/audit";
+import { logAccessSoft } from "@/lib/admin/audit";
+import { clientIp } from "@/lib/client-ip";
 import {
   checkLogin,
   clearFailures,
@@ -25,7 +26,10 @@ const loginSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const ip = requestIp(req.headers);
+  // IP 가 **플랫폼이 쓴 값인지**가 정책을 가른다.
+  // 클라이언트가 적어 보낸 XFF 로는 잠그지 않는다 — 공격자는 헤더를 바꿔
+  // 그냥 통과하고 정당한 운영자만 걸리기 때문이다 (lib/client-ip.ts 참고).
+  const { ip, trusted: ipTrusted } = clientIp(req.headers);
 
   let body: unknown;
   try {
@@ -46,7 +50,15 @@ export async function POST(req: NextRequest) {
   // 시도 횟수 제한 — 단일 계정 + 알려진 로그인 URL 조합은 대입 공격의 표적이 된다.
   // (한계는 lib/admin/login-throttle.ts 주석 참고)
   const tk = throttleKey(ip, email);
-  const gate = checkLogin(tk, email);
+  const gate = checkLogin(tk, email, ipTrusted);
+
+  // 지연(tarpit) — 차단이 아니라 **대입 1회의 비용**이다.
+  // 정당한 로그인도 이만큼 늦어지지만 최대 4초이고, 한 번 성공하면 즉시 사라진다.
+  // 계정을 잠가 버리면 단일 계정인 이 사이트는 복구 수단이 없다.
+  if (gate.delayMs > 0) {
+    await new Promise((r) => setTimeout(r, gate.delayMs));
+  }
+
   if (!gate.allowed) {
     await logAccessSoft({
       actorEmail: email,

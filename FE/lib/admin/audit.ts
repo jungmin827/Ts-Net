@@ -21,9 +21,11 @@ export async function logAccessSoft(entry: AuditEntry): Promise<void> {
   }
 }
 
-/** Route Handler 에서 접속자 IP — 접속기록의 법정 기재항목 */
-export function requestIp(headers: Headers): string | undefined {
-  const fwd = headers.get("x-forwarded-for");
-  const ip = fwd ? fwd.split(",")[0].trim() : headers.get("x-real-ip");
-  return ip ?? undefined;
-}
+/**
+ * Route Handler 에서 접속자 IP — 접속기록의 법정 기재항목.
+ *
+ * 값 선택은 `lib/client-ip.ts` 한 곳에 모았다. 예전에는 여기서 직접
+ * `x-forwarded-for` 맨 앞 값을 읽었는데, 그건 클라이언트가 적어 보내는
+ * 문자열이라 기록에 남는 IP 가 통째로 조작될 수 있었다.
+ */
+export { requestIp } from "@/lib/client-ip";

@@ -5,42 +5,64 @@
  * 서버 인스턴스가 여러 개면 인스턴스별로 따로 센다. 재배포하면 초기화된다.
  * 즉 결정적인 방어가 아니라 **자동화 공격의 비용을 올리는 장치**다.
  *
+ * ## 하드 차단을 거의 쓰지 않는 이유 — 잠금 자체가 공격 수단이 된다
+ *
+ * 앞선 판은 두 축 모두 하드 차단이었다.
+ *   - IP+이메일: 15분 5회
+ *   - 이메일 단독: 1시간 30회 ("IP 를 회전해도 계정당 총량이 묶인다")
+ *
+ * 계정 축을 넣은 이유는 맞았다 — XFF 를 바꿔가며 IP 축을 통과할 수 있었으니까.
+ * 그런데 그 축이 **서비스 거부 수단**이 됐다. 어드민은 계정 1개이고
+ * (CLAUDE.md 확정사항) 우회 로그인도 잠금 해제 수단도 없다. 공격자가 치르는
+ * 비용은 **HTTP 요청 30번**이고, 그 뒤로는 비밀번호와 TOTP 가 모두 맞아도 429 다.
+ * 15분마다 30회(분당 2회)만 흘려 보내면 접수 데이터를 영구히 열 수 없다.
+ * 방어가 막으려던 것보다 큰 피해를 스스로 만들었다.
+ *
+ * ## 지금의 구조
+ *
+ * 1. **IP 를 신뢰할 수 있을 때만 하드 차단한다.**
+ *    `lib/client-ip.ts` 가 Cloudflare·Vercel 이 직접 쓰는 헤더에서 온 값인지
+ *    알려준다. 그 값은 클라이언트가 바꿀 수 없으므로 IP 축이 제 일을 한다.
+ *    (이 프로젝트는 Cloudflare → Vercel 경로가 확정 사항이다.)
+ * 2. **신뢰할 수 없는 IP, 그리고 계정 축은 지연(tarpit)으로만 다룬다.**
+ *    대입 1회의 비용을 올리되 정당한 로그인을 막지는 않는다.
+ *    운영자는 몇 초 기다리면 들어온다. 영구 봉쇄가 성립하지 않는다.
+ * 3. 어느 경우에도 **TOTP 가 진짜 두 번째 관문**이다. 비밀번호만으로는
+ *    로그인이 성립하지 않으므로, 대입 제한은 심층방어이지 주 통제가 아니다.
+ *
  * 제대로 하려면 DB 테이블 + `security definer` RPC 가 필요하다
  * (레이트리밋을 `lead_rate_exceeded()` 로 옮긴 것과 같은 방식).
  * 그건 마이그레이션 적용 권한이 생긴 뒤의 과제로 남긴다.
- *
- * 그래도 지금 넣는 이유: 현재는 **시도 횟수에 아무 제한이 없다.**
- * 단일 계정 + 알려진 로그인 URL 조합이라 대입 공격의 표적이 되기 쉽다.
- *
- * ## IP 만으로는 막히지 않는다
- *
- * IP 는 `X-Forwarded-For` 에서 온다. 신뢰할 수 있는 프록시 뒤가 아니면
- * 공격자가 헤더를 바꿔가며 **키를 무한히 회전**시킬 수 있다
- * (실측: 헤더를 바꿔 8회 연속 401 — 잠금 미작동).
- *
- * 반대로 IP 키에만 의존하면, XFF 가 없는 환경에서 모든 요청이
- * `unknown|email` 한 키로 합쳐져 **제3자가 운영자를 15분 잠글 수 있다.**
- *
- * 그래서 두 축으로 센다.
- *   - IP+이메일: 15분 5회 — 단일 출처의 빠른 대입을 즉시 끊는다
- *   - 이메일 단독: 1시간 30회 — IP 를 아무리 회전해도 **계정당 총량**이 묶인다.
- *     운영자가 정상적으로 도달할 수 없는 수준이라 서비스 거부로 쓰이기 어렵다.
  */
 
-const WINDOW_MS = 15 * 60 * 1000;
-const MAX_ATTEMPTS = 5;
-/** 이메일 단독 총량 — IP 회전으로는 넘을 수 없는 상한 */
+/** 신뢰 가능한 IP 축 — 단일 출처의 빠른 대입을 즉시 끊는다 */
+const IP_WINDOW_MS = 15 * 60 * 1000;
+const IP_MAX_ATTEMPTS = 5;
+
+/** 계정 축 — 차단하지 않고 지연만 준다 */
 const ACCOUNT_WINDOW_MS = 60 * 60 * 1000;
-const ACCOUNT_MAX_ATTEMPTS = 30;
+/** 이 횟수를 넘으면 지연이 붙기 시작한다 */
+const ACCOUNT_SOFT_LIMIT = 5;
+
+/** 지연 곡선. 초과 1회마다 2배, 상한 4초 */
+const DELAY_BASE_MS = 250;
+const DELAY_MAX_MS = 4000;
+
 /** 메모리 누수를 막는 상한. 넘으면 오래된 것부터 버린다 */
 const MAX_KEYS = 5000;
 
-type Entry = { count: number; first: number };
+/**
+ * 엔트리가 **자기 윈도를 들고 있다.**
+ * 앞선 판은 `prune` 이 키 종류를 구분하지 않고 전부 15분 기준으로 지웠다.
+ * 그래서 "1시간 30회"라고 적어 둔 계정 축이 실제로는 15분마다 초기화돼
+ * 상한이 문서의 4배로 느슨했고, 안내 문구의 남은 시간은 4배로 과장됐다.
+ */
+type Entry = { count: number; first: number; window: number };
 const attempts = new Map<string, Entry>();
 
 function prune(now: number) {
   for (const [k, v] of attempts) {
-    if (now - v.first > WINDOW_MS) attempts.delete(k);
+    if (now - v.first > v.window) attempts.delete(k);
   }
   if (attempts.size > MAX_KEYS) {
     const excess = attempts.size - MAX_KEYS;
@@ -53,7 +75,10 @@ function prune(now: number) {
 }
 
 /** IP + 이메일 조합 키 — 단일 출처의 빠른 대입을 끊는다 */
-export function throttleKey(ip: string | null | undefined, email: string): string {
+export function throttleKey(
+  ip: string | null | undefined,
+  email: string,
+): string {
   return `${ip ?? "unknown"}|${email.toLowerCase()}`;
 }
 
@@ -62,60 +87,87 @@ function accountKey(email: string): string {
   return `acct:${email.toLowerCase()}`;
 }
 
-function overLimit(
-  key: string,
-  max: number,
-  window: number,
-  now: number,
-): number {
+function entryOf(key: string, now: number): Entry | null {
   const e = attempts.get(key);
-  if (!e) return 0;
-  if (now - e.first > window) {
+  if (!e) return null;
+  if (now - e.first > e.window) {
     attempts.delete(key);
-    return 0;
+    return null;
   }
-  if (e.count < max) return 0;
-  return Math.ceil((window - (now - e.first)) / 1000);
+  return e;
 }
 
 function bump(key: string, window: number, now: number): void {
   const e = attempts.get(key);
-  if (!e || now - e.first > window) {
-    attempts.set(key, { count: 1, first: now });
+  if (!e || now - e.first > e.window) {
+    attempts.set(key, { count: 1, first: now, window });
     return;
   }
   e.count += 1;
 }
 
+export interface LoginGate {
+  /** false 면 인증을 시도하지 않고 429 로 돌려보낸다 */
+  allowed: boolean;
+  /** `allowed: false` 일 때 남은 잠금 시간(초) */
+  retryAfter: number;
+  /** 인증을 시도하기 **전에** 기다릴 시간(ms). 정당한 로그인도 이만큼 늦어진다 */
+  delayMs: number;
+}
+
+function tarpit(count: number, softLimit: number): number {
+  if (count < softLimit) return 0;
+  const over = count - softLimit;
+  return Math.min(DELAY_BASE_MS * 2 ** over, DELAY_MAX_MS);
+}
+
 /**
- * 지금 시도해도 되는가. 남은 잠금 시간(초)을 함께 돌려준다.
- * IP 축과 계정 축 중 **하나라도** 걸리면 막는다.
+ * 지금 시도해도 되는가.
+ *
+ * @param ipTrusted 플랫폼이 설정한 헤더에서 온 IP 인가 (`lib/client-ip.ts`).
+ *   false 면 공격자가 키를 회전시킬 수 있으므로 **차단하지 않고 지연만** 준다.
+ *   차단해 봐야 공격자는 통과하고 정당한 사용자만 걸린다.
  */
 export function checkLogin(
   key: string,
   email: string,
-): { allowed: boolean; retryAfter: number } {
+  ipTrusted: boolean,
+): LoginGate {
   const now = Date.now();
   prune(now);
-  const byIp = overLimit(key, MAX_ATTEMPTS, WINDOW_MS, now);
-  const byAccount = overLimit(
-    accountKey(email),
-    ACCOUNT_MAX_ATTEMPTS,
-    ACCOUNT_WINDOW_MS,
-    now,
+
+  const ipEntry = entryOf(key, now);
+  const acctEntry = entryOf(accountKey(email), now);
+
+  const ipCount = ipEntry?.count ?? 0;
+  const acctCount = acctEntry?.count ?? 0;
+
+  if (ipTrusted && ipEntry && ipCount >= IP_MAX_ATTEMPTS) {
+    return {
+      allowed: false,
+      retryAfter: Math.ceil(
+        (ipEntry.window - (now - ipEntry.first)) / 1000,
+      ),
+      delayMs: 0,
+    };
+  }
+
+  // 신뢰할 수 없는 IP 축과 계정 축은 지연으로만 다룬다
+  const delayMs = Math.max(
+    ipTrusted ? 0 : tarpit(ipCount, IP_MAX_ATTEMPTS),
+    tarpit(acctCount, ACCOUNT_SOFT_LIMIT),
   );
-  const retryAfter = Math.max(byIp, byAccount);
-  return { allowed: retryAfter === 0, retryAfter };
+  return { allowed: true, retryAfter: 0, delayMs };
 }
 
 /** 실패를 두 축 모두에 기록한다 */
 export function recordFailure(key: string, email: string): void {
   const now = Date.now();
-  bump(key, WINDOW_MS, now);
+  bump(key, IP_WINDOW_MS, now);
   bump(accountKey(email), ACCOUNT_WINDOW_MS, now);
 }
 
-/** 성공하면 두 축 모두 지운다 */
+/** 성공하면 두 축 모두 지운다 — 정당한 로그인 한 번이 지연을 전부 되돌린다 */
 export function clearFailures(key: string, email: string): void {
   attempts.delete(key);
   attempts.delete(accountKey(email));

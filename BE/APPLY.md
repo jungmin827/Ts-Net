@@ -135,3 +135,19 @@ Cloudflare 대시보드에서 운영 키를 발급해 `NEXT_PUBLIC_TURNSTILE_SIT
   **운영자가 채울 값은 두 곳뿐이다** — `SITE.business` 6항목, `PRIVACY_OFFICER` 3항목(성명·직책·이메일).
   미입력 상태에서는 화면에 `등록 전`으로 표기된다 (숨기지 않는다).
   ⚠ 방침을 고칠 때는 `PRIVACY_POLICY.effectiveFrom` 시행일도 함께 올릴 것.
+
+
+## 어드민이 로그인되지 않을 때
+
+로그인 제한은 **계정을 잠그지 않는다.** 제3자가 요청을 퍼부어도 운영자의
+로그인이 막히는 일은 없다 — 느려질 뿐이고(최대 4초), 한 번 성공하면 사라진다.
+(설계 근거는 `FE/lib/admin/login-throttle.ts` 주석)
+
+하드 차단은 **Cloudflare·Vercel 이 직접 쓴 IP 헤더가 있을 때**, 같은 IP 에서
+15분 안에 5회 실패한 경우에만 걸린다. 이때도 15분 뒤 자동으로 풀린다.
+서버를 재배포하면 제한 상태는 메모리와 함께 초기화된다.
+
+로그인 실패가 계속되면 확인할 것 —
+1. `access_logs` 의 `LOGIN_FAIL` 행과 `detail.stage` (`password` / `mfa` / `throttled`)
+2. `SUPABASE_SERVICE_ROLE_KEY`·`NEXT_PUBLIC_SUPABASE_ANON_KEY` 설정 여부
+3. TOTP 미등록 상태면 `/admin/enroll-2fa` 로 이동한다 (로그아웃되지 않는다)
