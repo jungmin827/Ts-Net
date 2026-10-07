@@ -32,7 +32,7 @@ cat supabase/.temp/linked-project.json   # ref 가 yrqfnjiynyenxrjxruot 인지 �
 | 순서 | 파일 | 하는 일 |
 |---|---|---|
 | 003 | `003_lock_down_functions.sql` | 공개 anon 키로 호출 가능하던 **파기 함수 권한 회수** + `live_feed` 에 5건 게이트 |
-| 004 | `004_purge_at_by_status.sql` | 보유기간을 고지(개통 D+1095 / 단순상담 D+14)에 맞춤 |
+| 004 | `004_purge_at_by_status.sql` | 보유기간을 고지(개통 D+1095 / 단순상담 D+14)에 맞춤 — **앞으로 들어올 행만** |
 | 005 | `005_lead_logs_insert_policy.sql` | 변경 이력에 수정 주체(actor_id) 기록 |
 | 006 | `006_lead_rate_count.sql` | 접수 레이트리밋 함수 (`lead_rate_exceeded`) |
 
@@ -45,6 +45,14 @@ cat supabase/.temp/linked-project.json   # ref 가 yrqfnjiynyenxrjxruot 인지 �
 cd BE
 supabase db push
 ```
+
+> **기존 행의 파기 예정일은 이 단계에서 바뀌지 않는다.**
+> 004 는 트리거만 건다. 이미 보관 중인 행까지 맞추는 백필은
+> `BE/supabase/manual/004b_backfill_purge_at.sql` 로 떼어 놓았다 —
+> `db push` 대상이 아니고, 그 파일의 STEP 1(읽기 전용)로 **무엇이 얼마나
+> 당겨지는지 먼저 세어 본 뒤에** 직접 실행한다.
+> `pg_cron` 이 켜진 상태에서 백필하면 그 날짜에 실제로 삭제되고
+> 전화번호 암호문까지 함께 사라진다. 되돌릴 수 없다.
 
 ### 적용 후 검증
 
@@ -96,7 +104,7 @@ select count(*) from plans where description is not null;    -- 9 (사실 정보
 ## 3. QA 행 정리
 
 파이프라인 검증 중 실제 `leads` 에 3건이 들어갔다. `live_feed` 뷰가 공개 조회 가능하므로
-005 적용 전까지는 외부에 보인다.
+`003_lock_down_functions` 적용 전까지는 외부에 보인다 (5건 게이트가 그 파일에 있다).
 
 | 이름 | 마스킹 번호 |
 |---|---|

@@ -120,15 +120,55 @@ export async function PATCH(
     return NextResponse.json({ ok: false, error: "변경에 실패했습니다" }, { status: 500 });
   }
 
-  // memo 는 트리거 대상이 아니므로 직접 이력을 남긴다 (본문은 길이만)
+  /**
+   * memo 는 트리거 대상이 아니므로 직접 이력을 남긴다 (본문은 길이만).
+   *
+   * ⚠ **반환 error 를 반드시 본다.** 예전에는 `await` 만 하고 결과를 버렸는데,
+   *   그게 조용한 이력 유실을 만들었다. 경로를 따라가 보면 —
+   *     · `log_lead_change()` 는 status·gift_status 가 바뀔 때만 INSERT 한다.
+   *     · 그래서 **memo 만 고친 PATCH 는 005 미적용 상태에서도 UPDATE 가 성공**하고,
+   *       위쪽 폴백이 돌지 않아 `writer` 는 세션 클라이언트로 남는다.
+   *     · 그 상태에서 이 INSERT 는 RLS(005 가 추가하는 정책이 아직 없다)에 막힌다.
+   *     · 반환값을 아무도 보지 않으니 라우트는 `{ok:true}` 를 돌려준다.
+   *   화면에는 "저장했습니다"가 뜨고 메모도 실제로 저장되는데 이력만 사라진다.
+   *   폴백이 "실패하면 물러난다"로만 되어 있어 **실패하지 않고 일부만 빠지는 경로**를
+   *   덮지 못했다. 그래서 여기서 한 번 더 폴백하고, 그래도 안 되면 알린다.
+   */
   if (patch.memo !== undefined && patch.memo !== (before.memo ?? "")) {
-    await writer.from("lead_logs").insert({
+    const memoLog = {
       lead_id: id,
       actor_id: guard.admin.userId,
       field: "memo",
       before_val: before.memo ? `(${String(before.memo).length}자)` : null,
       after_val: patch.memo ? `(${patch.memo.length}자)` : "(삭제)",
-    });
+    };
+
+    let { error: logError } = await writer.from("lead_logs").insert(memoLog);
+
+    if (logError && writer === session) {
+      // 세션 경로가 막힌 것뿐일 수 있다 (005 미적용). 전권 키로 한 번 더.
+      try {
+        ({ error: logError } = await createAdminClient()
+          .from("lead_logs")
+          .insert(memoLog));
+      } catch {
+        // service_role 키가 없는 경우 — logError 를 그대로 둔다
+      }
+    }
+
+    if (logError) {
+      console.error(
+        "[/api/admin/leads] memo 변경 이력 기록 실패:",
+        logError.code,
+        logError.message,
+      );
+      // 변경은 이미 반영됐다. 감사로그 실패와 **같은 등급**으로 알린다 —
+      // 이력이 빠진 사실을 운영자가 모르고 지나가서는 안 된다.
+      return NextResponse.json(
+        { ok: false, error: "변경은 저장됐지만 변경 이력 기록에 실패했습니다" },
+        { status: 500 },
+      );
+    }
   }
 
   try {

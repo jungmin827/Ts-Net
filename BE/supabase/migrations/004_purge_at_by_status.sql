@@ -57,17 +57,19 @@ create trigger leads_set_purge_at
   for each row
   execute function set_lead_purge_at();
 
--- 기존 행 백필. 트리거는 앞으로 들어올 행만 처리하므로 한 번 맞춰 준다.
-update leads
-set purge_at = (
-  created_at
-  + case when lead_is_activated(status) then interval '1095 days'
-         else interval '14 days'
-    end
-)::date
-where purge_at is distinct from (
-  created_at
-  + case when lead_is_activated(status) then interval '1095 days'
-         else interval '14 days'
-    end
-)::date;
+-- ⚠ 기존 행 백필은 **이 파일에 두지 않는다.**
+--
+--   트리거는 앞으로 들어올 행만 처리하므로 한 번은 맞춰 줘야 한다. 그런데
+--   백필을 여기 두면 `supabase db push` 한 번에 **이미 보관 중인 전 행의
+--   파기 예정일이 당겨진다.** `pg_cron` 이 켜져 있으면 그 날짜에 실제로
+--   삭제되고, 암호문까지 함께 사라져 복구 수단이 없다.
+--   예: 오늘 들어온 status=NEW 접수 1건 → purge_at = 오늘+14일.
+--       14일 넘게 NEW 로 남아 있던 기존 접수는 **다음 실행에서 즉시 삭제 대상**이다.
+--
+--   보유기간 D+14 는 화면 고지(`CONSENT.privacyDetail` ③)와 맞추기 위한 값이지만,
+--   그 숫자가 운영에 맞는지는 운영자가 확정해야 한다. 확정 전까지 과거 데이터를
+--   건드리지 않는다 — 앞으로 들어올 행만 고지대로 처리하면 고지 위반은 생기지 않는다.
+--
+--   백필이 필요해지면 `BE/supabase/manual/004b_backfill_purge_at.sql` 를
+--   **영향 범위를 먼저 세어 보고** 직접 실행한다. 그 파일은 `migrations/` 밖에 있어
+--   `db push` 대상이 아니다.
