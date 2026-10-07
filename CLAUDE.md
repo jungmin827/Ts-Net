@@ -174,7 +174,10 @@ docs/SPEC.md           기능 명세 — 작업 전 반드시 읽을 것
 - [x] lib 기반 모듈 (crypto / validation / supabase 클라이언트 3종 / audit)
 - [x] 메인 랜딩 퍼블리싱 1차 — 섹션(Hero·LiveFeed·Benefits·Process·Reviews·Footer)
   + 폼 3종(인라인·플로팅 퀵상담·모바일 하단바). 카피·사업자정보는 `FE/lib/site-config.ts`
-  - 잔여: 약관 모달(content/*.mdx), 실제 카피·사업자 정보, 히어로 이미지
+  - 잔여: 실제 카피·사업자 정보 (약관·처리방침 전문은 `lib/site-config.ts` 에 작성 완료)
+  - **히어로 배경 사진은 '잔여'가 아니다.** 비워 두는 것이 결정이고, 비면 옅은
+    뉴트럴 그라데이션만 깔려 흰 면 기조가 유지된다. 넣고 싶을 때 `SITE.hero.background`
+    에 경로만 적으면 흰 스크림까지 자동으로 적용된다.
 - [x] `/api/leads` 접수 파이프라인 + `/api/feed/live` (60초 캐시, 5건 미만 빈 배열)
   - 실 접수 E2E 테스트는 anon/service_role 키 기입 후 진행 필요
 - [ ] 어드민 (목록·필터·상세·상태변경·엑셀)
