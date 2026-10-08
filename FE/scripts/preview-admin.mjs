@@ -6,7 +6,7 @@
  * 화면으로 증명할 방법이 없다 — 코드가 있다는 말만 남는다.
  *
  * 그래서 실제 컴포넌트(`LeadFilterBar`)를 **가짜 데이터로 서버 렌더**해
- * `public/_admin-preview.html` 로 떨어뜨린다. dev 서버가 그 파일을 그대로
+ * `public/_preview/admin.html` 로 떨어뜨린다. dev 서버가 그 파일을 그대로
  * 서빙하므로 같은 출처의 실제 CSS 가 적용된 모습 그대로 보인다.
  *
  * ⚠ 리드 데이터를 쓰지 않는다. 표는 **형태만** 보기 위한 고정 문자열이고
@@ -18,13 +18,15 @@
  *   node scripts/preview-admin.mjs --rm  # 삭제
  */
 import { execSync } from "node:child_process";
-import { writeFileSync, unlinkSync, existsSync } from "node:fs";
+import { writeFileSync, unlinkSync, existsSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { pathToFileURL } from "node:url";
 
 const FE = join(dirname(fileURLToPath(import.meta.url)), "..");
-const OUT = join(FE, "public", "_admin-preview.html");
+const OUT = join(FE, "public", "_preview", "admin.html");
+// `_preview/` 는 커밋·배포 대상이 아니라 체크아웃에 없다. 쓰기 전에 만든다.
+mkdirSync(dirname(OUT), { recursive: true });
 
 /** dev 서버가 지금 쓰는 CSS 경로를 읽어온다.
     해시를 박아 두면 globals.css 를 고친 순간 **옛 파일을 가리켜**
@@ -123,4 +125,4 @@ ${blocks}
 </body></html>`,
 );
 
-console.log(`public/_admin-preview.html 생성 — http://localhost:3100/_admin-preview.html`);
+console.log(`public/_preview/admin.html 생성 — http://localhost:3100/_preview/admin.html`);

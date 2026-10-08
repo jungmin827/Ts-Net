@@ -6,7 +6,7 @@
  * 그려지는지 아무도 확인하지 못했다**는 뜻이기도 하다. 운영자가 첫 후기를
  * 올리는 순간이 첫 시험이 되어서는 안 된다.
  *
- * 실제 컴포넌트를 가짜 행으로 서버 렌더해 `public/_reviews-preview.html` 로
+ * 실제 컴포넌트를 가짜 행으로 서버 렌더해 `public/_preview/reviews.html` 로
  * 떨어뜨린다. dev 서버가 같은 출처에서 서빙하므로 실제 CSS 가 적용된다.
  *
  * ⚠ 가짜 후기를 **DB 에 넣지 않는다.** 렌더 함수 입력으로만 쓰고 파일은 검토용이다
@@ -17,12 +17,14 @@
  *   node scripts/preview-reviews.mjs --rm  # 삭제
  */
 import { execSync } from "node:child_process";
-import { writeFileSync, unlinkSync, existsSync } from "node:fs";
+import { writeFileSync, unlinkSync, existsSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const FE = join(dirname(fileURLToPath(import.meta.url)), "..");
-const OUT = join(FE, "public", "_reviews-preview.html");
+const OUT = join(FE, "public", "_preview", "reviews.html");
+// `_preview/` 는 커밋·배포 대상이 아니라 체크아웃에 없다. 쓰기 전에 만든다.
+mkdirSync(dirname(OUT), { recursive: true });
 
 /** dev 서버가 지금 쓰는 CSS 경로를 읽어온다.
     해시를 박아 두면 globals.css 를 고친 순간 **옛 파일을 가리켜**
@@ -93,5 +95,17 @@ writeFileSync(
 ${html}
 </body></html>`,
 );
-console.log(`public/_reviews-preview.html 생성 — http://localhost:3100/_reviews-preview.html`);
-console.log(`렌더 길이 ${html.length}자 · 카드 ${(html.match(/<article|<li/g) ?? []).length}개`);
+console.log(`public/_preview/reviews.html 생성 — http://localhost:3100/_preview/reviews.html`);
+/**
+ * 카드 수를 `<article|<li>` 로 세고 있었는데 Reviews 는 `<div>` 로 그린다 —
+ * 4건이 정상 렌더된 상태에서도 **0개**가 찍혔다. 렌더가 진짜로 실패했을 때와
+ * 구분이 안 되는 지표라서 통과 신호로 쓸 수 없었다.
+ * 목 데이터의 제목이 결과물에 실제로 박혀 있는지로 센다. 제목은 이 스크립트가
+ * 넣은 값이라 컴포넌트의 마크업이 바뀌어도 같이 깨지지 않는다.
+ */
+const rendered = ROWS.filter((r) => html.includes(r.title)).length;
+console.log(`렌더 길이 ${html.length}자 · 후기 ${rendered}/${ROWS.length}건`);
+if (rendered !== ROWS.length) {
+  console.error("✗ 일부 후기가 렌더되지 않았다 — 컴포넌트를 확인할 것");
+  process.exitCode = 1;
+}

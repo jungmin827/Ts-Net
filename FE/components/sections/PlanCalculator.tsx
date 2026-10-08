@@ -162,15 +162,23 @@ export default function PlanCalculator({
                       {formatWon(combo.monthly_fee)}
                     </dd>
                   </div>
-                  {combo.list_fee != null &&
-                    combo.list_fee !== combo.monthly_fee && (
-                      <div className="flex items-baseline justify-between gap-3">
-                        <dt className="text-muted">할인 전</dt>
-                        <dd className="tabular text-muted line-through">
-                          {formatWon(combo.list_fee)}
-                        </dd>
-                      </div>
-                    )}
+                  {/* `list_fee` 가 없을 때 이 **행을 지우면** 안 된다 —
+                      같은 값을 같은 자리에서 다루는 요금표(PlanTable)는 `-` 를
+                      보여주고 비교 문서도 `-` 라고 적고 있다. 행이 사라지면
+                      방문자는 "이 조합은 원래 할인이 없다"로 읽는데, 실제로는
+                      **원가를 확인하지 못해 비워둔** 칸이다. 둘은 다른 사실이다.
+                      할인 폭이 0인 경우(list=monthly)만 행을 접는다 — 그건
+                      보여줄 게 실제로 없는 유일한 경우다. */}
+                  {combo.list_fee !== combo.monthly_fee && (
+                    <div className="flex items-baseline justify-between gap-3">
+                      <dt className="text-muted">할인 전</dt>
+                      <dd className="tabular text-muted line-through">
+                        {combo.list_fee != null
+                          ? formatWon(combo.list_fee)
+                          : "-"}
+                      </dd>
+                    </div>
+                  )}
                   <div className="flex items-baseline justify-between gap-3">
                     <dt className="text-muted">휴대폰</dt>
                     {/* "미포함" 이라고 쓰면 위 금액이 휴대폰 없이 나오는 값처럼

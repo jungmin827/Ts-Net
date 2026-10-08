@@ -54,21 +54,50 @@ const MONEY = /(?<![\d,])\d{1,3}(?:,\d{3})+(?=원)/g;
 
 function seedAmounts() {
   const dir = join(ROOT, "BE/supabase/seed");
-  const file = readdirSync(dir).find((f) => f.startsWith("plans_damoa_"));
+  /**
+   * `find` 로 집으면 **디렉터리 순서상 먼저 오는** 파일을 쓴다. 수집일이 다른
+   * 시드를 추가한 순간 새 시드를 적용해 놓고 옛 시드를 검사하게 된다 —
+   * 그 고장은 "검사 실패" 가 아니라 "엉뚱한 통과" 로 나타나서 눈치챌 수 없다.
+   * 파일명이 `plans_damoa_YYYY-MM-DD.sql` 이라 사전순 = 날짜순이다.
+   */
+  const candidates = readdirSync(dir)
+    .filter((f) => f.startsWith("plans_damoa_") && f.endsWith(".sql"))
+    .sort();
+  const file = candidates.at(-1);
   if (!file) throw new Error("plans_damoa_*.sql 시드를 찾지 못했습니다");
+  if (candidates.length > 1)
+    console.log(
+      `  시드 ${candidates.length}개 중 최신 → ${file} (나머지: ${candidates.slice(0, -1).join(", ")})`,
+    );
   const by = {};
-  for (const line of readFileSync(join(dir, file), "utf8").split("\n")) {
+  const sql = readFileSync(join(dir, file), "utf8");
+  let rows = 0;
+  for (const line of sql.split("\n")) {
     const row = /^ {2}\('(\w+)'/.exec(line);
     if (!row) continue;
     const set = (by[row[1]] ??= new Set());
     // monthly_fee / list_fee
-    const fee = /(\d{4,6}|NULL),\s*(\d{4,6}|NULL),\s*36,/.exec(line);
-    if (fee)
+    // 약정 자리를 `36` 으로 박아 두면 24개월 행이 들어오는 순간 그 행의
+    // 금액이 **검사 대상에서 조용히 빠진다** — 실패가 아니라 검사 개수가 줄 뿐이다.
+    const fee = /(\d{4,6}|NULL),\s*(\d{4,6}|NULL),\s*\d+,/.exec(line);
+    if (fee) {
+      rows += 1;
       for (const v of [fee[1], fee[2]])
         if (v !== "NULL") set.add(Number(v).toLocaleString("en-US"));
+    }
     // description 안의 "월 9,900원" 같은 값
     for (const m of line.match(/월 [\d,]+원/g) ?? []) set.add(m.slice(2, -1));
   }
+  /**
+   * 파싱한 행 수가 시드 행 수와 어긋나면 **금액 일부가 검사되지 않은 것**이다.
+   * 정규식이 못 집은 행은 조용히 통과하므로, 개수 자체를 불변식으로 못 박는다.
+   */
+  const declared = (sql.match(/^ {2}\('(\w+)'/gm) ?? []).length;
+  if (rows !== declared)
+    throw new Error(
+      `시드 ${declared}행 중 ${rows}행만 금액을 파싱했습니다 — 못 집은 행이 ${declared - rows}개 있습니다`,
+    );
+  console.log(`  시드 ${declared}행 전부 파싱 (금액 미검사 행 0)`);
   return { file, by };
 }
 
@@ -88,8 +117,11 @@ function seedAmounts() {
  * 보고에 분리해 적는다.
  */
 async function liveAmounts(path) {
+  // 타임아웃이 없으면 상대가 응답을 끄는 순간 스크립트가 무한정 멈춘다.
+  // `catch` 는 거부만 잡고 지연은 못 잡는다 — 멈춘 검사는 실패로도 안 보인다.
   const res = await fetch(`${BASE}/${path}`, {
     headers: { "User-Agent": "Mozilla/5.0 (compatible; TSNet-price-check)" },
+    signal: AbortSignal.timeout(15_000),
   });
   if (!res.ok) throw new Error(`${path} → HTTP ${res.status}`);
   const html = await res.text();

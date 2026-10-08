@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "prebuild": "rm -rf public/_preview"
   },
   "dependencies": {
     "@marsidev/react-turnstile": "^1.6.1",

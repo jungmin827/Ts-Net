@@ -32,6 +32,75 @@ const strip = (html) =>
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ");
 
+// ── G0 내부 링크가 실재하는 라우트를 가리키는가 ────────────────────────
+/**
+ * `/review` 는 Reviews 섹션이 **후기가 1건 이상일 때만** 그린다. 그래서 지금은
+ * 라이브 HTML 에 그 링크가 없고, 라우트가 비어 있어도 아무 증상이 없다.
+ * 깨진 링크는 **운영자가 후기를 넣는 순간** 켜진다 — 가장 늦게, 가장 안 좋은
+ * 타이밍에. 데이터 상태와 무관하게 "코드가 거는 링크"와 "존재하는 라우트"를
+ * 맞춰 두면 그 시점이 오기 전에 여기서 걸린다.
+ */
+{
+  /**
+   * 라우트 그룹 `(site)` `(admin)` 은 URL 에 안 나타난다. 한 그룹만 뒤지면
+   * 어드민 링크가 전부 "없는 라우트" 로 잡혀 검사가 거짓 실패를 낸다 —
+   * 거짓 실패는 몇 번 보면 무시하게 되고, 그때 진짜 하나가 섞여 들어온다.
+   */
+  const groups = readdirSync(join(FE, "app"), { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => join(FE, "app", d.name))
+    .concat([join(FE, "app")]);
+
+  const resolveIn = (base, segs) => {
+    let dir = base;
+    for (const seg of segs) {
+      if (!existsSync(dir)) return false;
+      const names = readdirSync(dir);
+      const hit =
+        names.find((n) => n === seg) ?? names.find((n) => /^\[.+\]$/.test(n));
+      if (!hit) return false;
+      dir = join(dir, hit);
+    }
+    return existsSync(join(dir, "page.tsx"));
+  };
+
+  const routeExists = (path) => {
+    const segs = path.split("/").filter(Boolean);
+    if (segs.length === 0) return existsSync(join(FE, "app", "(site)", "page.tsx"));
+    return groups.some((g) => resolveIn(g, segs));
+  };
+
+  const linked = new Set();
+  const walk = (d) => {
+    for (const n of readdirSync(d, { withFileTypes: true })) {
+      const full = join(d, n.name);
+      if (n.isDirectory()) {
+        if (n.name !== "node_modules") walk(full);
+      } else if (/\.tsx?$/.test(n.name)) {
+        const src = readFileSync(full, "utf8");
+        // href="/..." 와 href={`/...`} 둘 다. 외부 링크·앵커·api 는 제외
+        for (const m of src.matchAll(/href=(?:"|\{`)(\/[^"`${}#]*)/g)) {
+          // 쿼리스트링은 라우트가 아니다 — 떼고 비교한다
+          const v = m[1].split("?")[0].replace(/\/$/, "");
+          if (v && !v.startsWith("/api")) linked.add(v);
+        }
+      }
+    }
+  };
+  walk(join(FE, "components"));
+  walk(join(FE, "app"));
+
+  const broken = [...linked].filter((v) => !routeExists(v));
+  check(
+    "G0",
+    "코드가 거는 내부 링크가 전부 실재하는 라우트",
+    broken.length === 0,
+    broken.length
+      ? `라우트 없음: ${broken.join(", ")} — 데이터가 들어오면 404 가 노출된다`
+      : `링크 ${linked.size}개 전부 라우트 존재`,
+  );
+}
+
 // ── G1 다모아 요금 정합 ────────────────────────────────────────────────
 // 2026-10-08 다모아 라이브에서 수집한 **게시 금액 집합** (sub-01~04-test.php).
 // 수집 범위: 요금표 셀 + 추천카드 + 각주 할인액 + 요금계산기가 선택에 따라
