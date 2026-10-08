@@ -107,7 +107,21 @@ export default async function ReviewListPage({
             params={{ q: q || undefined, field: field === "all" ? undefined : field }}
           />
 
+          {/* 작성 버튼은 **목록 위가 아니라 아래**에 둔다.
+              레퍼런스(다모아)는 섹션 제목 반대쪽 위에 두는데, 그러면 후기를
+              읽기 전에 쓰라고 권하는 배치가 된다. 쓰는 사람은 이미 가입을
+              끝낸 사람이고, 읽는 사람이 압도적으로 많다. */}
           <p className="mt-10 text-center">
+            <Link
+              href="/review/write"
+              className="inline-flex min-h-12 items-center gap-1.5 rounded-xl border-2 border-brand-dark bg-white px-6 font-bold text-brand-dark transition-colors duration-200 hover:bg-brand-soft"
+            >
+              <Icon name="chat" size={17} />
+              후기 쓰기
+            </Link>
+          </p>
+
+          <p className="mt-6 text-center">
             <Link
               href="/notice"
               className="inline-flex items-center gap-1 text-sm font-bold text-brand-dark hover:underline"

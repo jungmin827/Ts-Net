@@ -36,6 +36,7 @@ cat supabase/.temp/linked-project.json   # ref 가 yrqfnjiynyenxrjxruot 인지 �
 | 005 | `005_lead_logs_insert_policy.sql` | 변경 이력에 수정 주체(actor_id) 기록 |
 | 006 | `006_lead_rate_count.sql` | 접수 레이트리밋 함수 (`lead_rate_exceeded`) |
 | 007 | `007_board_reply_and_images.sql` | 게시판 — 후기 **운영자 답글** 1건, 정보공유 **본문 이미지** 배열 |
+| 008 | `008_review_public_submit.sql` | 후기 **방문자 제출** 경로 (anon INSERT, `is_published=false` 강제) + 길이 제약 + 폭증 상한 함수 |
 
 **003 이 004 보다 먼저여야 하는 이유**: 004 는 미개통 접수의 파기 예정일을 D+14 로
 당긴다. 삭제 구멍(003 이 막는 것)이 열린 상태에서 파기 대상만 넓어지면 피해가 커진다.
@@ -63,6 +64,18 @@ supabase db push
 > 화면은 정상이고 답글·본문 이미지만 안 보인다. 즉 **증상이 없으므로**
 > 운영자가 "다 됐다" 고 판단할 수 있다 — 적용 후 로그에서
 > `007_board_reply_and_images.sql 가 적용되지 않았습니다` 가 없는지 확인할 것.
+
+> **008 은 "후기를 누가 쓸 수 있는가" 를 바꾼다.** 적용 전에는 방문자가 후기를
+> 남길 경로가 없어, `/review` 에 뜰 수 있는 글이 전부 운영자가 쓴 글이었다 —
+> 소비자가 제3자 경험으로 읽는 자리에 사업자의 자기 서술이 들어가면
+> 표시광고법상 거짓·과장 광고 소지가 있다 (`docs/REVIEW_AUTHORSHIP.md`).
+> 008 은 anon INSERT 를 열지만 `is_published = false` 인 행만 통과시키고
+> anon 에게 UPDATE·DELETE 를 주지 않는다. 제출자가 자기 글을 게시 상태로
+> 바꿀 경로가 없다. 승인은 어드민 `/admin/reviews` 에서만.
+>
+> 008 미적용 상태에서 방문자가 후기를 쓰려 하면 RLS 가 INSERT 를 거부하고
+> 서버 로그에 `008_review_public_submit.sql 미적용 가능` 이 찍힌다.
+> 화면에는 "등록에 실패했습니다" 만 보이므로, 로그를 확인할 것.
 
 ### 적용 후 검증
 

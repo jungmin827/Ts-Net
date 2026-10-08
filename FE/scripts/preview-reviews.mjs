@@ -62,7 +62,8 @@ export const render = (rows) => renderToStaticMarkup(<Reviews reviews={rows} />)
     `npx esbuild ${entry} --bundle --platform=node --format=esm --outfile=${bundle} ` +
       `--external:react --external:react-dom --alias:@=${FE} ` +
       `--alias:next/link=${join(FE, "scripts/_shim-link.tsx")} ` +
-      `--alias:next/image=${join(FE, "scripts/_shim-image.tsx")} --jsx=automatic --log-level=error`,
+      `--alias:next/image=${join(FE, "scripts/_shim-image.tsx")} ` +
+      `--alias:next/navigation=${join(FE, "scripts/_shim-navigation.tsx")} --jsx=automatic --log-level=error`,
     { stdio: "inherit", cwd: FE },
   );
   ({ render } = await import(pathToFileURL(bundle).href));

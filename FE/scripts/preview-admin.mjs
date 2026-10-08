@@ -56,16 +56,37 @@ writeFileSync(
   entryTs,
   `import { renderToStaticMarkup } from "react-dom/server";
 import LeadFilterBar from "@/app/(admin)/admin/leads/LeadFilterBar";
+import ReviewModRow from "@/app/(admin)/admin/reviews/ReviewModRow";
 import { resolvePeriod, parseLeadFilter } from "@/lib/admin/filters";
+
+/** 후기 승인 화면의 행. 계정이 없으면 브라우저로 열 수 없는 화면이라
+    여기서 재지 않으면 대비를 한 번도 못 재고 내보내게 된다. */
+const REVIEWS = [
+  { id: 1, title: "승인 대기 — 테두리가 brand 이고 뱃지가 brand-light", content: "운영자가 먼저 봐야 하는 상태.", rating: 5, carrier: "KT", is_published: false, created_at: "2026-10-07T01:00:00Z" },
+  { id: 2, title: "게시중 — 뱃지가 surface-muted + muted", content: "이미 공개된 글.", rating: null, carrier: null, is_published: true, created_at: "2026-10-01T05:00:00Z", admin_reply: "확인했습니다. 알려주셔서 감사합니다.", admin_reply_at: "2026-10-02T02:00:00Z" },
+  { id: 3, title: "본문이 아주 긴 경우", content: "접지 않고 전부 보여준다. ".repeat(18), rating: 2, carrier: "SKYLIFE", is_published: false, created_at: "2026-09-25T09:00:00Z" },
+];
 
 export function render(period: string) {
   const filter = parseLeadFilter({ period });
   const range = resolvePeriod(filter);
   return {
     range,
-    html: renderToStaticMarkup(
-      <LeadFilterBar filter={filter} range={range} exportFields={{ period }} />,
-    ),
+    reviewTitles: REVIEWS.map((r) => r.title),
+    html:
+      renderToStaticMarkup(
+        <LeadFilterBar filter={filter} range={range} exportFields={{ period }} />,
+      ) +
+      renderToStaticMarkup(
+        <div className="mt-8 flex flex-col gap-4">
+          <h1 className="text-2xl font-black">후기 승인 (가짜 데이터)</h1>
+          <ul className="flex flex-col gap-4">
+            {REVIEWS.map((r) => (
+              <ReviewModRow key={r.id} row={r} replyAvailable={true} />
+            ))}
+          </ul>
+        </div>,
+      ),
   };
 }
 `,
@@ -78,7 +99,8 @@ execSync(
     `--external:react --external:react-dom --alias:@=${FE} ` +
     // next/link 는 노드에서 바로 풀리지 않고, 정적 미리보기에는 평범한 <a> 면 충분하다
     `--alias:next/link=${join(FE, "scripts/_shim-link.tsx")} ` +
-      `--alias:next/image=${join(FE, "scripts/_shim-image.tsx")} --jsx=automatic --log-level=error`,
+      `--alias:next/image=${join(FE, "scripts/_shim-image.tsx")} ` +
+      `--alias:next/navigation=${join(FE, "scripts/_shim-navigation.tsx")} --jsx=automatic --log-level=error`,
   { stdio: "inherit", cwd: FE },
 );
 

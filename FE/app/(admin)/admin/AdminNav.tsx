@@ -9,6 +9,9 @@ import { usePathname } from "next/navigation";
 const ITEMS = [
   { href: "/admin", label: "대시보드", exact: true },
   { href: "/admin/leads", label: "상담신청", exact: false },
+  // 방문자가 제출한 후기는 비공개로 들어온다 — 승인 화면이 없으면
+  // 영원히 공개되지 않는다 (008 이 제출 경로를 열었다).
+  { href: "/admin/reviews", label: "후기 승인", exact: false },
 ] as const;
 
 export default function AdminNav() {
