@@ -12,7 +12,34 @@ import { getNoticePage } from "@/lib/board-data";
 
 export const revalidate = 300;
 
-export const metadata: Metadata = {
+/**
+ * 검색·페이지 파라미터가 붙은 주소는 **색인하지 않는다.**
+ *
+ * `?q=KT`, `?q=KT&page=2`, `?field=title&q=…` 는 같은 글 묶음을 가리키는
+ * 서로 다른 주소다. 그대로 열어 두면 글 하나가 수십 개 주소로 중복 색인되고,
+ * 검색엔진은 그중 아무 것이나 정본으로 고른다 — 1페이지가 아니라
+ * "KT 로 검색한 3페이지" 가 대표 주소가 되는 일이 실제로 일어난다.
+ * 2페이지 이후도 같은 이유로 막고, canonical 은 전부 목록 첫 페이지로 모은다.
+ * (robots.txt 에도 `Disallow: {BASE}?` 를 두었지만, 이미 알려진 주소는
+ *  수집 없이 색인될 수 있어 메타로 한 번 더 막는다.)
+ */
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string | string[]; q?: string | string[] }>;
+}): Promise<Metadata> {
+  const sp = await searchParams;
+  const filtered = !!sp.q || (!!sp.page && String(sp.page) !== "1");
+  return {
+    ...metadata,
+    alternates: { canonical: BASE },
+    ...(filtered ? { robots: { index: false, follow: true } } : {}),
+  };
+}
+
+const BASE = "/notice";
+
+const metadata: Metadata = {
   title: "정보공유",
   description:
     "인터넷·IPTV 가입 절차와 요금 관련 안내를 정리해 올리는 게시판입니다.",

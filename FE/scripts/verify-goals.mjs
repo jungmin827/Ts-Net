@@ -147,6 +147,53 @@ const strip = (html) =>
   );
 }
 
+// ── G0a canonical 은 페이지마다, 루트에는 없다 ──────────────────────
+/**
+ * 루트 레이아웃의 메타는 **모든 페이지로 상속된다.** 거기에
+ * `alternates.canonical: "/"` 를 넣었다가 `/kt` `/sk` `/review` 가 전부
+ * `canonical = /` 로 나갔다 — 각 페이지가 스스로를 "홈의 중복" 이라고
+ * 선언한 것이고, 그러면 색인에서 빠지는 쪽은 그 페이지다.
+ * 증상이 브라우저에 안 보이고(화면은 멀쩡하다) 검색결과가 사라질 때까지
+ * 몇 주가 걸리는 종류의 고장이라, 검사로 못 박는다.
+ */
+{
+  const layout = read("FE/app/layout.tsx");
+  // 주석 안의 언급은 센다고 치고 — 실제 속성만 본다
+  const inRoot = /alternates\s*:\s*\{[^}]*canonical/.test(
+    layout.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, ""),
+  );
+  check(
+    "G0",
+    "루트 레이아웃에 canonical 없음 (전 페이지 상속 방지)",
+    !inRoot,
+    inRoot
+      ? "app/layout.tsx 의 alternates.canonical 이 모든 페이지로 상속된다"
+      : "루트에 canonical 없음",
+  );
+
+  // 공개 라우트의 page.tsx 는 전부 자기 canonical 을 선언해야 한다
+  const pages = [];
+  const walk = (d) => {
+    for (const n of readdirSync(d, { withFileTypes: true })) {
+      const full = join(d, n.name);
+      if (n.isDirectory()) walk(full);
+      else if (n.name === "page.tsx") pages.push(full);
+    }
+  };
+  walk(join(FE, "app", "(site)"));
+  const missing = pages.filter(
+    (f) => !/alternates\s*:\s*\{[^}]*canonical/.test(readFileSync(f, "utf8")),
+  );
+  check(
+    "G0",
+    "공개 페이지가 각자 canonical 을 선언",
+    missing.length === 0,
+    missing.length
+      ? missing.map((f) => f.replace(`${FE}/app/`, "")).join(", ")
+      : `페이지 ${pages.length}개 전부 선언`,
+  );
+}
+
 // ── G0b 게시판 본문의 두 불변식 ──────────────────────────────────────
 {
   const files = [];

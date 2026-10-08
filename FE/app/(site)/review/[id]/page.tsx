@@ -25,6 +25,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const review = n ? await getReview(n) : null;
   if (!review) return { title: "후기를 찾을 수 없습니다" };
   return {
+    // canonical 은 페이지마다 적는다 — 루트 레이아웃에 두면 전 페이지가
+    // 같은 주소를 정본으로 선언해 자기를 중복으로 떨어뜨린다.
+    alternates: { canonical: `/review/${n}` },
     title: review.title,
     // 본문 발췌를 설명으로 쓴다. 한국어는 검색결과에서 약 80자까지 보인다.
     description: excerpt(review.content, 80),

@@ -45,6 +45,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
    *   여기에 "인터넷·TV" 를 또 붙이면 "KT 인터넷·IPTV 인터넷·TV" 가 된다.
    */
   return {
+    // canonical 은 페이지마다 적는다 — 루트 레이아웃에 두면 전 페이지가
+    // 같은 주소를 정본으로 선언해 자기를 중복으로 떨어뜨린다.
+    alternates: { canonical: `/${slug}` },
     title: `${info.fullLabel} 가입 상담`,
     // ⚠ "휴대폰 1회선 결합" 을 여기 적지 않는다.
     //   SKYLIFE 페이지에는 휴대폰 상품이 0개이고, 그 전제가 실제로 적용되는지

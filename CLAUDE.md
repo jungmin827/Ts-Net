@@ -180,9 +180,26 @@ docs/SPEC.md           기능 명세 — 작업 전 반드시 읽을 것
     에 경로만 적으면 흰 스크림까지 자동으로 적용된다.
 - [x] `/api/leads` 접수 파이프라인 + `/api/feed/live` (60초 캐시, 5건 미만 빈 배열)
   - 실 접수 E2E 테스트는 anon/service_role 키 기입 후 진행 필요
-- [ ] 어드민 (목록·필터·상세·상태변경·엑셀)
+- [x] 어드민 — 로그인(2FA/TOTP)·목록·필터·상세·상태변경·메모·**기간 지정 엑셀 내보내기**
+  (`app/(admin)/admin/*`, `app/api/admin/export/route.ts`). 전화번호 복호화는
+  상세에서 버튼으로만, `access_logs` 기록 후. 검증은 `scripts/verify-export.mjs`
+  — 기간 프리셋·잘못된 입력 거부·KST→UTC 경계·xlsx 생성까지 본다.
+  - 잔여(운영자 작업): 어드민 계정 생성 + TOTP 등록. 계정이 없으면 로그인 불가라
+    화면을 끝까지 눌러 볼 수 없다 (`BE/README.md` 7번)
 - [x] 통신사 서브페이지 4종 (`/kt` `/sk` `/lg` `/skylife`) — SSG, 미등록 slug는 404
   + 메인 통신사 4카드 허브. 요금제는 `plans` 테이블 기반, 미등록 시 상담 유도로 대체
   - 요금제 데이터 입력 필요: `BE/supabase/seed/plans_template.sql` (자리표시자 → 실제 값)
-- [ ] 후기·공지 게시판
-- [ ] SEO·트래킹·도메인 연결
+- [x] 후기·정보공유 게시판 (`/review` `/notice` + 각 상세) — 목록·검색·번호
+  페이지네이션·이전글/다음글·운영자 답글·본문 이미지. `revalidate = 300`,
+  anon key + RLS `*_public_read` 만 사용. 본문은 평문 렌더(저장형 XSS 차단).
+  - 운영자 답글·본문 이미지는 `BE/supabase/migrations/007` 적용 후 동작한다.
+    미적용이면 **그 두 기능만 조용히 빠진다** — APPLY.md 의 로그 확인 항목 참고
+- [~] SEO — `sitemap.xml` / `robots.txt` / 페이지별 canonical / OG 완료.
+  정본 주소는 `NEXT_PUBLIC_SITE_URL` 하나로 결정된다(`lib/site-url.ts`).
+  **비어 있거나 운영 빌드에서 로컬 주소면 robots 가 전체 수집을 막고
+  sitemap 을 비운다** — 틀린 canonical 은 없는 canonical 보다 나쁘다.
+  검색·2페이지 이후 목록은 `noindex, follow` + canonical 을 목록 첫 페이지로.
+  - [ ] 도메인 연결 후 `NEXT_PUBLIC_SITE_URL` 기입 (이것 하나로 색인이 열린다)
+  - [ ] 트래킹: `.env.example` 에 GA/Meta/Kakao/Naver 자리는 있으나 **미연결**.
+    픽셀은 쿠키를 심으므로 동의 절차와 처리방침 고지를 같이 정해야 한다 —
+    운영자 결정 사항으로 남긴다. 결정 없이 넣으면 동의 없는 수집이 된다.

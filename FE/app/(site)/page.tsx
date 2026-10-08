@@ -13,6 +13,12 @@ import Faq from "@/components/sections/Faq";
 import PrivacyPromise from "@/components/sections/PrivacyPromise";
 import Reviews, { type ReviewItem } from "@/components/sections/Reviews";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
+
 // 메인 랜딩 — docs/SPEC.md §1.1 섹션 순서. 후기 반영을 위해 5분 재생성
 export const revalidate = 300;
 
