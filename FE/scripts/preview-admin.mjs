@@ -77,7 +77,8 @@ execSync(
   `npx esbuild ${entryTs} --bundle --platform=node --format=esm --outfile=${bundle} ` +
     `--external:react --external:react-dom --alias:@=${FE} ` +
     // next/link 는 노드에서 바로 풀리지 않고, 정적 미리보기에는 평범한 <a> 면 충분하다
-    `--alias:next/link=${join(FE, "scripts/_shim-link.tsx")} --jsx=automatic --log-level=error`,
+    `--alias:next/link=${join(FE, "scripts/_shim-link.tsx")} ` +
+      `--alias:next/image=${join(FE, "scripts/_shim-image.tsx")} --jsx=automatic --log-level=error`,
   { stdio: "inherit", cwd: FE },
 );
 

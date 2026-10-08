@@ -10,11 +10,19 @@ import Icon from "@/components/ui/Icon";
 /**
  * 게시판 메뉴.
  *
- * `/review` `/notice` 는 아직 구현되지 않아 **404 를 반환한다.**
- * 누르면 에러 페이지로 떨어지는 메뉴를 내비에 두는 쪽이, 메뉴가 하나 적은
- * 것보다 신뢰를 더 크게 깎는다. 페이지를 만들면 배열에 다시 넣으면 된다.
+ * 한동안 빈 배열이었다 — `/review` `/notice` 가 404 를 내던 때, 눌러서
+ * 에러로 떨어지는 메뉴를 두는 쪽이 메뉴가 적은 것보다 신뢰를 더 깎기 때문이다.
+ * 두 라우트를 만들었으므로 되돌린다. 라벨은 DB 테이블 이름(`notices`)이 아니라
+ * **방문자가 기대하는 말**로 적는다 — 여기 올라가는 건 공지가 아니라 가입
+ * 절차·요금 안내다.
+ *
+ * 링크와 라우트가 다시 어긋나지 않도록 `verify-goals` 의 G0 검사가
+ * "코드가 거는 내부 링크 ⊆ 존재하는 라우트" 를 데이터 상태와 무관하게 본다.
  */
-const BOARD_MENU: { href: string; label: string }[] = [];
+const BOARD_MENU: { href: string; label: string }[] = [
+  { href: "/review", label: "가입후기" },
+  { href: "/notice", label: "정보공유" },
+];
 
 const CARRIER_NAV = CARRIER_MENU.map((c) => ({
   href: `/${c.slug}`,

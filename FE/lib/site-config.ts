@@ -225,6 +225,11 @@ export const CARRIER_MENU = [
 export type CarrierMenuItem = (typeof CARRIER_MENU)[number];
 
 /** slug → 통신사 정보. 없는 slug면 undefined (서브페이지에서 notFound 처리) */
+/** 코드(`KT`/`SK`/`LG`/`SKYLIFE`)로 찾는다 — DB 의 `carrier` 열이 이 형태다 */
+export function carrierByCode(code: string): CarrierMenuItem | undefined {
+  return CARRIER_MENU.find((c) => c.code === code);
+}
+
 export function carrierBySlug(slug: string): CarrierMenuItem | undefined {
   return CARRIER_MENU.find((c) => c.slug === slug);
 }

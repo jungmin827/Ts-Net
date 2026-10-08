@@ -57,7 +57,10 @@ const strip = (html) =>
       if (!existsSync(dir)) return false;
       const names = readdirSync(dir);
       const hit =
-        names.find((n) => n === seg) ?? names.find((n) => /^\[.+\]$/.test(n));
+        seg === ":x"
+          ? names.find((n) => /^\[.+\]$/.test(n))
+          : (names.find((n) => n === seg) ??
+            names.find((n) => /^\[.+\]$/.test(n)));
       if (!hit) return false;
       dir = join(dir, hit);
     }
@@ -70,6 +73,38 @@ const strip = (html) =>
     return groups.some((g) => resolveIn(g, segs));
   };
 
+  /**
+   * 템플릿 리터럴에서 **정적으로 알 수 있는 경로**만 뽑는다.
+   *
+   * 보간이 두 종류라서 한 규칙으로 못 다룬다:
+   *   `` `/review/${r.id}` ``        → `/` 뒤에 붙었으니 **경로 구간**. `:x` 로 둔다.
+   *   `` `/admin/leads${qs(...)}` `` → 슬래시 없이 붙었으니 쿼리·접미사다.
+   *                                    거기서 **잘라낸다** (뒤는 알 수 없다).
+   * `\$\{[^}]*\}` 로 한 번에 지우면 보간 안의 `}` (객체 리터럴) 에서 먼저
+   * 끊겨 `:x)}` 같은 쓰레기가 남는다 — 그게 거짓 실패를 만들었다.
+   * 중괄호 깊이를 세며 직접 훑는다.
+   */
+  const staticPath = (body) => {
+    let out = "";
+    for (let i = 0; i < body.length; i += 1) {
+      if (body[i] === "$" && body[i + 1] === "{") {
+        const segment = out.endsWith("/");
+        let depth = 1;
+        let j = i + 2;
+        for (; j < body.length && depth > 0; j += 1) {
+          if (body[j] === "{") depth += 1;
+          else if (body[j] === "}") depth -= 1;
+        }
+        if (!segment) return out.split("?")[0].split("#")[0];
+        out += ":x";
+        i = j - 1;
+        continue;
+      }
+      out += body[i];
+    }
+    return out.split("?")[0].split("#")[0];
+  };
+
   const linked = new Set();
   const walk = (d) => {
     for (const n of readdirSync(d, { withFileTypes: true })) {
@@ -78,10 +113,21 @@ const strip = (html) =>
         if (n.name !== "node_modules") walk(full);
       } else if (/\.tsx?$/.test(n.name)) {
         const src = readFileSync(full, "utf8");
-        // href="/..." 와 href={`/...`} 둘 다. 외부 링크·앵커·api 는 제외
-        for (const m of src.matchAll(/href=(?:"|\{`)(\/[^"`${}#]*)/g)) {
-          // 쿼리스트링은 라우트가 아니다 — 떼고 비교한다
-          const v = m[1].split("?")[0].replace(/\/$/, "");
+        /**
+         * `href="/..."` 와 `` href={`/...`} `` 둘 다.
+         *
+         * 템플릿 리터럴의 `${...}` 를 **동적 구간으로 되살려서** 본다.
+         * 그냥 잘라 버리면 `` `/review/${r.id}` `` 가 `/review` 로 줄어
+         * 목록 페이지만 있으면 통과한다 — 정작 깨지는 건 `/review/1` 인데
+         * 그걸 못 잡으면 이 검사를 넣은 이유가 사라진다.
+         * 보간을 `:x` 로 바꿔 두면 라우트 해석기가 `[id]` 디렉터리에 맞춘다.
+         */
+        for (const m of src.matchAll(/href=(?:"([^"#?]*)"|\{`([^`]*)`\})/g)) {
+          const raw = staticPath(m[1] ?? m[2] ?? "");
+          if (!raw.startsWith("/")) continue; // 외부 링크·앵커·tel:
+          // 선두가 보간이면(`/${slug}`) 어느 라우트인지 정적으로 알 수 없다
+          if (raw.startsWith("/:x")) continue;
+          const v = raw.replace(/\/$/, "");
           if (v && !v.startsWith("/api")) linked.add(v);
         }
       }

@@ -6,12 +6,11 @@ import PlanCards from "@/components/sections/PlanCards";
 import PlanTable from "@/components/sections/PlanTable";
 import PartnerCard from "@/components/sections/PartnerCard";
 import PlanNotice from "@/components/sections/PlanNotice";
-import LeadForm from "@/components/forms/LeadForm";
+import ConsultSection from "@/components/sections/ConsultSection";
 import { getPlansByCarrier, tableRows } from "@/lib/plans";
-import { CARRIER_MENU, SITE, carrierBySlug, hasTel } from "@/lib/site-config";
+import { CARRIER_MENU, carrierBySlug } from "@/lib/site-config";
 import type { Carrier } from "@/lib/validation";
 import Icon from "@/components/ui/Icon";
-import SectionHeading from "@/components/ui/SectionHeading";
 
 // 통신사 서브페이지 — docs/SPEC.md §1.2, 구성은 docs/DESIGN.md 시안 순서.
 // 요금제 변경 반영을 위해 5분 재생성. 등록된 4개 slug 외에는 404.
@@ -105,46 +104,13 @@ export default async function CarrierPage({ params }: Params) {
           요금 미등록 통신사에서는 요금 전제 블록을 빼고 나머지만 렌더한다 */}
       <PlanNotice hasPrices={plans.length > 0} />
 
-      <section
-        id="consult"
-        className="scroll-mt-24 bg-surface-muted py-16 md:py-20"
-      >
-        {/*
-          히어로와 같은 폭 계산을 여기에도 적용한다.
-          `LeadForm` 안의 Turnstile 은 `size:"flexible"` 이어도 **최소 300px** 이다.
-          거터 16 + 카드 패딩 24 + 테두리 1 을 양쪽에 두면 360px 기기에서
-          내부가 278px 밖에 안 남아 위젯이 22px 잘린다.
-          거터는 **다른 섹션과 같은 16px 로 둔다** — 히어로에서 거터를 줄였다가
-          좌측 정렬선이 4px 어긋나는 일을 겪었다. 패딩만 12px 로 내리면
-          328 − 24 − 2 = 302px 로 같은 결과다.
-
-          ⚠ 히어로만 고치고 여기를 놓쳤었다. 그때 "통신사 4페이지 360px 넘침 0건"
-            으로 통과시켰는데, 그 0 을 만든 건 같은 작업에서 넣은
-            `overflow-x-auto` 래퍼였다 — **내가 넣은 안전장치가 내 측정 지표를
-            무력화한 것**이다. 페이지 넘침이 아니라 **위젯이 제 칸에 들어가는지**를
-            따로 재야 한다.
-        */}
-        <div className="mx-auto max-w-xl px-4">
-          <div className="rounded-panel border border-line bg-white p-3 shadow-float sm:p-6 md:p-8">
-            <SectionHeading
-              title={`${info.label} 가입 상담 신청`}
-              description="남겨주신 연락처로 확인 후 순차적으로 연락드립니다"
-            />
-            <LeadForm variant="compact" defaultCarrier={info.code as Carrier} />
-            {hasTel() && (
-              <p className="mt-6 text-center text-sm text-muted">
-                전화 상담{" "}
-                <a
-                  href={`tel:${SITE.tel}`}
-                  className="font-black text-brand-dark hover:underline"
-                >
-                  {SITE.tel}
-                </a>
-              </p>
-            )}
-          </div>
-        </div>
-      </section>
+      {/* 상담 섹션은 `ConsultSection` 한 곳에 있다 — 헤더 CTA 가 거는
+          `#consult` 앵커와 폭 계산(Turnstile 300px)이 페이지마다 갈라지지
+          않게 하기 위함이다. 히어로만 고치고 여기를 놓친 적이 있다. */}
+      <ConsultSection
+        title={`${info.label} 가입 상담 신청`}
+        defaultCarrier={info.code as Carrier}
+      />
     </main>
   );
 }
