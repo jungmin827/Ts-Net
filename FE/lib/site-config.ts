@@ -1,3 +1,4 @@
+import type { Carrier } from "@/lib/validation";
 // 사이트 전역 설정값 — 카피·사업자 정보의 단일 출처.
 // 과장 광고 문구(보상률·최대 지원금 등)는 코드에 하드코딩하지 않고 여기서만 관리한다.
 // TODO 항목은 사업자 정보 확정 후 실제 값으로 교체할 것 (런칭 전 체크리스트).
@@ -314,7 +315,19 @@ export type PromoSlotName =
   | "afterPromoBand"
   | "afterPriceCompare"
   | "afterJourney"
-  | "beforeFooter";
+  | "beforeFooter"
+  // ── 통신사 상세페이지 (`/kt` `/sk` `/lg` `/skylife`) ─────────────
+  // 요구사항의 "상세페이지 홍보 이미지" 자리가 여기다. 한동안 메인에만
+  // 슬롯이 있어서, 상세페이지에 이미지를 넣으려면 코드를 고쳐야 했다 —
+  // 구조를 만들라는 요구의 핵심이 "코드를 고치지 않고 교체" 인데
+  // 정작 상세페이지가 그 밖에 있었다.
+  //
+  //   CarrierHero → **carrierAfterHero** → PlanCards → PlanCalculator →
+  //   PlanTable → **carrierAfterPlans** → PartnerCard → PlanNotice →
+  //   **carrierBeforeConsult** → ConsultSection
+  | "carrierAfterHero"
+  | "carrierAfterPlans"
+  | "carrierBeforeConsult";
 
 export interface PromoImage {
   /** React key. 중복되지 않게만 하면 된다 */
@@ -334,6 +347,15 @@ export interface PromoImage {
   alt: string;
   /** 누르면 갈 곳. 보통 "#consult". 생략하면 클릭되지 않는 그림 */
   href?: string;
+  /**
+   * 통신사 상세페이지 슬롯에서만 의미가 있다. 비우면 **네 페이지 전부**에
+   * 같은 이미지가 뜨고, `"KT"` 로 두면 `/kt` 에만 뜬다.
+   *
+   * 메인 슬롯 항목에 적어도 무시된다 — 메인은 특정 통신사의 페이지가 아니다.
+   * (타입으로 가르지 않는 이유: 슬롯 이름 하나만 바꿔 자리를 옮기는 게
+   *  운영자에게 가장 단순하고, 그 때 타입이 깨지면 손이 더 간다.)
+   */
+  carrier?: Carrier;
   /** false 면 파일을 지우지 않고도 내릴 수 있다 */
   enabled: boolean;
 }

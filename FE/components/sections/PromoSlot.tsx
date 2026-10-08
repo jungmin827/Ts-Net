@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { PROMO_IMAGES, type PromoSlotName } from "@/lib/site-config";
+import type { Carrier } from "@/lib/validation";
 
 /**
  * 외부 디자인 툴로 만든 홍보 이미지를 꽂는 자리.
@@ -21,9 +22,27 @@ import { PROMO_IMAGES, type PromoSlotName } from "@/lib/site-config";
  *   운영자가 "나중에 채우지" 하고 비워두면 아무도 못 잡으므로, 조용히 통과시키지 않는다.
  *   (같은 검사가 `scripts/verify-goals.mjs` 에도 있다 — 화면에 뜨기 전에 걸린다)
  */
-export default function PromoSlot({ slot }: { slot: PromoSlotName }) {
+export default function PromoSlot({
+  slot,
+  carrier,
+}: {
+  slot: PromoSlotName;
+  /**
+   * 통신사 상세페이지에서 넘긴다. 항목의 `carrier` 가 비어 있으면 네 페이지
+   * 공통으로 뜨고, 값이 있으면 그 통신사 페이지에서만 뜬다.
+   *
+   * 이 인자를 **넘기지 않으면 통신사 지정 항목이 전부 뜬다** — 메인에서
+   * KT 전용 이미지가 뜨는 일을 막으려고, 지정이 있는 항목은
+   * `carrier` 를 받은 자리에서만 렌더한다.
+   */
+  carrier?: Carrier;
+}) {
   const mine = PROMO_IMAGES.filter(
-    (i) => i.enabled && i.slot === slot && i.desktop,
+    (i) =>
+      i.enabled &&
+      i.slot === slot &&
+      i.desktop &&
+      (i.carrier === undefined ? true : i.carrier === carrier),
   );
   /** alt 가 비어 렌더하지 않은 항목 — 개발 중에는 화면에 알린다 */
   const missingAlt = mine.filter((i) => !i.alt.trim());

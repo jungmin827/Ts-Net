@@ -7,6 +7,7 @@ import PlanTable from "@/components/sections/PlanTable";
 import PartnerCard from "@/components/sections/PartnerCard";
 import PlanNotice from "@/components/sections/PlanNotice";
 import ConsultSection from "@/components/sections/ConsultSection";
+import PromoSlot from "@/components/sections/PromoSlot";
 import { getPlansByCarrier, tableRows } from "@/lib/plans";
 import { CARRIER_MENU, carrierBySlug } from "@/lib/site-config";
 import type { Carrier } from "@/lib/validation";
@@ -71,6 +72,7 @@ export default async function CarrierPage({ params }: Params) {
   return (
     <main>
       <CarrierHero carrier={info} />
+      <PromoSlot slot="carrierAfterHero" carrier={info.code as Carrier} />
 
       {plans.length > 0 ? (
         <>
@@ -80,6 +82,7 @@ export default async function CarrierPage({ params }: Params) {
           <PlanCards plans={plans} carrier={info} />
           {/* 추천 카드로 이미 보여준 행은 표에서 빼 같은 금액이 두 번 나오지 않게 한다 */}
           <PlanTable plans={tableRows(plans)} />
+      <PromoSlot slot="carrierAfterPlans" carrier={info.code as Carrier} />
         </>
       ) : (
         // 요금제 미등록 상태에서 빈 표를 보여주지 않는다 — 상담 유도로 대체
@@ -110,6 +113,7 @@ export default async function CarrierPage({ params }: Params) {
       {/* 상담 섹션은 `ConsultSection` 한 곳에 있다 — 헤더 CTA 가 거는
           `#consult` 앵커와 폭 계산(Turnstile 300px)이 페이지마다 갈라지지
           않게 하기 위함이다. 히어로만 고치고 여기를 놓친 적이 있다. */}
+      <PromoSlot slot="carrierBeforeConsult" carrier={info.code as Carrier} />
       <ConsultSection
         title={`${info.label} 가입 상담 신청`}
         defaultCarrier={info.code as Carrier}

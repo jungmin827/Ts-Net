@@ -462,8 +462,21 @@ async function g5() {
   // 스크립트 안에서 과대 표기가 한 번 더 일어나고 있었다.
   const slotBlock = cfg.match(/export type PromoSlotName =[\s\S]*?;/)?.[0] ?? "";
   const slots = (slotBlock.match(/"[A-Za-z]+"/g) ?? []).length;
-  const page = read("FE/app/(site)/page.tsx");
-  const used = (page.match(/<PromoSlot slot=/g) ?? []).length;
+  /*
+   * 삽입 지점은 **메인과 통신사 상세페이지 둘 다** 센다.
+   * 한동안 메인만 읽어서, 상세페이지 슬롯 3개를 추가한 순간
+   * "정의 8 · 삽입 5" 로 실패했다 — 검사가 틀렸고 코드는 맞았다.
+   * 요구사항의 "상세페이지 홍보 이미지" 자리가 상세페이지에 있는 건
+   * 당연한데, 검사는 메인만 세상의 전부로 알고 있었다.
+   */
+  const slotPages = [
+    "FE/app/(site)/page.tsx",
+    "FE/app/(site)/[carrier]/page.tsx",
+  ];
+  const used = slotPages.reduce(
+    (n, f) => n + (read(f).match(/<PromoSlot slot=/g) ?? []).length,
+    0,
+  );
   check("G5", "슬롯 정의 = 삽입 지점", slots > 0 && slots === used, `정의 ${slots} · 삽입 ${used}`);
   check("G5", "빈 슬롯은 섹션 미렌더", read("FE/components/sections/PromoSlot.tsx").includes("return null"), "");
 
