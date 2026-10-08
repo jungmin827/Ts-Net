@@ -147,6 +147,94 @@ const strip = (html) =>
   );
 }
 
+// ── G0b 게시판 본문의 두 불변식 ──────────────────────────────────────
+{
+  const files = [];
+  const walk = (d) => {
+    for (const n of readdirSync(d, { withFileTypes: true })) {
+      const full = join(d, n.name);
+      if (n.isDirectory()) {
+        if (n.name !== "node_modules") walk(full);
+      } else if (/\.tsx?$/.test(n.name)) files.push(full);
+    }
+  };
+  walk(join(FE, "app"));
+  walk(join(FE, "components"));
+  walk(join(FE, "lib"));
+
+  /**
+   * 1. 게시글 본문을 HTML 로 꽂지 않는다.
+   *    운영자가 쓴 글이라 "믿을 수 있다" 고 생각하기 쉽지만, 어드민 계정이
+   *    하나뿐이라(CLAUDE.md) 그 계정이 털리면 저장형 XSS 가 **모든 방문자**
+   *    에게 실행된다. 평문 + `whitespace-pre-wrap` 으로 충분하다.
+   */
+  /*
+   * 주석을 지우고 본다. 처음엔 원본을 그대로 훑어서 **"쓰지 말 것" 이라고
+   * 적어 둔 주석**까지 위반으로 잡았다 — 검사가 자기 경고문을 위반으로
+   * 신고하면 아무도 그 결과를 안 읽는다.
+   */
+  const strip = (src) =>
+    src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+
+  /*
+   * JSON-LD(`<script type="application/ld+json">`)는 예외다. 구조화 데이터를
+   * 넣는 **표준 방법이 그것뿐**이고, `<` 를 `\u003c` 로 이스케이프하면
+   * 스크립트가 깨질 경로가 없다. 그 두 조건을 같이 확인한다 —
+   * ld+json 이라는 이유만으로 면제하면 이스케이프를 뺀 판이 통과한다.
+   */
+  const unsafe = files.filter((f) => {
+    const src = strip(readFileSync(f, "utf8"));
+    let i = src.indexOf("dangerouslySetInnerHTML");
+    while (i !== -1) {
+      const before = src.slice(Math.max(0, i - 400), i);
+      const after = src.slice(i, i + 400);
+      const jsonLd =
+        /application\/ld\+json/.test(before) &&
+        /replace\(\s*\/<\/g/.test(after);
+      if (!jsonLd) return true;
+      i = src.indexOf("dangerouslySetInnerHTML", i + 1);
+    }
+    return false;
+  });
+  check(
+    "G0",
+    "게시글 본문을 HTML 로 꽂는 곳 없음",
+    unsafe.length === 0,
+    unsafe.length
+      ? unsafe.map((f) => f.replace(`${FE}/`, "")).join(", ")
+      : `검사 ${files.length}개 파일`,
+  );
+
+  /**
+   * 2. PostgREST 의 `.or()` 는 **문자열을 파싱하는 필터 DSL** 이다.
+   *    검색어가 SQL 파라미터가 아니라 그 DSL 의 일부로 들어가므로,
+   *    `sanitizeQuery` 를 거치지 않은 값이 닿으면 조건을 하나 더 만들거나
+   *    다른 열을 가리킬 수 있다. 호출 지점을 `lib/board-data.ts` 한 곳으로
+   *    묶어 두고, 다른 파일에서 쓰이면 실패시킨다.
+   */
+  /*
+   * 허용 지점은 두 곳이다 — 공개 게시판 검색(`lib/board-data.ts`)과
+   * 어드민 명단 검색(`lib/admin/leads.ts`). 둘 다 `safeLikeTerm` 을 거쳐야
+   * 하므로, `.or(` 를 쓰면서 그 함수를 부르지 않는 파일은 전부 실패다.
+   * (어드민 쪽은 한동안 정리 없이 검색어를 그대로 끼워 넣고 있었다.)
+   */
+  const orUsers = files.filter((f) => {
+    const src = strip(readFileSync(f, "utf8"));
+    if (!/\.or\(/.test(src)) return false;
+    // 정리 함수를 직접 부르거나(어드민), 정리된 값만 받는 브랜드 타입을
+    // 쓰면(공개 게시판) 통과. 둘 다 아니면 생문자열이 DSL 에 닿는다.
+    return !/safeLikeTerm\(/.test(src) && !/SafeLikeTerm/.test(src);
+  });
+  check(
+    "G0",
+    "PostgREST `.or()` 쓰는 곳은 전부 safeLikeTerm 경유",
+    orUsers.length === 0,
+    orUsers.length
+      ? `${orUsers.map((f) => f.replace(`${FE}/`, "")).join(", ")} — sanitizeQuery 우회 경로`
+      : "검색어 정리를 안 거치는 .or() 없음",
+  );
+}
+
 // ── G1 다모아 요금 정합 ────────────────────────────────────────────────
 // 2026-10-08 다모아 라이브에서 수집한 **게시 금액 집합** (sub-01~04-test.php).
 // 수집 범위: 요금표 셀 + 추천카드 + 각주 할인액 + 요금계산기가 선택에 따라

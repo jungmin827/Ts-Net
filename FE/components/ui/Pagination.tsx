@@ -15,6 +15,7 @@ export default function Pagination({
   current,
   pages,
   label,
+  params,
 }: {
   /** 쿼리 없는 경로 (예: `/review`) */
   base: string;
@@ -22,10 +23,24 @@ export default function Pagination({
   pages: number;
   /** 스크린리더용 — "후기 목록 페이지" 처럼 무엇의 페이지인지 말해준다 */
   label: string;
+  /**
+   * 페이지를 넘겨도 유지할 쿼리 (검색어 등).
+   *
+   * 이게 없으면 "검색 → 2페이지" 가 **검색어를 잃고 전체 목록 2페이지**로
+   * 간다. 결과가 20건이라 2페이지가 있는데, 눌러 보면 전혀 다른 글이 나온다 —
+   * 사용자는 자기가 뭘 잘못 눌렀는지 알 수 없다.
+   */
+  params?: Record<string, string | undefined>;
 }) {
   if (pages <= 1) return null;
 
-  const href = (n: number) => (n === 1 ? base : `${base}?page=${n}`);
+  const href = (n: number) => {
+    const qs = new URLSearchParams();
+    for (const [k, v] of Object.entries(params ?? {})) if (v) qs.set(k, v);
+    if (n > 1) qs.set("page", String(n));
+    const s = qs.toString();
+    return s ? `${base}?${s}` : base;
+  };
   const window = new Set<number>([1, pages]);
   for (let n = current - 2; n <= current + 2; n += 1)
     if (n >= 1 && n <= pages) window.add(n);

@@ -1,4 +1,5 @@
 import { kstRangeToUtc } from "@/lib/kst";
+import { safeLikeTerm } from "@/lib/postgrest";
 import type { SupabaseServerClient } from "./auth";
 import type { LeadFilter } from "./filters";
 
@@ -105,9 +106,19 @@ export function buildLeadQuery(
   if (filter.exported === "yes") query = query.not("exported_at", "is", null);
   if (filter.exported === "no") query = query.is("exported_at", null);
   if (filter.q) {
-    // 이름 또는 번호 뒷자리(phone_masked 꼬리) 검색.
-    // 평문 번호로는 검색할 수 없다 — 암호문은 검색 대상이 아니다.
-    query = query.or(`name.ilike.*${filter.q}*,phone_masked.ilike.*${filter.q}*`);
+    /*
+     * 이름 또는 번호 뒷자리(phone_masked 꼬리) 검색.
+     * 평문 번호로는 검색할 수 없다 — 암호문은 검색 대상이 아니다.
+     *
+     * ⚠ `filter.q` 를 **그대로 끼워 넣고 있었다.** `.or()` 는 PostgREST 가
+     *   문자열을 파싱하는 필터 DSL 이라, 검색어의 `,` 는 조건을 하나 더 만들고
+     *   `.` 은 `열.연산자.값` 구문으로 읽혀 다른 열을 가리킨다. 어드민은 이미
+     *   인증된 주체라 새로 열리는 노출은 없지만, **이름에 쉼표나 점이 들어간
+     *   검색이 조용히 엉뚱한 결과를 낸다.** 상담사에게 넘길 명단이 한 건
+     *   모자라도 아무도 모르는 종류의 고장이다.
+     */
+    const q = safeLikeTerm(filter.q);
+    if (q) query = query.or(`name.ilike.*${q}*,phone_masked.ilike.*${q}*`);
   }
 
   return query;

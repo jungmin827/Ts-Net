@@ -3,10 +3,11 @@ import Link from "next/link";
 import PageHero from "@/components/sections/PageHero";
 import ConsultSection from "@/components/sections/ConsultSection";
 import BoardEmpty from "@/components/sections/BoardEmpty";
+import BoardSearch from "@/components/sections/BoardSearch";
 import NoticeList from "@/components/sections/NoticeList";
 import Pagination from "@/components/ui/Pagination";
 import Icon from "@/components/ui/Icon";
-import { pageParam } from "@/lib/board";
+import { pageParam, sanitizeQuery, searchField } from "@/lib/board";
 import { getNoticePage } from "@/lib/board-data";
 
 export const revalidate = 300;
@@ -20,12 +21,20 @@ export const metadata: Metadata = {
 export default async function NoticeListPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string | string[] }>;
+  searchParams: Promise<{
+    page?: string | string[];
+    q?: string | string[];
+    field?: string | string[];
+  }>;
 }) {
-  const { page } = await searchParams;
-  const { items, total, pages, current, state } = await getNoticePage(
-    pageParam(page),
-  );
+  const sp = await searchParams;
+  const q = sanitizeQuery(sp.q);
+  const field = searchField(sp.field);
+  const { items, total, pages, current, state } = await getNoticePage({
+    page: pageParam(sp.page),
+    q,
+    field,
+  });
 
   return (
     <main>
@@ -33,11 +42,23 @@ export default async function NoticeListPage({
         title="정보공유"
         description="가입 절차·요금·설치 관련 안내를 정리해 올립니다."
       >
-        {state === "ok" && total > 0 && (
+        {/* 건수는 **검색 중이 아닐 때만** 여기 적는다. 검색 중에는
+            `BoardSearch` 가 "검색 — N건" 으로 말하므로, 위에 전체 건수를
+            또 적으면 두 숫자가 서로 다른 것을 가리켜 혼란만 만든다.
+            조회에 실패했을 때는 숫자를 아예 쓰지 않는다 — 0 을 적으면
+            장애가 "글이 없음" 으로 읽힌다. */}
+        {state === "ok" && q === "" && total > 0 && (
           <p className="mt-4 text-sm text-muted">
             전체 <span className="font-bold text-foreground">{total}</span>건
           </p>
         )}
+        <BoardSearch
+          action="/notice"
+          field={field}
+          q={q}
+          total={total}
+          state={state}
+        />
       </PageHero>
 
       <section className="bg-white py-12 md:py-16">
@@ -53,6 +74,7 @@ export default async function NoticeListPage({
             current={current}
             pages={pages}
             label="정보공유 목록 페이지"
+            params={{ q: q || undefined, field: field === "all" ? undefined : field }}
           />
 
           <p className="mt-10 text-center">

@@ -1,3 +1,5 @@
+import { safeLikeTerm, type SafeLikeTerm } from "@/lib/postgrest";
+
 /**
  * 게시판(후기·정보공유) 공용 유틸.
  *
@@ -14,6 +16,13 @@ export interface ReviewRow {
   carrier: string | null;
   view_count?: number;
   created_at: string;
+  /**
+   * 운영자 공개 답글 1건. 스레드형 댓글이 아니다 — 레퍼런스 두 곳이 공통으로
+   * 투자한 유일한 상호작용이 이것뿐이었다(007 마이그레이션 주석 참고).
+   * 007 미적용 환경에서는 `undefined` 로 온다.
+   */
+  admin_reply?: string | null;
+  admin_reply_at?: string | null;
 }
 
 export interface NoticeRow {
@@ -23,10 +32,17 @@ export interface NoticeRow {
   is_pinned: boolean;
   view_count?: number;
   created_at: string;
+  /** 본문에 순서대로 붙는 홍보 이미지. 007 미적용 환경에서는 `undefined` */
+  image_urls?: string[] | null;
 }
 
-/** 목록 한 페이지에 몇 건. 모바일에서 한 화면에 1.5페이지쯤 들어가는 수. */
-export const PAGE_SIZE = 12;
+/**
+ * 목록 한 페이지에 몇 건.
+ *
+ * 15 는 레퍼런스(탐나넷) 실측값이다 — 1페이지 15행, 2페이지 15행, 총 55건에
+ * 페이저 4칸. 3으로 나누어떨어져 카드 격자(최대 3열)에서 마지막 줄이 비지 않는다.
+ */
+export const PAGE_SIZE = 15;
 
 /**
  * 날짜는 **전부 `Asia/Seoul` 기준**이다 (CLAUDE.md 코딩 규칙).
@@ -86,4 +102,26 @@ export function pageParam(v: string | string[] | undefined) {
   const raw = Array.isArray(v) ? v[0] : v;
   const n = Number(raw);
   return Number.isSafeInteger(n) && n >= 1 ? n : 1;
+}
+
+/** 검색 대상 — 레퍼런스(탐나넷)의 `sfield` 와 같은 구성. 회원명은 우리가 작성자를 노출하지 않아 뺀다 */
+export const SEARCH_FIELDS = {
+  all: "제목+내용",
+  title: "제목",
+  content: "내용",
+} as const;
+export type SearchField = keyof typeof SEARCH_FIELDS;
+
+export function searchField(v: string | string[] | undefined): SearchField {
+  const raw = Array.isArray(v) ? v[0] : v;
+  return raw === "title" || raw === "content" ? raw : "all";
+}
+
+/**
+ * 검색어 정리. 실제 규칙은 `safeLikeTerm` 한 곳에 있다 —
+ * 어드민 명단 검색(`lib/admin/leads.ts`)도 같은 함수를 쓴다.
+ * 규칙이 두 벌이면 한쪽만 고쳐지고, 고쳐지지 않은 쪽은 조용히 오답을 낸다.
+ */
+export function sanitizeQuery(v: string | string[] | undefined): SafeLikeTerm {
+  return safeLikeTerm(v);
 }

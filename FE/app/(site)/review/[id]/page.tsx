@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import ConsultSection from "@/components/sections/ConsultSection";
 import BoardNav from "@/components/sections/BoardNav";
 import BoardArticle from "@/components/sections/BoardArticle";
+import AdminReply from "@/components/sections/AdminReply";
 import Stars from "@/components/ui/Stars";
 import { excerpt, formatDate } from "@/lib/board";
 import { getNeighbors, getReview } from "@/lib/board-data";
@@ -69,8 +70,11 @@ export default async function ReviewDetailPage({ params }: Params) {
             </time>
           </>
         }
-        imageUrl={review.thumbnail_url}
+        images={[review.thumbnail_url]}
         content={review.content}
+        footer={
+          <AdminReply body={review.admin_reply} at={review.admin_reply_at} />
+        }
       />
 
       <BoardNav base="/review" listLabel="후기 목록" prev={prev} next={next} />

@@ -51,6 +51,7 @@ export default async function NoticeDetailPage({ params }: Params) {
             {formatDate(notice.created_at, { withTime: true })}
           </time>
         }
+        images={notice.image_urls}
         content={notice.content}
       />
 

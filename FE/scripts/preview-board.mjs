@@ -60,6 +60,8 @@ import Pagination from "@/components/ui/Pagination";
 import Stars from "@/components/ui/Stars";
 import BoardArticle from "@/components/sections/BoardArticle";
 import { CARRIER_COLOR } from "@/lib/site-config";
+import BoardSearch from "@/components/sections/BoardSearch";
+import AdminReply from "@/components/sections/AdminReply";
 import { formatDate } from "@/lib/board";
 
 /** 상세는 **페이지와 같은 BoardArticle** 을 쓴다. 손으로 베껴 쓴 적이 있고
@@ -82,6 +84,8 @@ function Detail({ row }) {
         </>
       }
       content={row.content}
+      images={row.images}
+      footer={<AdminReply body={row.admin_reply} at={row.admin_reply_at} />}
     />
   );
 }
@@ -91,6 +95,7 @@ export const render = ({ reviews, notices }) =>
     <>
       <PageHero title="가입 후기" description="가입하신 분들이 직접 남긴 후기입니다. 승인된 글만 공개됩니다.">
         <p className="mt-4 text-sm text-muted">전체 <span className="font-bold text-foreground">{reviews.length}</span>건</p>
+        <BoardSearch action="/review" field="all" q="" total={reviews.length} state="ok" />
       </PageHero>
       <section className="bg-white py-12 md:py-16">
         <div className="mx-auto max-w-6xl px-4">
@@ -98,7 +103,9 @@ export const render = ({ reviews, notices }) =>
           <Pagination base="/review" current={2} pages={7} label="후기 목록 페이지" />
         </div>
       </section>
-      <PageHero title="정보공유" description="가입 절차·요금·설치 관련 안내를 정리해 올립니다." />
+      <PageHero title="정보공유" description="가입 절차·요금·설치 관련 안내를 정리해 올립니다.">
+        <BoardSearch action="/notice" field="title" q="설치" total={1} state="ok" />
+      </PageHero>
       <section className="bg-white py-12 md:py-16">
         <div className="mx-auto max-w-4xl px-4">
           <NoticeList items={notices} />
@@ -137,7 +144,7 @@ const reviews = [
   { id: 1, title: "설치까지 이틀 걸렸습니다", content: "상담에서 들은 금액과 청구서가 같았습니다.", rating: 5, thumbnail_url: null, carrier: "KT", created_at: "2026-10-01T02:00:00Z" },
   { id: 2, title: "평점을 안 남긴 후기 — 별이 하나도 그려지지 않아야 한다", content: "별점 없이 글만 남기는 경우.", rating: null, thumbnail_url: null, carrier: "SK", created_at: "2026-09-28T05:30:00Z" },
   { id: 3, title: "통신사 정보가 없는 후기", content: "carrier 가 NULL 인 경우. 뱃지 자리가 비어도 카드 높이가 흔들리지 않아야 한다.", rating: 4, thumbnail_url: null, carrier: null, created_at: "2026-09-20T11:00:00Z" },
-  { id: 4, title: "제목이 아주 길어서 두 줄을 넘어가는 경우 — 카드 격자에서 높이가 서로 맞는지, 그리고 상세에서 줄바꿈이 어떻게 떨어지는지 같이 본다", content: "여기부터는 길이 시험입니다. ".repeat(20), rating: 3, thumbnail_url: null, carrier: "SKYLIFE", created_at: "2026-09-11T23:10:00Z" },
+  { id: 4, admin_reply: "문의하신 설치 지연은 해당 지역 공사 일정 때문이었습니다. 불편을 드려 죄송합니다.\n다음 건부터는 접수 시점에 예상 일정을 함께 안내드리겠습니다.", admin_reply_at: "2026-09-12T04:00:00Z", title: "제목이 아주 길어서 두 줄을 넘어가는 경우 — 카드 격자에서 높이가 서로 맞는지, 그리고 상세에서 줄바꿈이 어떻게 떨어지는지 같이 본다", content: "여기부터는 길이 시험입니다. ".repeat(20), rating: 3, thumbnail_url: null, carrier: "SKYLIFE", created_at: "2026-09-11T23:10:00Z" },
   { id: 5, title: "짧은글", content: "짧다.", rating: 1, thumbnail_url: null, carrier: "LG", created_at: "2026-09-02T00:10:00Z" },
 ];
 const notices = [
