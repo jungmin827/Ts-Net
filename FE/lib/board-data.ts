@@ -6,7 +6,7 @@ import {
   type ReviewRow,
   type SearchField,
 } from "@/lib/board";
-import type { SafeLikeTerm } from "@/lib/postgrest";
+import { likePattern, type SafeLikeTerm } from "@/lib/postgrest";
 
 /**
  * 게시판 조회. anon key + RLS(`*_public_read`)로만 읽는다 — `is_published`
@@ -91,7 +91,9 @@ function applySearch<T extends { or: (f: string) => T; ilike: (c: string, p: str
   field: SearchField | undefined,
 ): T {
   if (!q) return query;
-  const pattern = `%${q}%`;
+  // 와일드카드 이스케이프는 **여기서만** 한다. 그 결과를 URL 이나 입력창으로
+  // 되돌리면 다음 요청에서 또 정리되어 검색어가 달라진다(postgrest.ts 주석).
+  const pattern = likePattern(q);
   if (field === "title") return query.ilike("title", pattern);
   if (field === "content") return query.ilike("content", pattern);
   return query.or(`title.ilike.${pattern},content.ilike.${pattern}`);

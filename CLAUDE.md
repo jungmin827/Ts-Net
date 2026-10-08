@@ -171,6 +171,11 @@ docs/SPEC.md           기능 명세 — 작업 전 반드시 읽을 것
 
 ## 현재 진행 상태
 
+> 한 장 요약은 **`docs/PROGRESS_2026-10-08.md`** — 여섯 목표의 상태, 검증
+> 명령과 그 출력, 내가 만든 결함 11건, 지금 열려 있는 것(비평 15건 +
+> 운영자 작업 10건)을 근거와 함께 적어 두었다. 아래 체크리스트보다 상세하다.
+
+
 - [x] 요구사항 확정, 기술 스택 결정
 - [x] DB 스키마 작성 (`BE/supabase/migrations/001_init_schema.sql`)
 - [x] Supabase 프로젝트 생성 및 마이그레이션 적용 — Seoul 리전, ref `yrqfnjiynyenxrjxruot`

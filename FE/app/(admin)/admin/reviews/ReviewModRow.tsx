@@ -59,7 +59,8 @@ export default function ReviewModRow({
       </p>
 
       {r.admin_reply && (
-        <div className="mt-4 rounded-lg border border-brand-light bg-brand-soft px-4 py-3">
+        <div // 경계 토큰은 `AdminReply` 와 같다 — `--brand-light` 는 흰 면 위 1.13:1
+            className="mt-4 rounded-lg border-2 border-brand-dark bg-brand-soft px-4 py-3">
           <p className="text-xs font-black text-brand-deep">
             운영자 답변
             {r.admin_reply_at && (

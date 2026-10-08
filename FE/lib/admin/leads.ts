@@ -1,5 +1,5 @@
 import { kstRangeToUtc } from "@/lib/kst";
-import { safeLikeTerm } from "@/lib/postgrest";
+import { likePattern, safeLikeTerm } from "@/lib/postgrest";
 import type { SupabaseServerClient } from "./auth";
 import type { LeadFilter } from "./filters";
 
@@ -118,7 +118,13 @@ export function buildLeadQuery(
      *   모자라도 아무도 모르는 종류의 고장이다.
      */
     const q = safeLikeTerm(filter.q);
-    if (q) query = query.or(`name.ilike.*${q}*,phone_masked.ilike.*${q}*`);
+    if (q) {
+      // `likePattern` 이 `%...%` 로 감싸고 와일드카드를 이스케이프한다.
+      // 어드민 필터는 `filter.q` 를 URL 에 되싣으므로, 거기 실리는 값은
+      // 반드시 이스케이프 **전** 의 `q` 여야 한다 (postgrest.ts 주석).
+      const pattern = likePattern(q);
+      query = query.or(`name.ilike.${pattern},phone_masked.ilike.${pattern}`);
+    }
   }
 
   return query;

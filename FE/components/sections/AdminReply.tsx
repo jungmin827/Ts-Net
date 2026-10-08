@@ -28,7 +28,13 @@ export default function AdminReply({
   return (
     <aside
       aria-label="운영자 답변"
-      className="mt-10 rounded-panel border-2 border-brand-light bg-brand-soft p-5 md:p-6"
+      // 경계는 `--brand-dark`(흰 배경 4.94:1). `--brand-light` 로 두었더니
+      // 흰 면 위에서 **1.13:1** 이라 패널이 사실상 보이지 않았다
+      // (면 자체인 `--brand-soft` 는 1.05:1). 글자는 전부 통과했으므로
+      // 글자만 재는 감사기는 "위반 0" 을 냈다 — SC 1.4.11(비문자 3:1)은
+      // 글자가 아니라 **경계**를 요구한다. 방문자 후기와 운영자 답변을
+      // 가르는 유일한 시각 장치라 여기서 흐릿하면 두 글이 한 덩어리로 읽힌다.
+      className="mt-10 rounded-panel border-2 border-brand-dark bg-brand-soft p-5 md:p-6"
     >
       <div className="mb-2.5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <span className="text-sm font-black text-brand-deep">운영자 답변</span>
