@@ -6,10 +6,26 @@ import BoardArticle from "@/components/sections/BoardArticle";
 import AdminReply from "@/components/sections/AdminReply";
 import Stars from "@/components/ui/Stars";
 import { excerpt, formatDate } from "@/lib/board";
-import { getNeighbors, getReview } from "@/lib/board-data";
-import { CARRIER_COLOR, carrierByCode } from "@/lib/site-config";
+import CarrierBadge from "@/components/ui/CarrierBadge";
+import { getNeighbors, getPublishedIds, getReview } from "@/lib/board-data";
 
 export const revalidate = 300;
+
+/**
+ * 프리렌더 대상 — **이게 없으면 `revalidate` 가 아무것도 지키지 않는다.**
+ *
+ * 빌드 라우트 표로 확인한 사실: `generateStaticParams` 가 없던 동안
+ * 이 라우트는 `ƒ (Dynamic)` 이고 재생성 주기 칸이 비어 있었다
+ * (`/` 와 `/[carrier]` 는 `5m` 으로 찍힌다). "게시판은 5분 재생성" 은
+ * 문서에만 있던 말이다.
+ *
+ * 목록에 없는 id 도 요청 시 렌더된다(`dynamicParams` 기본 `true`) —
+ * 500건 상한은 빌드 시간을 묶는 장치이고 접근을 막지 않는다.
+ */
+export async function generateStaticParams() {
+  const ids = await getPublishedIds("reviews");
+  return ids.map((id) => ({ id: String(id) }));
+}
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -42,8 +58,7 @@ export default async function ReviewDetailPage({ params }: Params) {
   const review = await getReview(n);
   if (!review) notFound();
 
-  const { prev, next } = await getNeighbors("reviews", review.created_at);
-  const carrier = review.carrier ? carrierByCode(review.carrier) : null;
+  const { prev, next } = await getNeighbors("reviews", review.id);
 
   return (
     <main>
@@ -51,11 +66,7 @@ export default async function ReviewDetailPage({ params }: Params) {
         breadcrumb={{ href: "/review", label: "가입 후기" }}
         badge={
           review.carrier ? (
-            <span
-              className={`mb-3 inline-block rounded-md px-2 py-0.5 text-[11px] font-black text-white ${CARRIER_COLOR[review.carrier] ?? "bg-muted"}`}
-            >
-              {carrier?.label ?? review.carrier}
-            </span>
+            <CarrierBadge code={review.carrier} label="full" className="mb-3" />
           ) : null
         }
         title={review.title}
@@ -73,7 +84,14 @@ export default async function ReviewDetailPage({ params }: Params) {
             </time>
           </>
         }
-        images={[review.thumbnail_url]}
+        /*
+          후기에는 대체 텍스트 칸이 없다 — 008 이 방문자에게서 이미지를
+          받지 않기로 했으므로(이름·연락처·비밀번호·이미지 미수집) 이
+          썸네일은 운영자가 직접 넣은 경우에만 존재한다. 그 한 장을
+          장식으로 선언한다. 후기에 이미지를 받게 되는 날 `reviews` 에도
+          009 와 같은 모양의 alt 칸을 더하고 여기를 고친다.
+        */
+        images={[{ url: review.thumbnail_url, alt: "" }]}
         content={review.content}
         footer={
           <AdminReply body={review.admin_reply} at={review.admin_reply_at} />

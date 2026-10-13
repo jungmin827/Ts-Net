@@ -22,9 +22,24 @@ const check = (goal, label, pass, detail) =>
 const read = (p) => readFileSync(join(ROOT, p), "utf8");
 const has = (p) => existsSync(join(ROOT, p));
 
+/**
+ * dev 서버에 못 닿은 횟수. **판정 실패와 판정 불가는 다르다.**
+ *
+ * 이전 판은 서버가 꺼져 있으면 `fetch failed` 스택을 뱉고 **프로세스가
+ * 죽었다.** 그러면 서버와 무관한 코드 검사 39개의 결과도 같이 사라진다 —
+ * 서버를 띄울 수 없는 환경(CI, 다른 사람 노트북)에서 이 스크립트는
+ * "아무것도 모르는" 도구가 된다. 끊기면 그 사실을 적고 계속 간다.
+ */
+let unreachable = 0;
+
 async function http(path, init) {
-  const res = await fetch(BASE + path, { redirect: "manual", ...init });
-  return { status: res.status, text: await res.text().catch(() => "") };
+  try {
+    const res = await fetch(BASE + path, { redirect: "manual", ...init });
+    return { status: res.status, text: await res.text().catch(() => "") };
+  } catch {
+    unreachable += 1;
+    return { status: 0, text: "", down: true };
+  }
 }
 const strip = (html) =>
   html
@@ -51,6 +66,15 @@ const strip = (html) =>
     .map((d) => join(FE, "app", d.name))
     .concat([join(FE, "app")]);
 
+  /**
+   * ⚠ 리터럴 구간은 **동적 디렉터리로 떨어지지 않는다.**
+   *
+   * 이전 판은 리터럴이 실재하지 않으면 `[...]` 디렉터리로 폴백했다. 그래서
+   * `/notice/latest` 가 "존재하는 라우트" 로 통과했다 — `latest` 라는 디렉터리는
+   * 없고 `[id]` 가 받는데, `[id]` 는 **숫자 id** 를 받는 자리라 런타임에는
+   * `parseId` 가 404 를 낸다. 즉 검사는 통과하고 화면은 404 다.
+   * 동적 구간은 `staticPath` 가 `:x` 로 표시해 넘기므로, 폴백은 그때만 쓴다.
+   */
   const resolveIn = (base, segs) => {
     let dir = base;
     for (const seg of segs) {
@@ -59,8 +83,7 @@ const strip = (html) =>
       const hit =
         seg === ":x"
           ? names.find((n) => /^\[.+\]$/.test(n))
-          : (names.find((n) => n === seg) ??
-            names.find((n) => /^\[.+\]$/.test(n)));
+          : names.find((n) => n === seg);
       if (!hit) return false;
       dir = join(dir, hit);
     }
@@ -106,6 +129,8 @@ const strip = (html) =>
   };
 
   const linked = new Set();
+  /** `href` 가 몇 번 나왔고 그중 몇 개를 정적으로 판정했는지 — 커버리지를 적는다 */
+  const seen = { total: 0, resolved: 0 };
   const walk = (d) => {
     for (const n of readdirSync(d, { withFileTypes: true })) {
       const full = join(d, n.name);
@@ -122,13 +147,33 @@ const strip = (html) =>
          * 그걸 못 잡으면 이 검사를 넣은 이유가 사라진다.
          * 보간을 `:x` 로 바꿔 두면 라우트 해석기가 `[id]` 디렉터리에 맞춘다.
          */
-        for (const m of src.matchAll(/href=(?:"([^"#?]*)"|\{`([^`]*)`\})/g)) {
-          const raw = staticPath(m[1] ?? m[2] ?? "");
-          if (!raw.startsWith("/")) continue; // 외부 링크·앵커·tel:
-          // 선두가 보간이면(`/${slug}`) 어느 라우트인지 정적으로 알 수 없다
-          if (raw.startsWith("/:x")) continue;
-          const v = raw.replace(/\/$/, "");
-          if (v && !v.startsWith("/api")) linked.add(v);
+        /*
+         * ⚠ `href=` 만 보면 **대부분을 놓친다.** 이 코드베이스의 링크는
+         * 상당수가 JSX 속성이 아니라 **객체 속성**으로 적혀 있다 —
+         * `breadcrumb={{ href: "/review", … }}`, `SITE.nav` 의 항목,
+         * `CARRIER_MENU` 의 slug 조합 등. 그쪽을 안 보면 검사가
+         * "코드가 거는 내부 링크 전부" 라고 적으면서 실제로는 일부만 본다.
+         * 그래서 `href=` 와 `href:` 두 표기를 같이 모으고, 아래에
+         * **판정한 비율을 출력한다** — 못 본 게 몇인지 보이지 않으면
+         * 커버리지가 줄어도 아무도 모른다.
+         */
+        seen.total += (src.match(/\bhref\s*[=:]/g) ?? []).length;
+        const patterns = [
+          /href=(?:"([^"#?]*)"|\{`([^`]*)`\})/g, // JSX 속성
+          /href:\s*(?:"([^"#?]*)"|`([^`]*)`)/g, // 객체 속성
+        ];
+        for (const re of patterns) {
+          for (const m of src.matchAll(re)) {
+            const raw = staticPath(m[1] ?? m[2] ?? "");
+            if (!raw.startsWith("/")) continue; // 외부 링크·앵커·tel:
+            // 선두가 보간이면(`/${slug}`) 어느 라우트인지 정적으로 알 수 없다
+            if (raw.startsWith("/:x")) continue;
+            const v = raw.replace(/\/$/, "");
+            if (v && !v.startsWith("/api")) {
+              linked.add(v);
+              seen.resolved += 1;
+            }
+          }
         }
       }
     }
@@ -143,7 +188,9 @@ const strip = (html) =>
     broken.length === 0,
     broken.length
       ? `라우트 없음: ${broken.join(", ")} — 데이터가 들어오면 404 가 노출된다`
-      : `링크 ${linked.size}개 전부 라우트 존재`,
+      : `고유 경로 ${linked.size}개 전부 라우트 존재 ` +
+        `(href 표기 ${seen.total}곳 중 ${seen.resolved}곳을 정적으로 판정 — ` +
+        `나머지는 변수·외부 링크·앵커)`,
   );
 }
 
@@ -228,16 +275,49 @@ const strip = (html) =>
    * 넣는 **표준 방법이 그것뿐**이고, `<` 를 `\u003c` 로 이스케이프하면
    * 스크립트가 깨질 경로가 없다. 그 두 조건을 같이 확인한다 —
    * ld+json 이라는 이유만으로 면제하면 이스케이프를 뺀 판이 통과한다.
+   *
+   * ⚠ 면제는 **구문 단위**다. 이전 판은 앞뒤 400자 안에 `ld+json` 과
+   * 이스케이프가 있으면 면제했다 — 즉 JSON-LD **옆에** 본문 주입을 쓰면
+   * 둘 다 통과했다. 같은 파일 안에 구조화 데이터와 게시글 렌더가 같이
+   * 있는 건 흔한 배치라 가정이 아니다. 지금은 두 가지를 그 주입 지점
+   * 자신에 대해 확인한다:
+   *   ① 자기를 감싼 **여는 태그**가 `<script … application/ld+json`
+   *   ② 자기 `__html` **표현식 안**에 `<` 이스케이프가 있다
    */
+  /** `dangerouslySetInnerHTML={{ … }}` 의 중괄호 표현식을 균형 맞춰 잘라낸다 */
+  const htmlExpr = (src, at) => {
+    const open = src.indexOf("{", at);
+    if (open === -1) return "";
+    let depth = 0;
+    for (let i = open; i < src.length; i += 1) {
+      if (src[i] === "{") depth += 1;
+      else if (src[i] === "}") {
+        depth -= 1;
+        if (depth === 0) return src.slice(open, i + 1);
+      }
+    }
+    return src.slice(open);
+  };
+
+  /** 주입 지점을 감싼 여는 태그 (바로 앞의 `<` 부터 주입 지점까지) */
+  const enclosingTag = (src, at) => {
+    const lt = src.lastIndexOf("<", at);
+    if (lt === -1) return "";
+    const gt = src.indexOf(">", lt);
+    // 태그가 주입 지점보다 먼저 닫혔으면 그 태그 안이 아니다
+    if (gt !== -1 && gt < at) return "";
+    return src.slice(lt, at);
+  };
+
   const unsafe = files.filter((f) => {
     const src = strip(readFileSync(f, "utf8"));
     let i = src.indexOf("dangerouslySetInnerHTML");
     while (i !== -1) {
-      const before = src.slice(Math.max(0, i - 400), i);
-      const after = src.slice(i, i + 400);
+      const tag = enclosingTag(src, i);
+      const expr = htmlExpr(src, i);
       const jsonLd =
-        /application\/ld\+json/.test(before) &&
-        /replace\(\s*\/<\/g/.test(after);
+        /^<script\b[^>]*application\/ld\+json/.test(tag) &&
+        /replace\(\s*\/</.test(expr);
       if (!jsonLd) return true;
       i = src.indexOf("dangerouslySetInnerHTML", i + 1);
     }
@@ -265,20 +345,67 @@ const strip = (html) =>
    * 하므로, `.or(` 를 쓰면서 그 함수를 부르지 않는 파일은 전부 실패다.
    * (어드민 쪽은 한동안 정리 없이 검색어를 그대로 끼워 넣고 있었다.)
    */
-  const orUsers = files.filter((f) => {
+  /*
+   * ⚠ **파일 단위가 아니라 호출 지점 단위로** 본다.
+   *
+   * 이전 판은 "`.or(` 를 쓰는 파일에 `safeLikeTerm` 이나 `SafeLikeTerm` 이
+   * 나오는가" 였다. 그래서 이미 통과한 파일(`lib/board-data.ts`,
+   * `lib/admin/leads.ts`)에 정리를 거치지 않은 `.or()` 를 **하나 더 더하면
+   * 영원히 안 걸렸다.** 바로 그 두 파일이 검색 코드를 더할 가장 유력한
+   * 자리다. `.or (` (공백)도 못 봤다.
+   *
+   * 지금 규칙: 모든 `.or(` 호출의 인자는 **`orFilter(...)` 호출**이어야 한다.
+   * `orFilter` 는 `SafeFilter` 만 받고, `SafeFilter` 는 `ilikeTerm`(열 이름
+   * 검증 + `SafeLikeTerm`)만 만들 수 있다 — 즉 조립 구간에 생문자열이
+   * 들어갈 자리가 타입 단계에서 없다. 템플릿 리터럴을 허용하지 않는 이유가
+   * 그것이다: 리터럴이 허용되는 한 `${}` 안에 무엇이 오는지는 사람이 본다.
+   */
+  const orSites = (src) => {
+    const sites = [];
+    const re = /\.or\s*\(/g;
+    let m;
+    while ((m = re.exec(src)) !== null) {
+      let depth = 1;
+      let i = m.index + m[0].length;
+      const start = i;
+      for (; i < src.length && depth > 0; i += 1) {
+        if (src[i] === "(") depth += 1;
+        else if (src[i] === ")") depth -= 1;
+      }
+      sites.push(src.slice(start, i - 1).trim());
+    }
+    return sites;
+  };
+
+  const orProblems = [];
+  for (const f of files) {
     const src = strip(readFileSync(f, "utf8"));
-    if (!/\.or\(/.test(src)) return false;
-    // 정리 함수를 직접 부르거나(어드민), 정리된 값만 받는 브랜드 타입을
-    // 쓰면(공개 게시판) 통과. 둘 다 아니면 생문자열이 DSL 에 닿는다.
-    return !/safeLikeTerm\(/.test(src) && !/SafeLikeTerm/.test(src);
-  });
+    const rel = f.replace(`${FE}/`, "");
+    for (const arg of orSites(src)) {
+      if (/^orFilter\s*\(/.test(arg)) continue;
+      // 변수로 한 번 받아 넘기는 것도 허용 — 단 그 변수가 orFilter 결과여야 한다
+      if (/^[A-Za-z_$][\w$]*$/.test(arg)) {
+        const declared = new RegExp(
+          `(?:const|let|var)\\s+${arg}\\s*=\\s*orFilter\\s*\\(`,
+        ).test(src);
+        if (declared) continue;
+        orProblems.push(`${rel}: ${arg} 가 orFilter 결과가 아니다`);
+        continue;
+      }
+      orProblems.push(`${rel}: orFilter(...) 가 아닌 인자 — ${arg.slice(0, 48)}`);
+    }
+  }
+  const orCount = files.reduce(
+    (n, f) => n + orSites(strip(readFileSync(f, "utf8"))).length,
+    0,
+  );
   check(
     "G0",
-    "PostgREST `.or()` 쓰는 곳은 전부 safeLikeTerm 경유",
-    orUsers.length === 0,
-    orUsers.length
-      ? `${orUsers.map((f) => f.replace(`${FE}/`, "")).join(", ")} — sanitizeQuery 우회 경로`
-      : "검색어 정리를 안 거치는 .or() 없음",
+    "PostgREST `.or()` 호출 전부가 정리된 패턴만 끼운다",
+    orProblems.length === 0,
+    orProblems.length
+      ? orProblems.join(" / ")
+      : `.or() 호출 ${orCount}곳 전부 orFilter(SafeFilter) 경유`,
   );
 }
 
@@ -616,5 +743,11 @@ for (const r of results) {
 const codeTotal = results.filter((r) => r.goal !== "LIVE").length;
 const liveTotal = results.length - codeTotal;
 console.log(`\n코드 ${codeTotal}개 중 실패 ${codeFail}개 · 라이브 ${liveTotal}개 중 실패 ${liveFail}개`);
+if (unreachable) {
+  console.log(
+    `⚠ dev 서버(${BASE})에 ${unreachable}회 못 닿았다 — 페이지를 받아 보는 검사는 ` +
+      `**판정 불가**이며 위 집계에서 실패로 들어가 있다. \`npm run dev\` 후 다시 돌릴 것.`,
+  );
+}
 if (liveFail) console.log("라이브 실패는 BE/APPLY.md 절차를 실행하면 해소된다 (DB 자격증명 필요).");
 process.exit(codeFail ? 1 : 0);

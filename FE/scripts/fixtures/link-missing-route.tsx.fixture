@@ -1,0 +1,9 @@
+// 반례 ②: 존재하지 않는 정적 하위 경로 — 동적 디렉터리 폴백으로 통과하던 것
+export default function CeLink() {
+  return (
+    <>
+      <a href="/notice/latest">최신 공지</a>
+      <a href="/review/popular">인기 후기</a>
+    </>
+  );
+}

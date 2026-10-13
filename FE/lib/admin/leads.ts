@@ -1,5 +1,5 @@
 import { kstRangeToUtc } from "@/lib/kst";
-import { likePattern, safeLikeTerm } from "@/lib/postgrest";
+import { ilikeTerm, orFilter, safeLikeTerm } from "@/lib/postgrest";
 import type { SupabaseServerClient } from "./auth";
 import type { LeadFilter } from "./filters";
 
@@ -122,8 +122,9 @@ export function buildLeadQuery(
       // `likePattern` 이 `%...%` 로 감싸고 와일드카드를 이스케이프한다.
       // 어드민 필터는 `filter.q` 를 URL 에 되싣으므로, 거기 실리는 값은
       // 반드시 이스케이프 **전** 의 `q` 여야 한다 (postgrest.ts 주석).
-      const pattern = likePattern(q);
-      query = query.or(`name.ilike.${pattern},phone_masked.ilike.${pattern}`);
+      // 조립은 `orFilter`/`ilikeTerm` 만 할 수 있다 (`SafeFilter`) —
+      // 템플릿 리터럴로 이어 붙이면 그 자리에 생문자열이 들어갈 수 있다.
+      query = query.or(orFilter(ilikeTerm("name", q), ilikeTerm("phone_masked", q)));
     }
   }
 

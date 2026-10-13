@@ -1,0 +1,10 @@
+// 반례 ③: JSON-LD 옆에 본문 주입 — 400자 근접 면제로 통과하던 것
+export default function CeXss({ body }: { body: string }) {
+  const ld = JSON.stringify({ "@type": "Thing" }).replace(/</g, "\\u003c");
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ld }} />
+      <div dangerouslySetInnerHTML={{ __html: body }} />
+    </>
+  );
+}

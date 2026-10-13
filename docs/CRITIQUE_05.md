@@ -40,6 +40,65 @@
 
 ---
 
+## 처리 상태 (2026-10-13)
+
+**F-01 ~ F-17 전부 처리.** 각 항목 제목 아래가 아니라 여기 한 곳에 적는다 —
+항목별로 흩어 적으면 "어디까지 했나" 를 세어 봐야 알 수 있다.
+
+| | 조치 | 확인 방법 |
+|---|---|---|
+| F-01 | `safeLikeTerm`/`likePattern` 분리 (10-08) | `verify-board.mjs [4]` |
+| F-02 | 답글 패널 경계 `--brand-dark` (10-08) | 캔버스 실측 4.94:1 |
+| F-03 | `BoardEmpty` 에 `search` 축 추가 — 검색 0건과 글 0건을 다르게 말한다 | 하네스 렌더 + 360px 실측 |
+| F-04 | `getNeighbors` 를 **목록과 같은 정렬 함수**로 다시 씀 (`id` 줄에서 앞뒤) | `verify-board.mjs [2]` |
+| F-05 | `applyListOrder` 에 `id desc` 타이브레이커 | `verify-board.mjs [1][5]` |
+| F-06 | XSS 면제를 **구문 단위**로 (여는 태그 + `__html` 표현식) | `verify-checks.mjs` 반례 ③ |
+| F-07 | `.or()` 검사를 **호출 지점 단위**로 + `orFilter` 만 허용 | `verify-checks.mjs` 반례 ① |
+| F-08 | 리터럴 구간의 동적 폴백 제거 + `href:` 표기까지 수집 + 커버리지 출력 | `verify-checks.mjs` 반례 ② |
+| F-09 | `SafeFilter`/`ilikeTerm`/`orFilter` — 보증을 `.or()` 입구까지 | `tsc` + F-07 검사 |
+| F-10 | `components/ui/CarrierBadge.tsx` 로 뽑아 목록·상세·하네스가 공유 | 하네스가 더 이상 베끼지 않는다 |
+| F-11 | 009 `notices.image_alts`(짝 길이 제약) + `content` 공백 금지 + `figure`/`aria-describedby` | 제약 실측 (아래) |
+| F-12 | 목록 쿼리에서 007 열 제거 — 목록은 `selectWithOptional` 을 아예 안 쓴다 | 소스 |
+| F-13 | `pageParam` 을 주석대로 (`1e9` → 1) + 상한 10000 | `verify-board.mjs [3]` |
+| F-14 | **빌드 표로 확인하고 고침** (아래) | `next build` 라우트 표 |
+| F-15 | `view_count` 를 네 쿼리와 두 타입에서 제거 | 소스 |
+| F-16 | `parseQuery` 가 `dropped` 를 같이 돌려주고 `BoardSearch` 가 안내 | `verify-board.mjs [4]` |
+| F-17 | `pics` 가 **판정과 사용을 같은 값으로** (`trim` 후 필터) | 소스 |
+
+### F-11 — 제약이 실제로 거부하는지 확인
+
+009 적용 후 service_role 로 세 번 넣어 봤다 (`notices` 0행 상태, 성공분은 즉시 삭제):
+
+```
+① content = '   '                               → HTTP 400  (notices_content_not_blank)
+② image_urls 2장 + image_alts 1개               → HTTP 400  (notices_image_alts_paired)
+③ image_urls 2장 + image_alts 2개(하나는 '')     → HTTP 201  → 삭제, 0행 복귀
+```
+
+③ 이 통과해야 하는 이유 — 빈 문자열은 **"이 한 장은 장식"** 이라는 운영자의
+선택이다. 전체에 일괄로 `alt=""` 를 박던 것과 다르다.
+
+### F-14 — 빌드 표가 말한 것
+
+비평은 "목록은 동적, 상세는 ISR 300" 이라고 추정했다. 실제 표는 **둘 다**
+재생성 주기가 비어 있었다:
+
+```
+적용 전   ƒ /review        (Dynamic, 주기 없음)     ƒ /review/[id]   (Dynamic, 주기 없음)
+적용 후   ƒ /review        (Dynamic, 주기 없음)     ● /review/[id]   (SSG)
+비교      ○ /  5m · ● /[carrier]  5m  ← 이쪽은 원래부터 주기가 찍힌다
+```
+
+상세가 동적이던 이유는 `generateStaticParams` 가 없어서였다 — 즉
+`revalidate = 300` 과 "게시판은 5분 재생성" 은 **어느 라우트에도
+적용되지 않는 말**이었다. 상세에는 프리렌더 대상을 알려 주고(공개 id
+최대 500건), 목록은 구조상 동적이므로 **쿼리 단위 캐시**(`unstable_cache`,
+키에 `page`·`q`·`field`)로 바꿨다. 실패는 캐시하지 않는다 — 던져서
+캐시를 건너뛰고 바깥에서 `state` 로 되돌린다. 1초 흔들린 DB 때문에
+5분간 "불러오지 못했습니다" 가 고정되면 장애보다 긴 장애가 된다.
+
+---
+
 ## F-01 [높음] `safeLikeTerm` 이 멱등이 아니다 — 검색 2페이지가 **다른 검색어**로 조회된다
 
 - **주장**: `FE/lib/postgrest.ts:11-12` — "**이름에 쉼표나 점이 들어간 검색이 조용히 엉뚱한

@@ -5,7 +5,8 @@ import { STATIC_ROUTES, siteUrl } from "@/lib/site-url";
 /**
  * sitemap.xml
  *
- * 5분마다 다시 만든다 — 게시판이 `revalidate = 300` 이라 사이트맵이 더 오래
+ * 5분마다 다시 만든다 — 게시판 **상세**(`[id]`)가 `revalidate = 300` 이라
+ * 사이트맵이 더 오래
  * 묶여 있으면 "글은 있는데 사이트맵엔 없는" 구간이 생긴다.
  */
 export const revalidate = 300;

@@ -14,7 +14,6 @@ export interface ReviewRow {
   rating: number | null;
   thumbnail_url: string | null;
   carrier: string | null;
-  view_count?: number;
   created_at: string;
   /**
    * 운영자 공개 답글 1건. 스레드형 댓글이 아니다 — 레퍼런스 두 곳이 공통으로
@@ -30,10 +29,15 @@ export interface NoticeRow {
   title: string;
   content: string;
   is_pinned: boolean;
-  view_count?: number;
   created_at: string;
   /** 본문에 순서대로 붙는 홍보 이미지. 007 미적용 환경에서는 `undefined` */
   image_urls?: string[] | null;
+  /**
+   * `image_urls` 와 1:1 로 짝지은 대체 텍스트. 009 가 **길이를 같게** 묶으므로
+   * 장수와 설명 수가 어긋난 행은 DB 가 받지 않는다.
+   * 009 미적용 환경에서는 `undefined` — 그때는 장식(`alt=""`)으로 떨어진다.
+   */
+  image_alts?: string[] | null;
 }
 
 /**
@@ -97,11 +101,25 @@ export function paginate(total: number, page: number, size = PAGE_SIZE) {
  * `page=-1` `page=abc` `page=1e9` 가 와도 1 로 떨어뜨린다. 던지지 않는 이유는
  * 목록 페이지가 그 때문에 500 을 내면 잘못 입력한 쪽이 아니라 사이트가
  * 망가진 것처럼 보이기 때문이다.
+ *
+ * ── 왜 `Number()` 만으로는 부족한가 ──────────────────────────
+ * 위 주석은 한동안 **코드가 하지 않는 일**을 적고 있었다. `Number("1e9")` 는
+ * `1000000000` 이고 `Number.isSafeInteger` 를 통과하므로, `?page=1e9` 는 1 이
+ * 아니라 10억으로 읽혔다. 10억은 `paginate` 가 마지막 페이지로 깎아 주지만
+ * 주소창에는 `page=1e9` 가 남고 페이저 링크도 그 숫자 기준으로 그려진다.
+ * 그래서 **표기까지** 숫자여야 한다고 못 박는다 — 숫자 외 문자가 섞인
+ * 표기(`1e9` `0x10` ` 3 ` `3.0`)는 전부 1 이다.
+ *
+ * 상한을 두는 이유는 따로다. `page` 는 `range()` 의 시작 행을 만들고,
+ * 10억 페이지는 `offset` 150억이 된다 — 글이 10건이어도 DB 가 그 계산을 한다.
  */
+const MAX_PAGE = 10_000;
+
 export function pageParam(v: string | string[] | undefined) {
   const raw = Array.isArray(v) ? v[0] : v;
+  if (typeof raw !== "string" || !/^[0-9]{1,9}$/.test(raw)) return 1;
   const n = Number(raw);
-  return Number.isSafeInteger(n) && n >= 1 ? n : 1;
+  return n >= 1 ? Math.min(n, MAX_PAGE) : 1;
 }
 
 /** 검색 대상 — 레퍼런스(탐나넷)의 `sfield` 와 같은 구성. 회원명은 우리가 작성자를 노출하지 않아 뺀다 */
@@ -124,4 +142,34 @@ export function searchField(v: string | string[] | undefined): SearchField {
  */
 export function sanitizeQuery(v: string | string[] | undefined): SafeLikeTerm {
   return safeLikeTerm(v);
+}
+
+/**
+ * 목록 페이지가 쓰는 검색어 해석 — 정리 결과와 **정리로 다 날아갔는지**를
+ * 같이 돌려준다.
+ *
+ * ── 왜 `dropped` 가 필요한가 ─────────────────────────────────
+ * `safeLikeTerm` 은 DSL 에서 의미를 갖는 문자를 버린다. 그래서 `...` `(((`
+ * `"` 처럼 **버려지는 문자만** 입력하면 결과가 빈 문자열이고, 빈 문자열은
+ * "검색 안 함" 과 같은 값이다. 그 상태로 두면 검색 버튼을 눌렀는데
+ * **전체 목록이 그대로** 나온다 — 방문자 눈에는 검색이 먹지 않은 것도
+ * 아니고 결과가 0건인 것도 아닌, 설명되지 않는 화면이다.
+ *
+ * 입력 자체가 비어 있던 경우(`dropped: false`)와 구분해야 한다. 그때
+ * 전체 목록은 **맞는 결과**다.
+ */
+export interface ParsedQuery {
+  /** 필터에 쓸 값. 빈 문자열이면 검색하지 않는다 */
+  term: SafeLikeTerm;
+  /** 입력은 있었는데 정리 후 아무것도 남지 않았다 */
+  dropped: boolean;
+}
+
+export function parseQuery(v: string | string[] | undefined): ParsedQuery {
+  const raw = Array.isArray(v) ? v[0] : v;
+  const term = safeLikeTerm(v);
+  return {
+    term,
+    dropped: term === "" && typeof raw === "string" && raw.trim() !== "",
+  };
 }

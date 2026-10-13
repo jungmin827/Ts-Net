@@ -74,3 +74,56 @@ export function safeLikeTerm(
 export function likePattern(term: SafeLikeTerm): string {
   return `%${term.replace(/[%_]/g, (m) => `\\${m}`)}%`;
 }
+
+declare const safeFilter: unique symbol;
+
+/**
+ * `.or()` 에 그대로 넘길 수 있는 완성된 필터 문자열.
+ *
+ * ── 왜 타입이 하나 더 필요한가 ───────────────────────────────
+ * `SafeLikeTerm` 은 **한 홉만** 막았다. `BoardQuery.q` 경계까지는 타입이
+ * 지켜 주지만, 그 다음에 호출부가
+ *
+ *   query.or(`title.ilike.${pattern},content.ilike.${pattern}`)
+ *
+ * 처럼 템플릿 리터럴로 문자열을 조립하는 순간 보증이 끝난다. 거기서는
+ * 아무 `string` 이나 끼워 넣을 수 있고 컴파일러는 말이 없다. 커밋 메시지와
+ * 주석은 "브랜드 타입으로 막았다" 고 적어 뒀는데, 실제로 막힌 범위는
+ * 그 경계까지였다 — **읽는 사람이 믿는 범위가 틀린 곳을 가리켰다.**
+ *
+ * 그래서 조립까지 타입 안으로 넣는다. `ilikeTerm` 과 `orFilter` 만이
+ * 이 타입을 만들 수 있고, 둘 다 `SafeLikeTerm` 과 **열 이름 검증**을
+ * 지나야 한다. 호출부에는 조립할 자리가 남지 않는다.
+ */
+export type SafeFilter = string & { readonly [safeFilter]: "safeFilter" };
+
+/**
+ * 열 이름은 식별자 모양만 받는다.
+ *
+ * 여기 오는 값은 전부 코드에 적힌 리터럴이라 사용자 입력이 섞일 경로가
+ * 없다 — 그래서 던진다. 열 이름이 틀리면 개발 중에 즉시 터지는 쪽이,
+ * 조용히 다른 조건을 만드는 쪽보다 낫다. 운영에서 이 예외가 날 수 있는
+ * 유일한 경우는 **코드가 틀렸을 때**다.
+ */
+function assertColumn(column: string): string {
+  if (!/^[a-z_][a-z0-9_]*$/.test(column)) {
+    throw new Error(`[postgrest] 열 이름이 아닙니다: ${column}`);
+  }
+  return column;
+}
+
+/** `열.ilike.%정리된검색어%` 한 조각 */
+export function ilikeTerm(column: string, term: SafeLikeTerm): SafeFilter {
+  return `${assertColumn(column)}.ilike.${likePattern(term)}` as SafeFilter;
+}
+
+/**
+ * 조각들을 `.or()` 가 읽는 한 줄로 잇는다.
+ *
+ * 구분자가 `,` 라서, 조각 안에 정리되지 않은 `,` 가 있으면 조건이 하나 더
+ * 생긴다 — 그 가능성을 `ilikeTerm` 이 입구에서 없앤다(`safeLikeTerm` 이
+ * `,` 를 버린다). 여기서는 잇는 일만 한다.
+ */
+export function orFilter(...parts: SafeFilter[]): SafeFilter {
+  return parts.join(",") as SafeFilter;
+}

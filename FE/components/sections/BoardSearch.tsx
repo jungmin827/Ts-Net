@@ -19,12 +19,21 @@ export default function BoardSearch({
   q,
   total,
   state,
+  dropped = false,
 }: {
   /** 폼이 향하는 경로 (예: `/review`) */
   action: string;
   field: SearchField;
   q: string;
   total: number;
+  /**
+   * 입력은 있었는데 정리 후 아무것도 남지 않았다 (`parseQuery`).
+   *
+   * 이 경우 `q` 는 빈 문자열이고 목록은 **전체**가 나온다. 아무 말도 하지
+   * 않으면 방문자는 검색 버튼이 먹지 않았다고 읽는다 — 결과가 0건인 것도,
+   * 검색이 안 된 것도 아닌 화면이라 설명할 길이 없다.
+   */
+  dropped?: boolean;
   /**
    * 조회 상태.
    *
@@ -82,6 +91,16 @@ export default function BoardSearch({
           검색
         </button>
       </form>
+
+      {/* 검색어가 통째로 날아간 경우. `q === ""` 라서 아래 "검색 — N건" 줄은
+          뜨지 않는다 — 두 문장이 같이 뜨면 서로를 부정한다. */}
+      {dropped && (
+        <p role="status" className="mt-4 text-center text-sm text-muted">
+          검색어에 쓸 수 없는 문자만 입력되어{" "}
+          <span className="font-bold text-foreground">전체 목록</span>을 보여
+          줍니다. 한글·영문·숫자로 다시 입력해 주세요.
+        </p>
+      )}
 
       {q !== "" && (
         <p className="mt-4 text-center text-sm text-muted">

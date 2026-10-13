@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Stars from "@/components/ui/Stars";
+import CarrierBadge from "@/components/ui/CarrierBadge";
 import { excerpt, formatDate, type ReviewRow } from "@/lib/board";
-import { CARRIER_COLOR } from "@/lib/site-config";
 
 /**
  * 후기 목록 격자.
@@ -21,13 +21,7 @@ export default function ReviewList({ items }: { items: ReviewRow[] }) {
             href={`/review/${r.id}`}
             className="group flex h-full flex-col rounded-panel border-2 border-line bg-white p-5 transition-colors duration-200 hover:border-brand"
           >
-            {r.carrier && (
-              <span
-                className={`mb-2.5 inline-block w-fit rounded-md px-2 py-0.5 text-[11px] font-black text-white ${CARRIER_COLOR[r.carrier] ?? "bg-muted"}`}
-              >
-                {r.carrier === "SKYLIFE" ? "SKY" : r.carrier}
-              </span>
-            )}
+            {r.carrier && <CarrierBadge code={r.carrier} className="mb-2.5" />}
             <h2 className="mb-1.5 line-clamp-2 font-bold transition-colors group-hover:text-brand-dark">
               {r.title}
             </h2>

@@ -7,9 +7,20 @@ import BoardSearch from "@/components/sections/BoardSearch";
 import NoticeList from "@/components/sections/NoticeList";
 import Pagination from "@/components/ui/Pagination";
 import Icon from "@/components/ui/Icon";
-import { pageParam, sanitizeQuery, searchField } from "@/lib/board";
+import { pageParam, parseQuery, searchField } from "@/lib/board";
 import { getNoticePage } from "@/lib/board-data";
 
+/*
+ * ⚠ 이 라우트는 **동적이다.** `revalidate` 를 적어도 목록 HTML 은 캐시되지
+ * 않는다 — `searchParams`(검색어·페이지)를 읽는 페이지는 빌드 시점에
+ * 프리렌더할 수 없기 때문이다. 빌드 라우트 표에서 `ƒ (Dynamic)` 으로
+ * 찍히고 재생성 주기 칸이 비어 있다(`/` 와 `/[carrier]` 는 `5m`).
+ *
+ * 그래서 캐시는 **쿼리 단위**로 둔다 (`lib/board-data.ts` 의 `cachedPage`) —
+ * 검색 없는 1페이지, 즉 트래픽의 대부분이 거기서 흡수된다.
+ * `revalidate` 는 남겨 둔다: 상세(`[id]`)와 주기를 맞추는 선언이고,
+ * 데이터 캐시의 기본 수명으로도 쓰인다.
+ */
 export const revalidate = 300;
 
 /**
@@ -55,7 +66,7 @@ export default async function NoticeListPage({
   }>;
 }) {
   const sp = await searchParams;
-  const q = sanitizeQuery(sp.q);
+  const { term: q, dropped } = parseQuery(sp.q);
   const field = searchField(sp.field);
   const { items, total, pages, current, state } = await getNoticePage({
     page: pageParam(sp.page),
@@ -85,13 +96,14 @@ export default async function NoticeListPage({
           q={q}
           total={total}
           state={state}
+          dropped={dropped}
         />
       </PageHero>
 
       <section className="bg-white py-12 md:py-16">
         <div className="mx-auto max-w-4xl px-4">
           {items.length === 0 ? (
-            <BoardEmpty state={state} noun="게시글" />
+            <BoardEmpty state={state} noun="게시글" search={q} />
           ) : (
             <NoticeList items={items} />
           )}

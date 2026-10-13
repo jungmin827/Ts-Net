@@ -1,0 +1,7 @@
+// 반례 ①: 이미 통과하던 파일 모양으로 .or() 를 하나 더 더한 경우
+import { safeLikeTerm } from "@/lib/postgrest";
+export function evil(query: { or: (f: string) => unknown }, raw: string) {
+  const q = safeLikeTerm(raw); // 같은 파일에 정리 함수가 있다 (구 검사 통과 조건)
+  void q;
+  return query.or (`name.ilike.%${raw}%,phone_masked.ilike.%${raw}%`);
+}

@@ -59,7 +59,7 @@ import BoardEmpty from "@/components/sections/BoardEmpty";
 import Pagination from "@/components/ui/Pagination";
 import Stars from "@/components/ui/Stars";
 import BoardArticle from "@/components/sections/BoardArticle";
-import { CARRIER_COLOR } from "@/lib/site-config";
+import CarrierBadge from "@/components/ui/CarrierBadge";
 import BoardSearch from "@/components/sections/BoardSearch";
 import AdminReply from "@/components/sections/AdminReply";
 import { formatDate } from "@/lib/board";
@@ -71,11 +71,7 @@ function Detail({ row }) {
   return (
     <BoardArticle
       breadcrumb={{ href: "/review", label: "가입 후기" }}
-      badge={
-        <span className={["mb-3 inline-block rounded-md px-2 py-0.5 text-[11px] font-black text-white", CARRIER_COLOR[row.carrier] ?? "bg-muted"].join(" ")}>
-          {row.carrier}
-        </span>
-      }
+      badge={<CarrierBadge code={row.carrier} label="full" className="mb-3" />}
       title={row.title}
       meta={
         <>
@@ -121,6 +117,10 @@ export const render = ({ reviews, notices }) =>
           <BoardEmpty state="ok" noun="후기" />
           <BoardEmpty state="unconfigured" noun="게시글" />
           <BoardEmpty state="error" noun="후기" />
+          {/* 검색 0건 — "아직 등록된 후기가 없습니다" 가 떠서는 안 되는 자리 */}
+          <BoardEmpty state="ok" noun="후기" search="없는단어" />
+          {/* 정리로 검색어가 통째로 날아간 경우 */}
+          <BoardSearch action="/review" field="all" q="" total={5} state="ok" dropped />
         </div>
       </section>
     </>,
@@ -147,6 +147,17 @@ const reviews = [
   { id: 3, title: "통신사 정보가 없는 후기", content: "carrier 가 NULL 인 경우. 뱃지 자리가 비어도 카드 높이가 흔들리지 않아야 한다.", rating: 4, thumbnail_url: null, carrier: null, created_at: "2026-09-20T11:00:00Z" },
   { id: 4, admin_reply: "문의하신 설치 지연은 해당 지역 공사 일정 때문이었습니다. 불편을 드려 죄송합니다.\n다음 건부터는 접수 시점에 예상 일정을 함께 안내드리겠습니다.", admin_reply_at: "2026-09-12T04:00:00Z", title: "제목이 아주 길어서 두 줄을 넘어가는 경우 — 카드 격자에서 높이가 서로 맞는지, 그리고 상세에서 줄바꿈이 어떻게 떨어지는지 같이 본다", content: "여기부터는 길이 시험입니다. ".repeat(20), rating: 3, thumbnail_url: null, carrier: "SKYLIFE", created_at: "2026-09-11T23:10:00Z" },
   { id: 5, title: "짧은글", content: "짧다.", rating: 1, thumbnail_url: null, carrier: "LG", created_at: "2026-09-02T00:10:00Z" },
+];
+/* 홍보 이미지 2장 — 하나는 설명이 있고 하나는 장식(빈 alt)이다. 009 가
+   image_urls/image_alts 길이를 묶으므로 실제로도 이 모양으로만 들어온다.
+   data URI 를 쓰는 이유는 하네스가 네트워크 없이 돌아야 하기 때문이다. */
+const pic = (label, bg) =>
+  `data:image/svg+xml;utf8,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="768" height="420"><rect width="768" height="420" fill="${bg}"/><text x="384" y="215" font-family="sans-serif" font-size="28" fill="#fff" text-anchor="middle">${label}</text></svg>`,
+  )}`;
+reviews[3].images = [
+  { url: pic("설명이 있는 홍보 이미지", "#0a8230"), alt: "10월 KT 인터넷+TV 결합 월 39,600원 안내" },
+  { url: pic("장식 이미지 (alt 빈 문자열)", "#6b7280"), alt: "" },
 ];
 const notices = [
   { id: 1, title: "설치 일정 안내 방식이 바뀝니다", content: "접수 후 연락 순서와 설치 일정 확정 절차를 정리했습니다.", is_pinned: true, created_at: "2026-10-05T01:00:00Z" },
