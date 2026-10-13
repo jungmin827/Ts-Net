@@ -15,11 +15,13 @@
 다시 하면 link 기반 관리로 전환 가능.
 
 **남은 대시보드 작업** (아래 절차 5~8번):
-- [ ] **pg_cron 활성화 + `purge-leads` 스케줄 등록 — 2026-10-13 확인: 미설치**
-      확장 목록에 `pgcrypto` 뿐이고 `cron.job` 릴레이션이 없다.
-      `purge_expired_leads()` · `purge_old_access_logs()` 는 존재하고 익명 호출도
-      막혀 있지만 **아무도 부르지 않는다** — 보존기간이 지난 개인정보가 스스로
-      지워지지 않는다. 함수가 있다는 것과 파기가 일어나는 것은 다르다
+- [x] **pg_cron 활성화 + 파기 스케줄 등록 (2026-10-13 완료)**
+      `purge-leads` 매일 18:00 UTC(03:00 KST) · `purge-logs` 18:30 UTC(03:30 KST),
+      둘 다 `active`. 등록 당시 **지울 대상이 0건**임을 먼저 확인했다
+      (leads 최단 `purge_at` 2028-10-07 / access_logs 최고령 6일, 보존 1년).
+      스케줄이 처음 도는 새벽에 터지지 않는지 `purge_expired_leads()` 를
+      한 번 호출해 확인했다 — 0건 반환, `access_logs` 에 `DELETE rows=0` 기록.
+      확인: `select jobid, jobname, schedule, active from cron.job;`
 - [x] 어드민 계정 생성 + `admin_users` INSERT (OWNER/active) — 로그인 실측 완료
   - [ ] **2FA(TOTP) 등록** — 지금은 `ADMIN_SKIP_2FA=1` 개발 분기로 우회 중.
         배포 전 등록 + 변수 제거 (어드민은 단일 계정 1개 + 2FA 가 확정사항)

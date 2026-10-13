@@ -191,10 +191,11 @@ docs/SPEC.md           기능 명세 — 작업 전 반드시 읽을 것
   실제 동작으로 확인할 것.**
   - [x] 어드민 계정 + 키를 `FE/.env.local` 에 기입 — 로그인·목록·필터 실측,
     `access_logs` 에 `LOGIN`/`LIST` 기록 확인 (`row_count` 가 실제 행 수와 일치)
-  - [ ] **`pg_cron` 활성화 + 파기 스케줄 등록** (`BE/README.md` 5번) —
-    `purge_expired_leads()` · `purge_old_access_logs()` 는 존재하고 익명 호출도
-    막혀 있으나 **호출자가 없다**(확장 목록에 `pgcrypto` 뿐, `cron.job` 없음).
-    함수가 있다는 것과 파기가 일어나는 것은 다르다 — 보존기간 경과분이 안 지워진다
+  - [x] **`pg_cron` 활성화 + 파기 스케줄 (2026-10-13)** — `purge-leads` 03:00 KST ·
+    `purge-logs` 03:30 KST. 그전까지 `purge_expired_leads()` ·
+    `purge_old_access_logs()` 는 **존재하지만 호출자가 없었다** — 보존기간이
+    지난 개인정보가 스스로 지워지지 않는 상태였다. 함수가 있다는 것과 파기가
+    일어나는 것은 다르다. 확인은 `select * from cron.job;` (행이 없으면 없는 것)
   - [ ] Storage 버킷 (`BE/README.md` 6번) — 007 의 `notices.image_urls` 가 가리킬 곳
 - [x] Next.js 스캐폴딩 + 디자인 토큰 (주조색·통신사 컬러는 임시값 — 브랜드 확정 시 `FE/app/globals.css`만 교체)
 - [x] lib 기반 모듈 (crypto / validation / supabase 클라이언트 3종 / audit)
