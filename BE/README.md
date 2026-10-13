@@ -15,11 +15,19 @@
 다시 하면 link 기반 관리로 전환 가능.
 
 **남은 대시보드 작업** (아래 절차 5~8번):
-- [ ] pg_cron 활성화 + `purge-leads` 스케줄 등록
-- [ ] 어드민 계정 생성 + `admin_users` INSERT + 2FA
+- [ ] **pg_cron 활성화 + `purge-leads` 스케줄 등록 — 2026-10-13 확인: 미설치**
+      확장 목록에 `pgcrypto` 뿐이고 `cron.job` 릴레이션이 없다.
+      `purge_expired_leads()` · `purge_old_access_logs()` 는 존재하고 익명 호출도
+      막혀 있지만 **아무도 부르지 않는다** — 보존기간이 지난 개인정보가 스스로
+      지워지지 않는다. 함수가 있다는 것과 파기가 일어나는 것은 다르다
+- [x] 어드민 계정 생성 + `admin_users` INSERT (OWNER/active) — 로그인 실측 완료
+  - [ ] **2FA(TOTP) 등록** — 지금은 `ADMIN_SKIP_2FA=1` 개발 분기로 우회 중.
+        배포 전 등록 + 변수 제거 (어드민은 단일 계정 1개 + 2FA 가 확정사항)
 - [ ] `review-images` Storage 버킷
-- [ ] anon / service_role 키를 `FE/.env.local`에 기입
+- [x] anon / service_role 키를 `FE/.env.local`에 기입
       (URL·ENCRYPTION_KEY·PHONE_PEPPER·Turnstile 테스트 키는 세팅됨)
+  - [ ] **service_role 키 교체** — 채팅에 평문으로 오갔다. 레거시 JWT 라 JWT
+        secret 을 돌리면 anon 키도 함께 바뀌므로 `.env.local` 두 값을 같이 갱신
 
 이 프로젝트의 백엔드는 Supabase(PostgreSQL + Auth + Storage)다.
 별도 API 서버는 없고, 서버 로직은 `FE/app/api/*` Route Handler가 담당한다.
@@ -55,6 +63,12 @@ BE/
    ```sql
    select cron.schedule('purge-leads', '0 18 * * *', $$select purge_expired_leads()$$);
    -- 18:00 UTC = 03:00 KST. 보유기간 만료 leads 자동 파기
+   select cron.schedule('purge-logs', '30 18 * * *', $$select purge_old_access_logs()$$);
+   -- access_logs 보존기간 경과분
+   ```
+   등록 후 확인 — 이 쿼리가 행을 돌려주지 않으면 **스케줄이 없는 것**이다:
+   ```sql
+   select jobid, jobname, schedule, command from cron.job;
    ```
 6. **어드민 계정 생성** — Auth에서 이메일 계정 1개 생성(2FA 활성화) 후:
    ```sql

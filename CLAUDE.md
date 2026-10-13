@@ -179,7 +179,18 @@ docs/SPEC.md           기능 명세 — 작업 전 반드시 읽을 것
 - [x] 요구사항 확정, 기술 스택 결정
 - [x] DB 스키마 작성 (`BE/supabase/migrations/001_init_schema.sql`)
 - [x] Supabase 프로젝트 생성 및 마이그레이션 적용 — Seoul 리전, ref `yrqfnjiynyenxrjxruot`
-  - [ ] 대시보드 후속: pg_cron 스케줄 / 어드민 계정 / Storage 버킷 / 키를 FE/.env.local에 기입 (`BE/README.md` 5~8번)
+  **001~008 전부 적용 완료 (2026-10-13)** + 요금 시드 72행.
+  ⚠ 마이그레이션 이력(`supabase_migrations`)은 실제 스키마와 어긋나 있었다 —
+  002 적용 직후 `list_fee` 가 이미 채워져 있었다(002 에는 백필이 없다). 누군가
+  대시보드에서 직접 SQL 을 돌린 것이다. **이력을 상태의 근거로 믿지 말고
+  실제 동작으로 확인할 것.**
+  - [x] 어드민 계정 + 키를 `FE/.env.local` 에 기입 — 로그인·목록·필터 실측,
+    `access_logs` 에 `LOGIN`/`LIST` 기록 확인 (`row_count` 가 실제 행 수와 일치)
+  - [ ] **`pg_cron` 활성화 + 파기 스케줄 등록** (`BE/README.md` 5번) —
+    `purge_expired_leads()` · `purge_old_access_logs()` 는 존재하고 익명 호출도
+    막혀 있으나 **호출자가 없다**(확장 목록에 `pgcrypto` 뿐, `cron.job` 없음).
+    함수가 있다는 것과 파기가 일어나는 것은 다르다 — 보존기간 경과분이 안 지워진다
+  - [ ] Storage 버킷 (`BE/README.md` 6번) — 007 의 `notices.image_urls` 가 가리킬 곳
 - [x] Next.js 스캐폴딩 + 디자인 토큰 (주조색·통신사 컬러는 임시값 — 브랜드 확정 시 `FE/app/globals.css`만 교체)
 - [x] lib 기반 모듈 (crypto / validation / supabase 클라이언트 3종 / audit)
 - [x] 메인 랜딩 퍼블리싱 1차 — 섹션(Hero·LiveFeed·Benefits·Process·Reviews·Footer)
@@ -189,23 +200,32 @@ docs/SPEC.md           기능 명세 — 작업 전 반드시 읽을 것
     뉴트럴 그라데이션만 깔려 흰 면 기조가 유지된다. 넣고 싶을 때 `SITE.hero.background`
     에 경로만 적으면 흰 스크림까지 자동으로 적용된다.
 - [x] `/api/leads` 접수 파이프라인 + `/api/feed/live` (60초 캐시, 5건 미만 빈 배열)
-  - 실 접수 E2E 테스트는 anon/service_role 키 기입 후 진행 필요
+  - 키 기입 완료. 실 접수 E2E 는 아직 — `leads` 3건은 10-07 QA 행이고
+    (id 1·3·4, 전부 `NEW`) 그 뒤로 새 접수가 없다
 - [x] 어드민 — 로그인(2FA/TOTP)·목록·필터·상세·상태변경·메모·**기간 지정 엑셀 내보내기**
   (`app/(admin)/admin/*`, `app/api/admin/export/route.ts`). 전화번호 복호화는
   상세에서 버튼으로만, `access_logs` 기록 후. 검증은 `scripts/verify-export.mjs`
   — 기간 프리셋·잘못된 입력 거부·KST→UTC 경계·xlsx 생성까지 본다.
-  - 잔여(운영자 작업): 어드민 계정 생성 + TOTP 등록. 계정이 없으면 로그인 불가라
-    화면을 끝까지 눌러 볼 수 없다 (`BE/README.md` 7번)
+  - 계정 생성·로그인 완료(2026-10-13). **TOTP 등록은 아직** — 지금은
+    `ADMIN_SKIP_2FA=1` 로 우회 중이고, 그 분기는 `NODE_ENV !== production` 과
+    두 조건을 모두 요구한다. **배포 전 등록 + 변수 제거 필수.**
+  - 엑셀 내보내기·전화번호 복호화는 **스크립트 검증만** 되어 있다.
+    `access_logs` 에 `EXPORT`·`DECRYPT` 가 0건 — 사람이 눌러 본 적이 없다.
+    서버 로그의 403/401 을 사람의 조작으로 오독한 적이 있으니, 눌렀는지는
+    로그가 아니라 `access_logs` 로 판단할 것
 - [x] 통신사 서브페이지 4종 (`/kt` `/sk` `/lg` `/skylife`) — SSG, 미등록 slug는 404
   + 메인 통신사 4카드 허브. 요금제는 `plans` 테이블 기반, 미등록 시 상담 유도로 대체
-  - 요금제 데이터 입력 필요: `BE/supabase/seed/plans_template.sql` (자리표시자 → 실제 값)
+  - 요금제 데이터 입력 완료 — `plans` 72행
+    (KT 17 · SK 21 · LG 17 · SKYLIFE 17 / BUNDLE 41 · INTERNET 13 · TV 9 · MOBILE 9).
+    구 시드 50행에는 `INTERNET`·`TV` 분류가 **아예 없어** 단독 상품을 고를 수 없었다.
+    교체 전 50행은 `BE/supabase/backup/plans_before_seed_20261013-140333.json`
 - [x] 후기·정보공유 게시판 (`/review` `/notice` + 각 상세) — 목록·검색·번호
   페이지네이션·이전글/다음글·운영자 답글·본문 이미지. `revalidate = 300`,
   anon key + RLS `*_public_read` 만 사용. 본문은 평문 렌더(저장형 XSS 차단).
-  - 운영자 답글·본문 이미지는 `BE/supabase/migrations/007` 적용 후 동작한다.
-    미적용이면 **그 두 기능만 조용히 빠진다** — APPLY.md 의 로그 확인 항목 참고
+  - 007 적용 완료 — 운영자 답글·본문 이미지가 동작한다 (미적용이던 동안은
+    **그 두 기능만 조용히 빠지고 있었다**)
 - [x] **후기는 방문자가 쓴다** (`/review/write` → `/api/reviews` → 비공개 접수
-  → 어드민 `/admin/reviews` 에서 승인). `BE/.../008` 적용 필요.
+  → 어드민 `/admin/reviews` 에서 승인). 008 적용 완료.
   적용 전에는 방문자 작성 경로가 없어 화면에 뜰 수 있는 후기가 전부 운영자가
   쓴 글이었다 — 표시광고 리스크다. 근거와 결정: `docs/REVIEW_AUTHORSHIP.md`
   - 이름·연락처·비밀번호·이미지를 **받지 않는다.** 받지 않으면 마스킹할 것도
