@@ -110,7 +110,12 @@ export const PRICE_BASIS_LINE =
 export const PRICE_SOURCE_LINE = `요금 기준일 ${PRICE_SOURCE.basisDateLabel}. ${PRICE_SOURCE_LABEL}으로, 실제 적용 금액은 상담 시 확정해 드립니다.`;
 
 /** 모바일 가로 스크롤 안내 — 표가 화면보다 넓을 때 노출 */
-export const TABLE_SCROLL_HINT = "표를 좌우로 밀면 요금·약정 항목까지 볼 수 있습니다.";
+/*
+ * 2026-10-13 제거 — 좁은 화면은 표가 아니라 카드로 그린다.
+ * 힌트는 "잘린 조건을 직접 찾아보라" 는 안내였고, 잘리지 않게 만드는 쪽이
+ * 맞았다 (`components/sections/PlanTable.tsx` 의 `PlanCards` 주석).
+ * 상수를 남겨 두면 다음 사람이 "힌트를 다시 띄우면 되겠다" 로 읽는다.
+ */
 
 /**
  * 상세페이지 고지 블록.

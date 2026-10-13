@@ -953,24 +953,33 @@ HTML 실측 접점 수: `tel:` 4 / `<form>` 2 / `apply.php` 3 / `support_modal_o
 
 ### 1차 — 지금 코드만으로 가능 (데이터 불필요)
 
-- [ ] **G-07** `PlanTable.tsx` — 그룹별 `hasGift = list.some(p => p.gift_amount != null)` 계산.
-      false 면 `<th>`(43-45) + `<td>`(73-77) 미렌더, `min-w-[760px]` → `min-w-[640px]`
-- [ ] **G-19** `globals.css:25-27` — `--surface-muted: #f5f7f8`, `--line: #e3e8e6`,
-      `--line-strong: #cdd6d1` 로 초록기 제거. 섹션 배경 `bg-brand-soft` → `bg-surface-muted`
-      5곳 (`PlanTable.tsx:17`, `PlanCalculator.tsx:50`, `LiveFeed.tsx:41`, `Process.tsx:15`,
-      `[carrier]/page.tsx:80`). `PromoBand.tsx:60-62` 는 **제외**.
-      변경 후 `#2f9e52` 대비비 확인 — 본문 크기 강조는 `--brand-dark` 로
-- [ ] **G-08** `lib/plans.ts` 에 `isRecommended()` 추가 → `PlanTable.tsx:50-53` 추천 행
-      `bg-brand-light/40 ring-1 ring-inset ring-brand/25` + 상품명 셀 `추천` 알약.
-      ⚠ 뱃지 문구에 "최저가" 금지
-- [ ] **G-09** `PlanTable.tsx:28-29` 모바일 카드 변환 (`md` 미만 `block`) 또는 최소조치
-      (우측 마스크 페이드 + 스크롤 힌트). 할인가 열을 앞으로 재배치
-- [ ] **G-25** `Journey.tsx:46` / `Process.tsx:44` 뒤 `#consult` 유도 1줄 +
-      `page.tsx` `Reviews` 뒤 전용 CTA 밴드 신설. Footer 밴드(`Footer.tsx:24-50`)와
-      중복되므로 Footer 쪽 축소 또는 대체. 현재 메인 `#consult` = Footer 1개뿐
-- [ ] **G-06** `Journey` + `Process` 통합 — `journey.steps` 에 `통신사 접수` 추가해 5단계,
-      `Journey.tsx:20` 그리드 `lg:grid-cols-5`, `Process.tsx` 삭제, `page.tsx:47` 제거,
-      `site-config.ts:100-106` `processSteps` 제거
+> **2026-10-13 전수 재확인.** 체크박스가 비어 있었지만 **대부분 이미 되어 있었다** —
+> 이 목록은 10-08 작성 시점의 코드를 기준으로 쓰였고, 그 뒤 두 라운드의 작업이
+> 반영되지 않았다. 빈 체크박스를 믿고 다시 손대면 같은 일을 두 번 하거나
+> 이미 내린 결정을 되돌린다(G-21 이 그 경우다). 실제 상태를 근거와 함께 적는다.
+
+- [x] **G-07** 사은품 열 조건부 렌더 — `PlanTable.tsx` `gift: list.some((p) => p.gift_amount != null)`.
+      열 폭 합으로 표 최소 폭을 계산해, 숨긴 열만큼 폭이 실제로 줄어든다
+- [x] **G-19** 색 토큰에서 초록기 제거 — `globals.css` `--surface-muted: #f5f8fa`,
+      `--line: #e4eaf0`, `--line-strong: #cbd5df` (중성 회청). 섹션 배경도 전환 완료
+- [x] **G-06** `Journey` + `Process` 통합 — `Process.tsx` 는 삭제됐고 `Journey` 하나다
+- [x] **G-09** 모바일 요금표 — **카드로 바꿨다 (2026-10-13).**
+      390px 실측에서 표는 최소 430~540px 이 필요한데 들어오는 폭이 356px 이라
+      **74~184px 이 잘려 있었고, 잘린 쪽에 `약정` 이 있었다.** 금액은 보여 주고
+      조건은 가린 화면이다. "밀면 보인다" 힌트(`TABLE_SCROLL_HINT`)를 띄워
+      뒀지만 힌트는 조건을 보여 주는 게 아니라 직접 찾으라는 안내다.
+      `md` 미만은 `PlanCards`(상품명 + 월 요금 + 나머지를 `dl` 로), `md` 이상은
+      표 그대로. 열 숨김 판정(`cols`)을 **두 레이아웃이 공유**해 서로 다른
+      항목을 보여 줄 수 없다. 측정: 390px 에서 표 0개 렌더·카드 14장·
+      페이지 가로 스크롤 없음·대비 위반 0 / 768px 에서 표 복귀·잘림 0px
+- [~] **G-08** 추천 행 강조 — **전제가 바뀌어 해당 없음.** 추천 상품은 표에서
+      제외되고(`sort_order < TABLE_SORT_MIN`) 별도 카드로 나간다. 표 안에
+      강조할 "추천 행" 이 없다. 표에 추천을 되살릴 이유가 생기면 그때 다시 본다
+- [x] **G-25** `#consult` 밀도 — 메인(390px, 17,081px 높이)에 인라인 유도 **14개**
+      (평균 간격 1,268px) + **상시 고정 하단 바**(`StickyConsultBar`, 59px) +
+      헤더 CTA. "메인 `#consult` = Footer 1개뿐" 은 10-08 이전 상태다.
+      최대 공백 구간은 3,283px(통신사 카드 → 비교 섹션)이지만 그 구간에도
+      고정 바가 화면에 떠 있어 전환 수단이 끊기지 않는다
 
 ### 2차 — 신규 컴포넌트 (설정 슬롯은 비워두고 `enabled:false` 시작)
 
@@ -983,8 +992,12 @@ HTML 실측 접점 수: `tel:` 4 / `<form>` 2 / `apply.php` 3 / `support_modal_o
 - [ ] **G-12** `sections/PlanNotice.tsx` — `<details>` 3블록 (신청 전 확인 / 약정·위약금 /
       사은품 반환조건). 본문 `text-sm text-muted`(faint 금지).
       `site-config.ts` `PLAN_NOTICE`. **내용은 우리 실제 계약 조건** — 탐나넷 문구 복제 금지
-- [ ] **G-21** `Hero.tsx` 배경을 `--brand-deep` 기반 다크 면 + 히어로 이미지 +
-      `bg-brand-deep/70` 오버레이. 흰 폼 카드가 떠오르게. 카피 색 동시 조정
+- [x] ~~**G-21** `Hero.tsx` 배경을 `--brand-deep` 기반 다크 면~~ —
+      **폐기 (CLAUDE.md 와 정면 충돌).** 2026-10-08 결정이 "진초록 풀블리드는
+      쓰지 않는다 / 히어로가 초록 풀블리드이던 이전 구성은 폐기" 이고,
+      레퍼런스 실측도 "배경 면적 90%가 순백, 포인트색은 글자로만" 이었다.
+      이 항목은 그 실측 **이전**에 쓰였다. 되살리면 색면 비율 상한(메인 1.22%)이
+      한 번에 깨진다. 요구사항 4번(완전 하얀색 + 쨍한 녹색)과도 반대 방향이다
 
 ### 검증
 

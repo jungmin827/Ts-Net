@@ -8,11 +8,7 @@ import {
   type Plan,
   type PlanCategory,
 } from "@/lib/plans";
-import {
-  PRICE_BASIS_LINE,
-  PRICE_SOURCE_LINE,
-  TABLE_SCROLL_HINT,
-} from "@/lib/legal-notices";
+import { PRICE_BASIS_LINE, PRICE_SOURCE_LINE } from "@/lib/legal-notices";
 import { PLAN_DISCLAIMER } from "@/lib/site-config";
 import Icon from "@/components/ui/Icon";
 import SectionHeading from "@/components/ui/SectionHeading";
@@ -74,15 +70,108 @@ function tableMinWidth(cols: Cols): number {
   );
 }
 
+/**
+ * 좁은 화면용 — **표를 가로로 밀지 않는다.**
+ *
+ * ── 왜 바꿨는가 (390px 실측) ─────────────────────────────────
+ * 표는 열을 숨겨도 최소 430~540px 이 필요했고, 화면 안에 들어오는 폭은
+ * 356px 이었다. 즉 **74~184px 이 오른쪽으로 잘려 있었다.** 보이는 두 열이
+ * `상품명 / 월 요금` 이라 가격은 읽혔지만, 잘린 쪽에 **약정**이 있었다 —
+ * 약정은 "이 금액을 받으려면 몇 년을 묶이는가" 이고, 금액과 떼어 놓으면
+ * 금액만 강조하고 조건을 가린 화면이 된다. 밀면 보인다는 힌트를 띄워
+ * 두었지만, 힌트는 조건을 보여 주는 것이 아니라 "직접 찾아보라" 는 안내다.
+ *
+ * 레퍼런스(탐나넷)는 모바일에서 요금표를 **아예 두지 않는다**(`<table>` 0개,
+ * 금액 블록은 사은품 액수와 비교 막대뿐). 그래서 베낄 모양이 없었고,
+ * 요금 정보를 그대로 주면서 잘리지 않는 쪽을 택했다.
+ *
+ * ── 표와 카드가 **같은 데이터·같은 판정**을 쓴다 ───────────────
+ * `cols` 를 그대로 받는다. 열을 숨기는 판정이 한 벌이라 두 레이아웃이
+ * 서로 다른 항목을 보여 줄 수 없다 — 둘이 갈라지면 어느 쪽이 맞는지
+ * 화면으로는 알 수 없다(하네스 손베끼기가 만든 사고와 같은 모양이다).
+ *
+ * DOM 이 둘인 비용은 받아들인다. `display:none` 쪽은 렌더도 접근성 트리도
+ * 타지 않으므로 한쪽만 살아 있고, 그 대신 표 의미구조(`th scope`)를 넓은
+ * 화면에서 온전히 유지한다 — `display:block` 으로 표를 눌러 카드처럼
+ * 보이게 하는 방법은 행·열 관계를 잃고 `::before` 라벨은 보조기술에
+ * 읽히는 방식이 제각각이다.
+ */
+interface MetaItem {
+  label: string;
+  value: string;
+  /** 할인 전 금액 — 취소선 */
+  strike?: boolean;
+  /** 혜택 — 브랜드 초록 */
+  brand?: boolean;
+}
+
+function PlanCards({ list, cols }: { list: Plan[]; cols: Cols }) {
+  /** 표에서 숨긴 열은 카드에서도 없다 — 판정(`cols`)이 한 벌이라 갈라질 수 없다 */
+  const meta = (p: Plan): MetaItem[] => {
+    const out: MetaItem[] = [];
+    if (cols.discount && p.list_fee != null && p.list_fee !== p.monthly_fee) {
+      out.push({ label: "할인 전", value: formatWon(p.list_fee), strike: true });
+    }
+    if (cols.speed && p.speed) out.push({ label: "속도", value: p.speed });
+    if (cols.tv && p.tv_option) out.push({ label: "TV 구성", value: p.tv_option });
+    // 약정은 **조건부로 숨기지 않는다.** 금액을 보여 주면서 몇 년 묶이는지를
+    // 가리면, 잘려 있던 것과 다를 바가 없다.
+    out.push({ label: "약정", value: formatContract(p.contract_months) });
+    if (cols.gift && p.gift_amount != null) {
+      out.push({
+        label: "현금 사은품",
+        value: `최대 ${formatWon(p.gift_amount)}`,
+        brand: true,
+      });
+    }
+    return out;
+  };
+
+  return (
+    <ul className="flex flex-col gap-2 p-3 md:hidden">
+      {list.map((p) => (
+        <li
+          key={p.id}
+          className="rounded-xl border border-line bg-white px-4 py-3.5"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <p className="min-w-0 font-bold">{p.name}</p>
+            <p className="shrink-0 text-right">
+              <span className="block text-[0.6875rem] font-bold text-muted">
+                월 요금
+              </span>
+              <span className="tabular text-base font-black text-brand-dark">
+                {formatWon(p.monthly_fee)}
+              </span>
+            </p>
+          </div>
+          <dl className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-1 border-t border-line/70 pt-2.5 text-xs">
+            {meta(p).map((m) => (
+              <div key={m.label} className="flex items-baseline gap-1.5">
+                <dt className="shrink-0 text-muted">{m.label}</dt>
+                <dd
+                  className={`tabular min-w-0 font-bold ${
+                    m.brand ? "text-brand-dark" : m.strike ? "text-muted line-through" : ""
+                  }`}
+                >
+                  {m.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function PlanRows({ list, cols }: { list: Plan[]; cols: Cols }) {
   return (
-    // 모바일에서 표가 화면보다 넓다. 스크롤 가능함을 글자(힌트)와 우측 페이드 둘로 알린다
-    <div className="relative">
-      <p className="flex items-center gap-1.5 px-5 pt-3 text-xs text-muted md:hidden">
-        <Icon name="arrowRight" size={14} className="shrink-0 text-brand-dark" />
-        {TABLE_SCROLL_HINT}
-      </p>
-      <div className="overflow-x-auto">
+    <div>
+      <PlanCards list={list} cols={cols} />
+      {/* md 이상에서만 표다. 그 폭에서는 열이 전부 들어오므로 잘리지 않는다 —
+          그래도 태블릿 세로처럼 좁은 구간이 있어 스크롤 컨테이너는 남긴다. */}
+      <div className="hidden overflow-x-auto md:block">
         <table
           className="w-full text-sm"
           style={{ minWidth: `${tableMinWidth(cols)}px` }}
@@ -172,11 +261,6 @@ function PlanRows({ list, cols }: { list: Plan[]; cols: Cols }) {
           </tbody>
         </table>
       </div>
-      {/* 우측 페이드 — 더 볼 내용이 있다는 신호. md 이상에서는 스크롤이 없어 숨긴다 */}
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-white to-transparent md:hidden"
-      />
     </div>
   );
 }
