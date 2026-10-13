@@ -547,17 +547,50 @@ async function live() {
   check("LIVE", "레퍼런스 카피 제거 (목표 9)", dcount === "9",
     `description 있는 행 ${dcount ?? "?"}개 — 12면 구 시드 그대로`);
 
-  // 파기 함수가 익명에게 **닫혀 있는지**. 호출하지 않고 OPTIONS 로만 확인한다.
+  /*
+   * 파기 함수가 익명에게 **닫혀 있는지**.
+   *
+   * ⚠ 처음에는 `OPTIONS` 로만 확인하고 "호출하지 않으니 안전하다" 고 적어
+   *   뒤었다. 그게 **거짓 실패**를 만들었다 — `OPTIONS` 는 PostgREST 의
+   *   프리플라이트라 **함수 실행 권한을 보지 않고** 늘 200 을 준다.
+   *   003 을 실제로 적용한 뒤에도 이 검사만 계속 실패했고, 하마터면
+   *   "003 이 안 먹었다" 고 판단할 뻔했다.
+   *
+   * 권한은 실제 호출로만 확인된다. 그래서 `POST` 한다 — 권한이 없으면
+   * 함수 본문이 **실행되기 전에** 거부되므로(`permission denied for function`)
+   * 데이터를 건드리지 않는다. 권한이 열려 있다면 그건 그 자체가 결함이고,
+   * 이 검사가 잡아내야 하는 바로 그 상태다.
+   */
   let rpc = "확인불가";
+  let rpcMsg = "";
   try {
     const r = await fetch(`${env.url}/rest/v1/rpc/purge_expired_leads`, {
-      method: "OPTIONS",
-      headers: { apikey: env.key },
+      method: "POST",
+      headers: {
+        apikey: env.key,
+        Authorization: `Bearer ${env.key}`,
+        "content-type": "application/json",
+      },
+      body: "{}",
     });
     rpc = String(r.status);
+    rpcMsg = await r.text().then(
+      (t) => {
+        try {
+          return String(JSON.parse(t).message ?? "").slice(0, 60);
+        } catch {
+          return t.slice(0, 60);
+        }
+      },
+      () => "",
+    );
   } catch { /* 네트워크 오류는 확인불가로 둔다 */ }
-  check("LIVE", "파기 함수 익명 노출 (003 적용 여부)", rpc === "404",
-    `OPTIONS ${rpc} — 404 가 아니면 003 미적용 가능성`);
+  // 401/403 = 권한 거부, 404 = 함수가 anon 스키마에 아예 안 보임. 전부 "닫힘".
+  const rpcClosed = ["401", "403", "404"].includes(rpc);
+  check("LIVE", "파기 함수 익명 호출 차단 (003 적용 여부)", rpcClosed,
+    rpcClosed
+      ? `POST ${rpc} — ${rpcMsg || "거부됨"}`
+      : `POST ${rpc} — 200/2xx 면 익명이 파기 함수를 실행할 수 있다 (003 미적용)`);
 
   const feed = await rest("live_feed?select=masked_name");
   const fcount = feed.range?.split("/")[1];

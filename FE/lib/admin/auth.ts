@@ -90,7 +90,10 @@ export async function checkAdmin(
   const atAal2 = aal?.currentLevel === "aal2";
 
   if (!atAal2) {
-    if (!hasVerifiedTotp) {
+    if (skip2fa()) {
+      // 개발 전용 우회. 조건은 `skip2fa()` 주석 참고.
+      warnSkip();
+    } else if (!hasVerifiedTotp) {
       // 등록 페이지 자체는 aal1 로 들어와야 한다
       if (!options?.allowAal1) return { ok: false, reason: "ENROLL_REQUIRED" };
     } else {
@@ -111,6 +114,43 @@ export async function checkAdmin(
 }
 
 /** 서버 컴포넌트용 — 실패 시 로그인 페이지로 */
+/**
+ * 개발 중 2FA 생략.
+ *
+ * ── 왜 환경변수 하나로 끝내지 않는가 ──────────────────────────
+ * **두 조건을 모두** 요구한다:
+ *   1. `ADMIN_SKIP_2FA=1`
+ *   2. `NODE_ENV !== "production"`
+ *
+ * ①만 보면 `.env.local` 의 그 한 줄이 배포 환경변수로 복사되는 순간
+ * 운영 어드민의 2FA 가 꺼진다. 그 계정 하나가 실제 신청자 전화번호를
+ * 복호화하는 권한을 갖고 있고, 꺼졌다는 증상이 **아무 데도 안 나타난다** —
+ * 로그인이 그냥 잘 되기 때문이다. ②가 그 경로를 막는다.
+ * (`NEXT_PUBLIC_` 접두사를 **쓰지 않는다** — 클라이언트로 새어 나가면
+ *  브라우저에서 우회 여부를 들여다볼 수 있다.)
+ *
+ * CLAUDE.md 의 확정 결정은 "단일 계정 1개 + 2FA" 다. 이 우회는 그 결정을
+ * 바꾸는 게 아니라, 계정·기기가 준비되기 전에 화면을 눌러 볼 수 있게 하는
+ * 개발 편의다. 운영에서 2FA 를 실제로 빼려면 CLAUDE.md 를 먼저 고쳐야 한다.
+ */
+function skip2fa(): boolean {
+  return (
+    process.env.NODE_ENV !== "production" &&
+    process.env.ADMIN_SKIP_2FA === "1"
+  );
+}
+
+/** 우회가 켜져 있다는 사실을 프로세스당 한 번은 반드시 찍는다 */
+let warned = false;
+function warnSkip() {
+  if (warned) return;
+  warned = true;
+  console.warn(
+    "[admin/auth] ⚠ ADMIN_SKIP_2FA=1 — 2단계 인증을 건너뜁니다. " +
+      "개발 환경 전용이며 운영 빌드에서는 이 분기가 동작하지 않습니다.",
+  );
+}
+
 export async function requireAdmin(
   nextPath?: string,
 ): Promise<AdminGuardSuccess> {

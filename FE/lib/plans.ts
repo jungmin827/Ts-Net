@@ -43,10 +43,18 @@ export const TABLE_SORT_MIN = 10;
  * 넘기는 값은 **RSC 페이로드로 HTML 에 직렬화되어** 페이지 소스에 그대로 남는다.
  * 그래서 조회 직후 데이터 단계에서 지운다.
  *
- * 신규 시드 `BE/supabase/seed/plans_damoa_2026-10-08.sql` 는 해당 행이 전부 NULL 이고
- * 사실 정보 9건만 남아 있다. **재시드 후 false 로 되돌릴 것** (docs/GOAL_PLAN.md 블로커).
+ * 2026-10-13 재시드 완료 후 **해제했다.** 라이브 72행을 확인한 결과
+ * `description` 은 9행만 채워져 있고 전부 사실 정보다 —
+ * "239개 채널 / TV 추가 1대당 월 10,670원" 같은 채널 수·추가 요금.
+ * 레퍼런스 카피가 들어 있던 12행(3개 문장이 4개 통신사에 복제된 형태)은
+ * 시드의 `delete from plans where carrier in (...)` 로 사라졌다.
+ *
+ * ⚠ 다시 `true` 로 올려야 하는 경우 — 시드를 거치지 않고 누가 대시보드에서
+ *   `description` 을 채웠고 그게 레퍼런스에서 가져온 문장일 때.
+ *   `verify-goals` 의 "레퍼런스 카피 제거(목표 9)" 검사가 9가 아닌 값을
+ *   보고하면 그 신호다.
  */
-export const SUPPRESS_PLAN_DESCRIPTION = true;
+export const SUPPRESS_PLAN_DESCRIPTION = false;
 
 /** 차단 스위치가 켜져 있으면 description 을 비운 사본을 돌려준다 */
 function stripDescription(rows: Plan[]): Plan[] {

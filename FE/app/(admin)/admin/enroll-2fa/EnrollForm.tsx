@@ -49,7 +49,14 @@ export default function EnrollForm({
         return;
       }
       setFactorId(data.id);
-      setQr(data.totp.qr_code);
+      /*
+       * `qr_code` 는 `data:image/svg+xml;utf-8,<svg …</svg>\n` 형태로 오고
+       * **끝에 개행이 붙어 있다.** `next/image` 는 src 가 공백·제어문자로
+       * 끝나면 거부하므로(런타임 에러) 받는 지점에서 다듬는다.
+       * 렌더 쪽에서 `trimEnd()` 하지 않는 이유 — 같은 값을 다른 곳에서 쓰면
+       * 거기서 또 터진다. 상태에 들어가는 값을 정상화하는 게 맞다.
+       */
+      setQr(data.totp.qr_code.trim() || null);
       setSecret(data.totp.secret);
     })();
     return () => {
