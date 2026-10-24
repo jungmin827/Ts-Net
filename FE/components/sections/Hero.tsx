@@ -49,7 +49,7 @@ export default function Hero() {
       */}
       <section
         id="consult"
-        className="relative isolate mt-6 scroll-mt-20 md:mt-8"
+        className="relative isolate mt-6 scroll-mt-24 md:mt-8"
       >
         {/* 모바일 — 그림으로 먼저 */}
         <Image

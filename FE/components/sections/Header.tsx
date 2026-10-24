@@ -93,7 +93,7 @@ export default function Header() {
       key={item.href}
       href={item.href}
       aria-current={isActive(item.href) ? "page" : undefined}
-      className={`group relative flex items-center px-2.5 py-5 text-[0.95rem] font-medium whitespace-nowrap transition-colors duration-200 xl:px-4 ${
+      className={`group relative flex items-center px-3 py-6 text-[1.0625rem] font-semibold whitespace-nowrap transition-colors duration-200 xl:px-[1.125rem] ${
         isActive(item.href) ? "text-brand-dark" : "text-foreground hover:text-brand-dark"
       }`}
     >
@@ -120,10 +120,11 @@ export default function Header() {
         <div className="mx-auto hidden max-w-6xl items-center px-4 lg:flex">
           <Link
             href="/"
-            className="mr-5 flex shrink-0 items-center xl:mr-8"
+            className="mr-6 flex shrink-0 items-center xl:mr-10"
             aria-label={`${SITE.name} 홈`}
           >
-            <Wordmark className="h-[38px]" />
+            {/* 포스터가 1120px 폭으로 크게 깔리는 페이지라 바도 그에 맞춰 키웠다 (66 → 80px) */}
+            <Wordmark className="h-[48px]" />
           </Link>
 
           <nav aria-label="주요 메뉴" className="flex items-stretch">
@@ -159,22 +160,22 @@ export default function Header() {
                 스크롤 위치와 무관하게 접수로 가는 길이 헤더에 항상 있어야 한다. */}
             <a
               href="#consult"
-              className="cta-fill flex items-center gap-1.5 rounded-xl px-5 py-2.5 text-[0.95rem] font-black whitespace-nowrap shadow-cta transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift active:translate-y-0"
+              className="cta-fill flex items-center gap-2 rounded-xl px-6 py-3 text-[1.0625rem] font-black whitespace-nowrap shadow-cta transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift active:translate-y-0"
             >
-              <Icon name="clipboard" size={17} />
+              <Icon name="clipboard" size={19} />
               상담 신청
             </a>
           </div>
         </div>
 
         {/* ── 모바일 컴팩트 바 ───────────────────────────── */}
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 lg:hidden">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 lg:hidden">
           <Link
             href="/"
             className="flex shrink-0 items-center gap-2.5"
             aria-label={`${SITE.name} 홈`}
           >
-            <Wordmark className="h-[30px]" />
+            <Wordmark className="h-[34px]" />
           </Link>
 
           <div className="flex items-center gap-2">
