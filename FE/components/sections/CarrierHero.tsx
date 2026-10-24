@@ -1,4 +1,4 @@
-import { SITE, type CarrierMenuItem, hasTel } from "@/lib/site-config";
+import { SITE, type CarrierMenuItem } from "@/lib/site-config";
 import Icon from "@/components/ui/Icon";
 
 /**
@@ -27,15 +27,7 @@ export default function CarrierHero({ carrier }: { carrier: CarrierMenuItem }) {
             {SITE.hero.cta}
             <Icon name="arrowRight" size={18} />
           </a>
-          {hasTel() && (
-            <a
-              href={`tel:${SITE.tel}`}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-line-strong bg-surface px-7 py-3.5 font-black text-foreground transition-colors hover:border-foreground"
-            >
-              <Icon name="phone" size={18} />
-              <span className="tabular">{SITE.tel}</span>
-            </a>
-          )}
+          {/* 대표번호는 싣지 않는다(10-25 운영자 결정 — 푸터·하단 띠에만 둔다) */}
         </div>
       </div>
     </section>

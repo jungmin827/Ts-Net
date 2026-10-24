@@ -1,6 +1,5 @@
 import LeadForm from "@/components/forms/LeadForm";
 import SectionHeading from "@/components/ui/SectionHeading";
-import { SITE, hasTel } from "@/lib/site-config";
 import type { Carrier } from "@/lib/validation";
 
 /**
@@ -35,17 +34,6 @@ export default function ConsultSection({
         <div className="rounded-panel border border-line bg-white p-3 shadow-float sm:p-6 md:p-8">
           <SectionHeading title={title} description={description} />
           <LeadForm variant="compact" defaultCarrier={defaultCarrier} />
-          {hasTel() && (
-            <p className="mt-6 text-center text-sm text-muted">
-              전화 상담{" "}
-              <a
-                href={`tel:${SITE.tel}`}
-                className="font-black text-brand-dark hover:underline"
-              >
-                {SITE.tel}
-              </a>
-            </p>
-          )}
         </div>
       </div>
     </section>
