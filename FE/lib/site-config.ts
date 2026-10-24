@@ -21,13 +21,20 @@ export const SITE = {
    */
   tel: process.env.NEXT_PUBLIC_TEL ?? "",
 
+  /*
+   * 사업자등록증명(국세청, 2026-05-05 발급) 기재값 그대로. 상호는 브랜드 표기(`TS-Net`)가
+   * 아니라 **등록된 법정 상호**를 쓴다 — 푸터의 사업자 정보는 등록 사항과 일치해야 한다.
+   * 등록번호는 검증 자리(체크섬)까지 맞는 것을 확인했다.
+   *
+   * 부가통신사업·통신판매업 신고번호 칸은 **뺐다** (2026-10-25 운영자 결정). 이 증명서에
+   * 없는 별도 신고 사항이고, 신고 여부가 정해지기 전까지 "등록 전" 으로 띄우지 않는다.
+   * 신고를 마치면 필드를 되살리고 `Footer.tsx` 의 행 목록에도 다시 넣을 것.
+   */
   business: {
-    companyName: "TODO 상호",
-    ceo: "TODO 대표자",
-    bizRegNo: "TODO 사업자등록번호",
-    telecomReportNo: "TODO 부가통신사업 신고번호",
-    mailOrderNo: "TODO 통신판매업 신고번호",
-    address: "TODO 주소",
+    companyName: "태산-Net",
+    ceo: "유태환",
+    bizRegNo: "430-06-03160",
+    address: "경기도 의정부시 오목로205번길 55, 4층 401호(민락동, 메가타워)",
   },
 
   hero: {
@@ -326,9 +333,10 @@ export function orPending(v: string | null | undefined): string {
  * 상호·주소는 `SITE.business` 를 쓰고, 담당자 정보만 여기서 받는다.
  */
 export const PRIVACY_OFFICER = {
-  name: "TODO 보호책임자 성명",
-  position: "TODO 직책",
-  email: "TODO 이메일",
+  // 대표자가 겸한다 (2026-10-25 운영자 지정). 연락 전화는 대표번호(`SITE.tel`)를 같이 쓴다
+  name: "유태환",
+  position: "대표",
+  email: "yootaehwan1212@gmail.com",
 } as const;
 
 /** 방침 한 절(節). 문단·목록·표를 섞을 수 있다 */

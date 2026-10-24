@@ -4,15 +4,13 @@ import Icon from "@/components/ui/Icon";
 import LegalLinks from "./LegalLinks";
 
 // 푸터 = 마지막 전환 구역 + 법적 고지.
-// 사업자 정보 6종 표기는 법적 필수 (런칭 전 체크리스트).
+// 사업자 정보 표기는 법적 필수 (런칭 전 체크리스트). 지금은 4종 — 신고번호 2종은 신고 전이라 뺐다 (site-config.ts `business` 주석)
 // 이용약관·개인정보처리방침은 LegalLinks 가 모달로 연다 (전문은 content/*.mdx 작성 후 교체)
-/** 사업자 정보 6종 중 하나라도 확정 전인가 */
+/** 사업자 정보 4종 중 하나라도 확정 전인가 */
 const BUSINESS_ROWS_PENDING = [
   SITE.business.companyName,
   SITE.business.ceo,
   SITE.business.bizRegNo,
-  SITE.business.telecomReportNo,
-  SITE.business.mailOrderNo,
   SITE.business.address,
 ].some(isPlaceholder);
 
@@ -54,7 +52,7 @@ export default function Footer() {
         </div>
       </section>
 
-      {/* 법적 고지 — 조용한 영역. 필수 6종은 반드시 유지 */}
+      {/* 법적 고지 — 조용한 영역. 사업자 정보는 반드시 유지 */}
       <div className="border-t border-line bg-surface-muted">
         <div className="mx-auto max-w-6xl px-4 py-10">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
@@ -73,8 +71,6 @@ export default function Footer() {
               ["상호", b.companyName],
               ["대표자", b.ceo],
               ["사업자등록번호", b.bizRegNo],
-              ["부가통신사업 신고번호", b.telecomReportNo],
-              ["통신판매업 신고번호", b.mailOrderNo],
               ["주소", b.address],
             ].map(([label, value]) => {
               // 자리표시자를 **숨기지 않는다.**
