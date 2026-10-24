@@ -1,8 +1,8 @@
 # 도메인 연결 — 후이즈 구매 → Cloudflare DNS → Vercel
 
-## 현황 (10-24)
+## 현황 (10-25)
 - **`tsnet.io.kr` 구매 완료** (후이즈, 만료 2027-10-24). `io.kr` 은 KISA 공식 2단계 → Cloudflare 존으로 추가 가능
-- DNSSEC 미서명. **네임서버 변경 신청 완료(10-24)** → `cris` / `priscilla.ns.cloudflare.com`. KISA WHOIS 반영됨, DNS 응답은 반영 대기
+- **네임서버 Cloudflare 로 이전 완료(10-25)** — `cris` / `priscilla.ns.cloudflare.com`. KISA·1.1.1.1·8.8.8.8·KT DNS 모두 확인, Cloudflare 존 Active
 - Cloudflare 존 추가 완료(Free, 계정 yootaewhan1212). DNS 레코드 0개 — Vercel 단계에서 추가
 - Vercel 미연결 · 10-14 개편 69개 파일 미커밋(푸시 전 배포하면 옛 디자인이 올라간다)
 - `NEXT_PUBLIC_SITE_URL` 비어 있음 → robots 전체 차단·sitemap 빈 상태(의도된 안전 상태)
@@ -17,7 +17,7 @@
 ## 체크리스트
 1. [x] 후이즈 구매 — 자동연장 ON, 부가서비스 체크 해제, 명의 = 사업자정보와 동일
 2. [x] Cloudflare Free 에 사이트 추가 → 네임서버 2개 받기
-3. [~] 후이즈 네임서버 변경 — 신청 완료, Cloudflare "Active" 대기
+3. [x] 후이즈 네임서버 변경 → Cloudflare Active (10-25)
 4. [ ] 프록시 여부 결정 → 코드(`client-ip.ts`)·CLAUDE.md 반영
 5. [ ] Vercel Pro · GitHub 연결 · Root `FE` · 함수 리전 `icn1` · 환경변수 입력
 6. [ ] Vercel Domains 에 apex + www 추가 → 표시된 레코드를 Cloudflare 에 입력 → 인증서 Valid
@@ -27,4 +27,4 @@
 10. [ ] 메일 라우팅(보호책임자 주소) · 서치콘솔 · 네이버 서치어드바이저 · 최종 확인
 
 ## 작업 보고
-- (미착수)
+- 10-25 Cloudflare 등록 완료. 남은 Cloudflare 일: 계정 이메일 인증, (Vercel 후) 레코드 추가, Turnstile 실키, Email Routing. DNSSEC 는 선택(켜면 후이즈에 DS 등록 필요)
