@@ -251,26 +251,17 @@ export default function StickyConsultBar() {
               className="relative mx-auto flex max-w-6xl items-center gap-2.5 px-4 py-3"
             >
               <div className="flex shrink-0 items-center gap-2.5 pr-1 text-foreground">
-                {/* 대표번호가 없으면 수화기 아이콘은 거짓말이 된다 */}
+                {/* 대표번호는 싣지 않는다(10-25 운영자 결정) — 바는 접수 폼으로만 쓴다 */}
                 <span className="flex size-9 items-center justify-center rounded-xl bg-brand-light text-brand-deep">
-                  <Icon name={hasTel() ? "phone" : "chat"} size={18} />
+                  <Icon name="chat" size={18} />
                 </span>
                 <span>
                   <span className="block text-[11px] leading-none text-muted">
                     빠른 상담신청
                   </span>
-                  {hasTel() ? (
-                    <a
-                      href={`tel:${SITE.tel}`}
-                      className="tabular block text-lg leading-tight font-black text-brand-deep hover:underline"
-                    >
-                      {SITE.tel}
-                    </a>
-                  ) : (
-                    <span className="block text-lg leading-tight font-black text-brand-deep">
-                      상담 신청
-                    </span>
-                  )}
+                  <span className="block text-lg leading-tight font-black text-brand-deep">
+                    상담 신청
+                  </span>
                 </span>
               </div>
 

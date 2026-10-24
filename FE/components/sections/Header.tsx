@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CARRIER_MENU, SITE, hasTel } from "@/lib/site-config";
+import { CARRIER_MENU, SITE } from "@/lib/site-config";
 import Icon from "@/components/ui/Icon";
 
 /**
@@ -140,23 +140,7 @@ export default function Header() {
           </nav>
 
           <div className="ml-auto flex shrink-0 items-center gap-2 pl-3 xl:gap-3 xl:pl-4">
-            {/* 대표번호와 상담 CTA 가 나란히 선다. 좁은 폭에서는 간격만 줄인다 */}
-            {hasTel() && (
-            <a
-              href={`tel:${SITE.tel}`}
-              aria-label={`대표번호 ${SITE.tel} 로 전화하기`}
-              className="flex items-center gap-2 rounded-xl px-2 py-2 transition-colors duration-200 hover:bg-brand-soft"
-            >
-              <span className="flex size-8 items-center justify-center rounded-full bg-brand-light text-brand-deep">
-                <Icon name="phone" size={16} />
-              </span>
-              <span className="tabular text-lg font-black tracking-tight text-brand-deep">
-                {SITE.tel}
-              </span>
-            </a>
-            )}
-
-            {/* 대표번호가 없으면 헤더 우측에 전환 수단이 하나도 남지 않는다.
+            {/* 메뉴바에는 대표번호를 싣지 않는다(10-25 운영자 결정 — 푸터·하단 띠에만 둔다).
                 스크롤 위치와 무관하게 접수로 가는 길이 헤더에 항상 있어야 한다. */}
             <a
               href="#consult"
@@ -179,17 +163,6 @@ export default function Header() {
           </Link>
 
           <div className="flex items-center gap-2">
-            {hasTel() && (
-            <a
-              href={`tel:${SITE.tel}`}
-              className="flex items-center gap-1.5 rounded-xl bg-brand-dark px-3.5 py-2.5 text-sm font-black text-white shadow-brand transition-colors duration-200 hover:bg-brand-deep sm:px-4"
-            >
-              <Icon name="phone" size={16} />
-              <span className="tabular hidden sm:inline">{SITE.tel}</span>
-              <span className="sm:hidden">전화</span>
-            </a>
-            )}
-
             <button
               type="button"
               onClick={() => setOpen(true)}
@@ -283,17 +256,6 @@ export default function Header() {
             </ul>
           </div>
 
-          {hasTel() && (
-          <div className="border-t border-line p-4">
-            <a
-              href={`tel:${SITE.tel}`}
-              className="flex items-center justify-center gap-2 rounded-xl bg-brand-dark py-3.5 font-black text-white shadow-brand"
-            >
-              <Icon name="phone" size={18} />
-              <span className="tabular">{SITE.tel}</span>
-            </a>
-          </div>
-          )}
         </nav>
       </div>
     </>
