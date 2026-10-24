@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/admin/auth";
 import { logAccess } from "@/lib/audit";
+import { headers } from "next/headers";
+import { requestIp } from "@/lib/client-ip";
 import {
   LEAD_DETAIL_COLUMNS,
   type LeadDetailRow,
@@ -64,6 +66,8 @@ export default async function AdminLeadDetailPage({
     await logAccess({
       actorId: admin.userId,
       actorEmail: admin.email,
+      // 접속지 정보는 접속기록의 법정 기재항목이다 (안전성 확보조치 기준 §8)
+      ip: requestIp(await headers()),
       action: "VIEW",
       target: `leads:${id}`,
       rowCount: 1,

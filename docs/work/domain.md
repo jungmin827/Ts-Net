@@ -7,7 +7,9 @@
 - **사이트 공개됨 — https://tsnet.io.kr (10-25)**. Vercel Pro 팀 yootaewhan1212-1064 / 프로젝트 `ts-net`, 리전 icn1, Let's Encrypt 인증서(~2027-01-22). www → 308 → apex
 - Cloudflare DNS: `A @ 216.150.1.1` · `CNAME www a8a1ac82d9ce2630.vercel-dns-016.com` (둘 다 DNS only)
 - 사업자 정보 채움(0ac18f6) → Vercel 에 `NEXT_PUBLIC_SITE_URL=https://tsnet.io.kr` · `NEXT_PUBLIC_TEL` 추가(Production, Config) → **검색 수집 공개**
-- 남은 것: 운영 TOTP 등록 · 메일 라우팅 · 서치콘솔/네이버 등록
+- **운영 E2E 확인(10-25)**: 접수 → 목록 → 상세(VIEW) → 번호 보기(DECRYPT, IP 기록) 전 구간 실측
+- QA 접수 6건(1·3·4·5·7·8)은 `SPAM` 처리 — 6건이 되면서 실시간 현황 5건 게이트를 넘어 테스트 행이 노출될 뻔했다(규칙 1). 테스트 접수 후에는 반드시 SPAM 으로 돌릴 것
+- 남은 것: 메일 라우팅 · 서치콘솔/네이버 등록
 
 ## 결정 (10-25)
 - 정본 `https://tsnet.io.kr` · www 는 308 리다이렉트
@@ -25,7 +27,7 @@
 6. [x] Domains apex + www(308) → Cloudflare 레코드 2개 → 인증서 발급 (10-25)
 7. [x] 사업자정보·보호책임자 → `NEXT_PUBLIC_SITE_URL` · `NEXT_PUBLIC_TEL` (Vercel 에 따로 넣어야 한다 — `.env.local` 은 배포되지 않는다) → 재배포 (10-25)
 8. [x] Turnstile 실키("TS-Net 상담 폼") → Vercel 환경변수 반영 (10-25)
-9. [ ] Supabase Site URL · TOTP 등록 · `ADMIN_SKIP_2FA` 제거
+9. [x] 운영 TOTP 등록 완료(10-25, verified) · `ADMIN_SKIP_2FA` 는 운영 환경변수에 없음. (Supabase Site URL 은 비밀번호 로그인이라 영향 없음 — 선택)
 10. [ ] 메일 라우팅(보호책임자 주소) · 서치콘솔 · 네이버 서치어드바이저 · 최종 확인
 
 ## 작업 보고

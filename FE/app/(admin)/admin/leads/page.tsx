@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin/auth";
 import { logAccess } from "@/lib/audit";
+import { headers } from "next/headers";
+import { requestIp } from "@/lib/client-ip";
 import {
   PAGE_SIZE,
   filterToAuditDetail,
@@ -77,6 +79,8 @@ export default async function AdminLeadsPage({
     await logAccess({
       actorId: admin.userId,
       actorEmail: admin.email,
+      // 접속지 정보는 접속기록의 법정 기재항목이다 (안전성 확보조치 기준 §8)
+      ip: requestIp(await headers()),
       action: "LIST",
       target: "leads",
       rowCount: rows.length,
