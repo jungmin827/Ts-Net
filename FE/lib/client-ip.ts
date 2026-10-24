@@ -11,15 +11,19 @@
  *   두 방향으로 동시에 틀린다. 그래서 호출부가 **신뢰도에 따라 정책을 달리**
  *   할 수 있도록 값과 신뢰 여부를 같이 준다.
  *
- * 신뢰하는 헤더 (플랫폼이 직접 쓰고, 클라이언트가 보낸 동명 헤더는 덮어쓴다)
- *   · `cf-connecting-ip`      Cloudflare — 이 프로젝트의 DNS·WAF 경로 (CLAUDE.md 확정사항)
- *   · `x-vercel-forwarded-for` Vercel — 배포 대상
- *   · `x-real-ip`             일반적인 리버스 프록시 관행
+ * 신뢰하는 헤더 — **Vercel 이 직접 쓰고, 클라이언트가 보낸 동명 헤더를 덮어쓰는 것만.**
+ *   · `x-vercel-forwarded-for`
+ *   · `x-real-ip`
+ *   (Vercel 문서: 프록시 뒤에서도 이 값들을 덮어쓰고 외부 IP 를 전달하지 않는다)
  *
- * ⚠ 이 신뢰는 **origin 이 직접 노출되지 않을 때만** 성립한다. Vercel 배포 URL 로
- *   Cloudflare 를 우회해 때리면 `cf-connecting-ip` 는 없고 Vercel 헤더만 남는다
- *   (그건 여전히 Vercel 이 쓰는 값이라 신뢰 가능하다). 반대로 셀프호스팅에서
- *   프록시 없이 띄우면 아래 헤더가 전부 없고 XFF 만 남아 `trusted: false` 가 된다.
+ * ⚠ `cf-connecting-ip` 는 믿지 않는다 (2026-10-25).
+ *   Cloudflare 는 **DNS 전용(회색 구름)** 으로 쓴다 — Vercel 권장 구성. 그러면 요청이
+ *   Cloudflare 를 거치지 않으므로 이 헤더는 **클라이언트가 마음대로 적어 보낸 값**이고,
+ *   Vercel 은 그대로 통과시킨다. 예전처럼 맨 앞에서 믿으면 요청마다 값을 바꿔
+ *   접수 레이트리밋을 무력화할 수 있었다.
+ *   프록시(주황 구름)로 바꾸면 위 Vercel 헤더가 Cloudflare 엣지 IP 가 되므로
+ *   그때는 이 목록을 다시 정해야 한다.
+ * 셀프호스팅에서 프록시 없이 띄우면 아래 헤더가 전부 없고 XFF 만 남아 `trusted: false` 가 된다.
  */
 export interface ClientIp {
   /** 접속자 IP. 아무것도 못 찾으면 undefined */
@@ -28,11 +32,7 @@ export interface ClientIp {
   trusted: boolean;
 }
 
-const TRUSTED_HEADERS = [
-  "cf-connecting-ip",
-  "x-vercel-forwarded-for",
-  "x-real-ip",
-] as const;
+const TRUSTED_HEADERS = ["x-vercel-forwarded-for", "x-real-ip"] as const;
 
 export function clientIp(headers: Headers): ClientIp {
   for (const h of TRUSTED_HEADERS) {

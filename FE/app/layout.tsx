@@ -13,6 +13,14 @@ const notoSansKr = Noto_Sans_KR({
 
 const ORIGIN = siteUrl();
 
+/**
+ * 검색엔진 소유 확인 태그. 값은 각 도구가 발급하는 문자열이고 환경변수로만 받는다.
+ * 네이버 서치어드바이저는 DNS 인증이 없어 메타 태그가 필요하다. 구글은 DNS TXT 로도
+ * 되지만 같은 자리를 둔다. 비어 있으면 태그를 내보내지 않는다.
+ */
+const GOOGLE_VERIFY = process.env.GOOGLE_SITE_VERIFICATION?.trim();
+const NAVER_VERIFY = process.env.NAVER_SITE_VERIFICATION?.trim();
+
 export const metadata: Metadata = {
   /*
    * `metadataBase` 는 **정본 주소를 알 때만** 설정한다.
@@ -65,6 +73,16 @@ export const metadata: Metadata = {
    * 두 장치가 막는 지점이 다르다.
    */
   ...(ORIGIN ? {} : { robots: { index: false, follow: false } }),
+  ...(GOOGLE_VERIFY || NAVER_VERIFY
+    ? {
+        verification: {
+          ...(GOOGLE_VERIFY ? { google: GOOGLE_VERIFY } : {}),
+          ...(NAVER_VERIFY
+            ? { other: { "naver-site-verification": NAVER_VERIFY } }
+            : {}),
+        },
+      }
+    : {}),
 };
 
 export default function RootLayout({

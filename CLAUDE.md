@@ -58,7 +58,7 @@
 | 프론트 | Next.js 15 App Router + TypeScript + Tailwind CSS |
 | DB/인증/스토리지 | Supabase (PostgreSQL), **Seoul 리전** |
 | 배포 | Vercel |
-| DNS/보안 | Cloudflare (WAF, Rate limit, Bot Fight) |
+| DNS/보안 | Cloudflare **DNS 전용**(회색 구름, Vercel 권장) · 방화벽은 Vercel · 접수 레이트리밋은 DB 함수(006). 도메인 `tsnet.io.kr` (2026-10-25) |
 | 봇방지 | Cloudflare Turnstile + honeypot 필드 |
 | 어드민 | **단일 계정 1개 + 2FA**. 상담사 계정 없음 |
 | 상담사 배분 | 어드민이 **엑셀 내보내기** → 오프라인 전달 |
