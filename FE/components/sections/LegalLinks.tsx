@@ -49,17 +49,43 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   );
 }
 
+/**
+ * 개인정보처리방침 전문 + 보호책임자 표.
+ * 푸터 모달과 상담 폼의 동의 스크롤 박스가 같은 글을 보여야 하므로 한 곳에서 만든다.
+ */
+export function PrivacyPolicyBody() {
+  const officerNotice = pendingNotice([
+    PRIVACY_OFFICER.name,
+    PRIVACY_OFFICER.position,
+    PRIVACY_OFFICER.email,
+  ]);
+
+  return (
+    <PolicyView
+      doc={PRIVACY_POLICY}
+      operatorBlock={
+        <>
+          <dl className="text-[13px]">
+            <InfoRow label="성명" value={orPending(PRIVACY_OFFICER.name)} />
+            <InfoRow label="직책" value={orPending(PRIVACY_OFFICER.position)} />
+            <InfoRow label="이메일" value={orPending(PRIVACY_OFFICER.email)} />
+            <InfoRow label="전화" value={hasTel() ? SITE.tel : "등록 전"} />
+          </dl>
+          {officerNotice && (
+            <p className="text-xs text-faint">{officerNotice}</p>
+          )}
+        </>
+      }
+    />
+  );
+}
+
 export default function LegalLinks() {
   const [open, setOpen] = useState<"terms" | "privacy" | null>(null);
 
   const linkClass =
     "cursor-pointer underline-offset-4 transition-colors hover:text-brand hover:underline";
 
-  const officerNotice = pendingNotice([
-    PRIVACY_OFFICER.name,
-    PRIVACY_OFFICER.position,
-    PRIVACY_OFFICER.email,
-  ]);
   const contactNotice = pendingNotice([
     SITE.business.companyName,
     SITE.tel,
@@ -113,25 +139,7 @@ export default function LegalLinks() {
         title="개인정보처리방침"
         size="lg"
       >
-        <PolicyView
-          doc={PRIVACY_POLICY}
-          operatorBlock={
-            <>
-              <dl className="text-[13px]">
-                <InfoRow label="성명" value={orPending(PRIVACY_OFFICER.name)} />
-                <InfoRow label="직책" value={orPending(PRIVACY_OFFICER.position)} />
-                <InfoRow label="이메일" value={orPending(PRIVACY_OFFICER.email)} />
-                <InfoRow
-                  label="전화"
-                  value={hasTel() ? SITE.tel : "등록 전"}
-                />
-              </dl>
-              {officerNotice && (
-                <p className="text-xs text-faint">{officerNotice}</p>
-              )}
-            </>
-          }
-        />
+        <PrivacyPolicyBody />
       </Modal>
     </>
   );

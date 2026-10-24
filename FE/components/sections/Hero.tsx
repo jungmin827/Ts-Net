@@ -90,7 +90,7 @@ export default function Hero() {
       */}
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 md:py-16 lg:grid-cols-12 lg:gap-12 lg:py-16">
         {/* ── 왼쪽: 상담원의 첫마디 ──────────────────── */}
-        <div className="flex min-w-0 flex-col lg:col-span-7">
+        <div className="flex min-w-0 flex-col lg:col-span-6">
           <p className="text-sm font-bold text-muted">인터넷 · TV 가입 상담</p>
 
           <h1 className="mt-4 text-[1.875rem] leading-[1.3] font-black tracking-tight text-foreground md:text-[2.5rem]">
@@ -159,16 +159,11 @@ export default function Hero() {
         </div>
 
         {/* ── 오른쪽: 접수 폼 ──────────────────────────── */}
-        <div className="min-w-0 lg:col-span-5">
+        <div className="min-w-0 lg:col-span-6">
           <div className="rounded-panel border border-line-strong bg-surface p-3 shadow-card sm:p-6 md:p-7">
-            <div className="mb-5">
-              <p className="text-xl leading-snug font-black text-foreground">
-                상담 신청
-              </p>
-              <p className="mt-1 text-sm text-muted">
-                남겨주시면 상담사가 직접 전화드려요
-              </p>
-            </div>
+            <p className="mb-5 text-xl leading-snug font-black text-foreground">
+              상담 신청
+            </p>
 
             <LeadForm
               variant="full"

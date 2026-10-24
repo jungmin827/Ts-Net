@@ -7,6 +7,7 @@ import { CARRIER_MENU, CONSENT } from "@/lib/site-config";
 import Button from "@/components/ui/Button";
 import Icon from "@/components/ui/Icon";
 import { ConsentCheck, fieldBase, selectBase } from "@/components/ui/Field";
+import { PrivacyPolicyBody } from "@/components/sections/LegalLinks";
 import { formatPhone, useLeadSubmit } from "./useLeadSubmit";
 
 // 본문 인라인 상담 폼. 제출 규격은 useLeadSubmit 이 담당한다.
@@ -239,10 +240,32 @@ export default function LeadForm({
           checked={consentPrivacy}
           onChange={setConsentPrivacy}
           required
-          detail={CONSENT.privacyDetail}
         >
           {CONSENT.privacyLabel}
         </ConsentCheck>
+        <p className="text-xs text-muted">{CONSENT.privacyRequiredHint}</p>
+
+        {/* 동의 대상 전문을 체크박스 바로 아래 스크롤 박스로 펼쳐 둔다.
+            법정 고지 4항목(목적·항목·기간·거부권)을 맨 위에 두어 스크롤하지 않아도
+            보이게 하고, 그 아래로 처리방침 전문(푸터 모달과 같은 글)을 잇는다.
+            스크롤 영역은 키보드로도 내릴 수 있어야 하므로 포커스를 받는다. */}
+        <div
+          role="region"
+          aria-label="개인정보 수집 및 이용 안내"
+          tabIndex={0}
+          className="h-28 overflow-y-auto overscroll-contain rounded-xl border border-line bg-surface-muted p-4 outline-none focus-visible:ring-2 focus-visible:ring-brand"
+        >
+          <p className="mb-2 text-sm font-bold text-foreground">
+            개인정보 수집·이용 안내
+          </p>
+          <ul className="mb-4 flex flex-col gap-1 border-b border-line pb-4 text-[13px] leading-[1.6] text-muted">
+            {CONSENT.privacyDetail.map((d) => (
+              <li key={d}>{d}</li>
+            ))}
+          </ul>
+          <PrivacyPolicyBody />
+        </div>
+
         <ConsentCheck checked={consentMarketing} onChange={setConsentMarketing}>
           {CONSENT.marketingLabel}
         </ConsentCheck>
