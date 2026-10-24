@@ -83,6 +83,7 @@ export default function Hero() {
 
             <LeadForm
               variant="full"
+              dense
               carrier={carrier}
               onCarrierChange={setCarrier}
             />

@@ -17,6 +17,8 @@ interface ConsentProps {
   onChange: (v: boolean) => void;
   required?: boolean;
   children: React.ReactNode;
+  /** 포스터 위 압축 카드용 — 안쪽 여백만 줄인다 */
+  compact?: boolean;
 }
 
 /**
@@ -28,10 +30,11 @@ export function ConsentCheck({
   onChange,
   required = false,
   children,
+  compact = false,
 }: ConsentProps) {
   return (
     <label
-      className={`flex cursor-pointer items-start gap-2.5 rounded-lg border p-3 text-sm leading-relaxed transition-colors duration-200 ${
+      className={`flex cursor-pointer items-start gap-2.5 rounded-lg border ${compact ? "px-3 py-2" : "p-3"} text-sm leading-relaxed transition-colors duration-200 ${
         checked
           ? "border-brand/35 bg-brand-soft"
           : "border-line bg-white hover:border-line-strong hover:bg-surface-muted"

@@ -19,6 +19,13 @@ interface Props {
   /** 통신사를 바깥(히어로 칩 등)에서 제어할 때. 주면 controlled 로 동작한다 */
   carrier?: string;
   onCarrierChange?: (v: string) => void;
+  /**
+   * 포스터 위에 얹는 카드용 압축 배치 (메인 `#consult`).
+   * 관심상품을 빼고 간격·입력칸·동의 박스를 줄이며, Turnstile 은 확인이 필요할 때만
+   * 나타나게 한다(interaction-only, 하단 고정바와 같은 방식). 배경 포스터 높이에
+   * 카드를 맞추기 위한 것이다 — 필수 항목·동의 분리·법정 고지는 그대로다.
+   */
+  dense?: boolean;
 }
 
 export default function LeadForm({
@@ -26,6 +33,7 @@ export default function LeadForm({
   defaultCarrier,
   carrier: carrierProp,
   onCarrierChange,
+  dense = false,
 }: Props) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -71,6 +79,7 @@ export default function LeadForm({
     controlled ? onCarrierChange?.(v) : setCarrierState(v);
 
   const { status, error, submit, fail } = useLeadSubmit();
+  const field = dense ? fieldBase.replace("py-3.5", "py-2.5") : fieldBase;
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -137,13 +146,13 @@ export default function LeadForm({
     <form
       onSubmit={handleSubmit}
       noValidate
-      className="relative flex flex-col gap-3"
+      className={`relative flex flex-col ${dense ? "gap-2" : "gap-3"}`}
     >
       {/* 통신사는 드롭다운이 아니라 칩 라디오로 받는다.
           선택지가 4개뿐이라 펼칠 이유가 없다(2탭 → 1탭). 선택된 칩은 검게 채운다.
           radio 로 구현해 키보드 화살표 이동과 스크린리더 그룹 읽기가 살아 있다. */}
       {variant === "full" && (
-        <fieldset className="rounded-xl border border-line-strong p-3">
+        <fieldset className={`rounded-xl border border-line-strong ${dense ? "px-2.5 pt-1 pb-2.5" : "p-3"}`}>
           <legend className="px-1.5 text-xs font-bold text-muted">
             통신사 선택
           </legend>
@@ -175,6 +184,7 @@ export default function LeadForm({
         </fieldset>
       )}
 
+      {!dense && (
       <select
         className={selectBase}
         value={product}
@@ -188,6 +198,7 @@ export default function LeadForm({
           </option>
         ))}
       </select>
+      )}
 
       {/* placeholder 는 입력을 시작하면 사라진다. 그것만으로는 라벨이 아니다 —
           스크린리더와 음성입력이 칸을 식별할 수단이 필요하다 */}
@@ -196,7 +207,7 @@ export default function LeadForm({
       </label>
       <input
         id="lead-name"
-        className={fieldBase}
+        className={field}
         type="text"
         aria-invalid={error ? true : undefined}
         placeholder="이름을 입력해주세요."
@@ -211,7 +222,7 @@ export default function LeadForm({
       </label>
       <input
         id="lead-phone"
-        className={fieldBase}
+        className={field}
         type="tel"
         inputMode="numeric"
         aria-invalid={error ? true : undefined}
@@ -235,11 +246,12 @@ export default function LeadForm({
       />
 
       {/* 개인정보 동의와 마케팅 동의는 반드시 분리 (CLAUDE.md 규칙 2) */}
-      <div ref={consentRef} className="mt-1 flex flex-col gap-2">
+      <div ref={consentRef} className={`flex flex-col ${dense ? "gap-1.5" : "mt-1 gap-2"}`}>
         <ConsentCheck
           checked={consentPrivacy}
           onChange={setConsentPrivacy}
           required
+          compact={dense}
         >
           {CONSENT.privacyLabel}
         </ConsentCheck>
@@ -253,7 +265,7 @@ export default function LeadForm({
           role="region"
           aria-label="개인정보 수집 및 이용 안내"
           tabIndex={0}
-          className="h-28 overflow-y-auto overscroll-contain rounded-xl border border-line bg-surface-muted p-4 outline-none focus-visible:ring-2 focus-visible:ring-brand"
+          className={`${dense ? "h-24 px-4 py-3" : "h-28 p-4"} overflow-y-auto overscroll-contain rounded-xl border border-line bg-surface-muted outline-none focus-visible:ring-2 focus-visible:ring-brand`}
         >
           <p className="mb-2 text-sm font-bold text-foreground">
             개인정보 수집·이용 안내
@@ -266,7 +278,11 @@ export default function LeadForm({
           <PrivacyPolicyBody />
         </div>
 
-        <ConsentCheck checked={consentMarketing} onChange={setConsentMarketing}>
+        <ConsentCheck
+          checked={consentMarketing}
+          onChange={setConsentMarketing}
+          compact={dense}
+        >
           {CONSENT.marketingLabel}
         </ConsentCheck>
       </div>
@@ -291,7 +307,12 @@ export default function LeadForm({
           }}
           onUnsupported={() => setTsFailed(true)}
           scriptOptions={tsScriptOptions}
-          options={{ size: compactTs ? "compact" : "flexible", theme: "light" }}
+          options={{
+            size: compactTs ? "compact" : "flexible",
+            theme: "light",
+            // 압축 배치에서는 확인이 필요할 때만 위젯이 나타난다 — 통과면 자리를 먹지 않는다
+            ...(dense ? { appearance: "interaction-only" as const } : {}),
+          }}
         />
         </div>
       ) : (
@@ -313,7 +334,7 @@ export default function LeadForm({
       <Button
         type="submit"
         variant="cta"
-        size="lg"
+        size={dense ? "md" : "lg"}
         fullWidth
         loading={status === "loading"}
       >
