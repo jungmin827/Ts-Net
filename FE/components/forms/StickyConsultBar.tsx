@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import { PRODUCTS, checkNamePhone } from "@/lib/validation";
 import { CONSENT, SITE, hasTel } from "@/lib/site-config";
@@ -56,8 +57,8 @@ export default function StickyConsultBar() {
   const [sheet, setSheet] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [detail, setDetail] = useState(false);
-  // 퍼스트뷰에는 이미 히어로 폼이 있다. 바가 처음부터 떠 있으면 히어로 하단을 가리고
-  // 같은 요청을 두 번 하는 꼴이라, 히어로를 지나친 뒤에 올라온다
+  // 본문 상담폼(`#consult`)이 화면에 보이는 동안에는 내려간다 — 같은 폼이 둘 뜨면
+  // 같은 요청을 두 번 하는 꼴이고 바가 폼 하단을 가린다. 첫 화면에서도 띄우지 않는다
   const [visible, setVisible] = useState(false);
   const tsRef = useRef<TurnstileInstance | null>(null);
   /** 위젯·스크립트 실패 — 차단되면 토큰이 영영 안 오므로 "잠시 후" 대신 원인을 말한다 */
@@ -66,15 +67,31 @@ export default function StickyConsultBar() {
   const tsScriptOptions = useMemo(() => ({ onError: () => setTsFailed(true) }), []);
 
   const { status, error, submit, fail } = useLeadSubmit();
+  // 바는 레이아웃에 붙어 페이지를 넘어가도 살아 있다 — 페이지마다 `#consult` 를 다시 찾는다
+  const pathname = usePathname();
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   useEffect(() => {
-    const onScroll = () =>
-      setVisible(window.scrollY > window.innerHeight * 0.72);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+    const form = document.getElementById("consult");
+    let formInView = false;
+    const update = () =>
+      setVisible(window.scrollY > window.innerHeight * 0.72 && !formInView);
+
+    const io = form
+      ? new IntersectionObserver(([e]) => {
+          formInView = e.isIntersecting;
+          update();
+        })
+      : null;
+    if (form) io!.observe(form);
+
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", update);
+      io?.disconnect();
+    };
+  }, [pathname]);
 
   // 접기 상태는 세션 동안 유지 — 닫았는데 페이지마다 다시 뜨면 성가시다
   useEffect(() => {
