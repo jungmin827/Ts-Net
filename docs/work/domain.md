@@ -4,9 +4,10 @@
 - **`tsnet.io.kr` 구매 완료** (후이즈, 만료 2027-10-24). `io.kr` 은 KISA 공식 2단계 → Cloudflare 존으로 추가 가능
 - **네임서버 Cloudflare 로 이전 완료(10-25)** — `cris` / `priscilla.ns.cloudflare.com`. KISA·1.1.1.1·8.8.8.8·KT DNS 모두 확인, Cloudflare 존 Active
 - Cloudflare 존 추가 완료(Free, 계정 yootaewhan1212). DNS 레코드 0개 — Vercel 단계에서 추가
-- Vercel 미연결. 10-14 개편분은 푸시 완료(074fd09)
-- `NEXT_PUBLIC_SITE_URL` 비어 있음 → robots 전체 차단·sitemap 빈 상태(의도된 안전 상태)
-- 막는 것: Turnstile 테스트 키 · 사업자정보 TODO · TOTP 미등록
+- **사이트 공개됨 — https://tsnet.io.kr (10-25)**. Vercel Pro 팀 yootaewhan1212-1064 / 프로젝트 `ts-net`, 리전 icn1, Let's Encrypt 인증서(~2027-01-22). www → 308 → apex
+- Cloudflare DNS: `A @ 216.150.1.1` · `CNAME www a8a1ac82d9ce2630.vercel-dns-016.com` (둘 다 DNS only)
+- 사업자 정보 채움(0ac18f6) → Vercel 에 `NEXT_PUBLIC_SITE_URL=https://tsnet.io.kr` · `NEXT_PUBLIC_TEL` 추가(Production, Config) → **검색 수집 공개**
+- 남은 것: 운영 TOTP 등록 · 메일 라우팅 · 서치콘솔/네이버 등록
 
 ## 결정 (10-25)
 - 정본 `https://tsnet.io.kr` · www 는 308 리다이렉트
@@ -19,13 +20,14 @@
 1. [x] 후이즈 구매 — 자동연장 ON, 부가서비스 체크 해제, 명의 = 사업자정보와 동일
 2. [x] Cloudflare Free 에 사이트 추가 → 네임서버 2개 받기
 3. [x] 후이즈 네임서버 변경 → Cloudflare Active (10-25)
-4. [x] DNS 전용 결정 → `client-ip.ts`·`vercel.json`·인증 태그·CLAUDE.md 반영 (커밋 대기)
-5. [ ] Vercel Pro · GitHub 연결 · Root `FE` · 함수 리전 `icn1` · 환경변수 입력
-6. [ ] Vercel Domains 에 apex + www 추가 → 표시된 레코드를 Cloudflare 에 입력 → 인증서 Valid
-7. [ ] `NEXT_PUBLIC_SITE_URL` 기입 후 **재배포** (그 전에 사업자정보·보호책임자 채우기)
-8. [ ] Turnstile 실키 발급(hostname 2개) → 테스트 키 교체
+4. [x] DNS 전용 결정 → `client-ip.ts`·`vercel.json`·인증 태그·CLAUDE.md 반영 (bf84be4)
+5. [x] Vercel Pro · GitHub(jungmin827/Ts-Net) 연결 · Root `FE` · 리전 `icn1` · 환경변수 7개 (10-25)
+6. [x] Domains apex + www(308) → Cloudflare 레코드 2개 → 인증서 발급 (10-25)
+7. [x] 사업자정보·보호책임자 → `NEXT_PUBLIC_SITE_URL` · `NEXT_PUBLIC_TEL` (Vercel 에 따로 넣어야 한다 — `.env.local` 은 배포되지 않는다) → 재배포 (10-25)
+8. [x] Turnstile 실키("TS-Net 상담 폼") → Vercel 환경변수 반영 (10-25)
 9. [ ] Supabase Site URL · TOTP 등록 · `ADMIN_SKIP_2FA` 제거
 10. [ ] 메일 라우팅(보호책임자 주소) · 서치콘솔 · 네이버 서치어드바이저 · 최종 확인
 
 ## 작업 보고
+- 10-25 Vercel 첫 배포(bf84be4) + 도메인 연결. 프로젝트 생성 화면 오류로 첫 빌드가 안 돌아 Create Deployment(main)로 수동 실행
 - 10-25 Cloudflare 등록 완료. 남은 Cloudflare 일: 계정 이메일 인증, (Vercel 후) 레코드 추가, Turnstile 실키, Email Routing. DNSSEC 는 선택(켜면 후이즈에 DS 등록 필요)

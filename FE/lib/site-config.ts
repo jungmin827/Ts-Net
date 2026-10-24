@@ -336,7 +336,7 @@ export const PRIVACY_OFFICER = {
   // 대표자가 겸한다 (2026-10-25 운영자 지정). 연락 전화는 대표번호(`SITE.tel`)를 같이 쓴다
   name: "유태환",
   position: "대표",
-  email: "yootaehwan1212@gmail.com",
+  email: "yootaewhan1212@gmail.com",
 } as const;
 
 /** 방침 한 절(節). 문단·목록·표를 섞을 수 있다 */
