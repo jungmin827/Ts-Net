@@ -1,35 +1,30 @@
-# 도메인 연결 — 후이즈 구매 → Cloudflare DNS → Vercel
+# 도메인·배포 — tsnet.io.kr
 
-## 현황 (10-25)
-- **`tsnet.io.kr` 구매 완료** (후이즈, 만료 2027-10-24). `io.kr` 은 KISA 공식 2단계 → Cloudflare 존으로 추가 가능
-- **네임서버 Cloudflare 로 이전 완료(10-25)** — `cris` / `priscilla.ns.cloudflare.com`. KISA·1.1.1.1·8.8.8.8·KT DNS 모두 확인, Cloudflare 존 Active
-- Cloudflare 존 추가 완료(Free, 계정 yootaewhan1212). DNS 레코드 0개 — Vercel 단계에서 추가
-- **사이트 공개됨 — https://tsnet.io.kr (10-25)**. Vercel Pro 팀 yootaewhan1212-1064 / 프로젝트 `ts-net`, 리전 icn1, Let's Encrypt 인증서(~2027-01-22). www → 308 → apex
-- Cloudflare DNS: `A @ 216.150.1.1` · `CNAME www a8a1ac82d9ce2630.vercel-dns-016.com` (둘 다 DNS only)
-- 사업자 정보 채움(0ac18f6) → Vercel 에 `NEXT_PUBLIC_SITE_URL=https://tsnet.io.kr` · `NEXT_PUBLIC_TEL` 추가(Production, Config) → **검색 수집 공개**
-- **운영 E2E 확인(10-25)**: 접수 → 목록 → 상세(VIEW) → 번호 보기(DECRYPT, IP 기록) 전 구간 실측
-- QA 접수 6건(1·3·4·5·7·8)은 `SPAM` 처리 — 6건이 되면서 실시간 현황 5건 게이트를 넘어 테스트 행이 노출될 뻔했다(규칙 1). 테스트 접수 후에는 반드시 SPAM 으로 돌릴 것
-- 남은 것: 메일 라우팅 · 서치콘솔/네이버 등록
+## 현황 (10-25) — **운영 오픈 완료**
+- https://tsnet.io.kr · Vercel Pro(팀 yootaewhan1212-1064 / 프로젝트 `ts-net`) · 리전 icn1 · `main` 푸시 = 자동 배포
+- 도메인: 후이즈(만료 2027-10-24) → 네임서버 Cloudflare(`cris`/`priscilla`, 계정 yootaewhan1212)
+- 인증서: Let's Encrypt, Vercel 자동 갱신. www → 308 → apex
+- 검색: robots·sitemap 공개. Google Search Console(도메인 속성, 계정 qkrwjdals8827) · 네이버 서치어드바이저 소유확인
+- 메일: `privacy@tsnet.io.kr` → 대표 Gmail (Cloudflare Email Routing, 수신 확인). 처리방침 보호책임자 주소
 
-## 결정 (10-25)
-- 정본 `https://tsnet.io.kr` · www 는 308 리다이렉트
-- Cloudflare **DNS 전용**(회색 구름). `client-ip.ts` 에서 `cf-connecting-ip` 신뢰 제거
-- Vercel 함수 리전 서울 — `FE/vercel.json` `regions: ["icn1"]` (Pro 전용)
-- 검색엔진 인증: `GOOGLE_SITE_VERIFICATION` · `NAVER_SITE_VERIFICATION` 환경변수 → 메타 태그
-- Vercel 요금제: 상업 사이트라 Hobby 불가 → Pro
+## 구성 기록 (바꿀 때 같이 볼 것)
+| 자리 | 값 |
+|---|---|
+| Cloudflare DNS | `A @ 216.150.1.1` · `CNAME www → a8a1ac82d9ce2630.vercel-dns-016.com` (둘 다 **DNS only**) · MX 3 · SPF · DKIM · `TXT google-site-verification` |
+| Vercel env (Production) | Supabase 3 · `ENCRYPTION_KEY` · `PHONE_PEPPER` · Turnstile 2(실키) · `NEXT_PUBLIC_SITE_URL` · `NEXT_PUBLIC_TEL` · `NAVER_SITE_VERIFICATION` |
+| 넣지 않는 것 | `ADMIN_SKIP_2FA`, 트래킹 픽셀 ID(동의 절차 결정 전) |
+| 코드 | `client-ip.ts` 는 `cf-connecting-ip` 를 믿지 않는다(DNS only 전제). 프록시(주황 구름)로 바꾸면 다시 정할 것 |
 
-## 체크리스트
-1. [x] 후이즈 구매 — 자동연장 ON, 부가서비스 체크 해제, 명의 = 사업자정보와 동일
-2. [x] Cloudflare Free 에 사이트 추가 → 네임서버 2개 받기
-3. [x] 후이즈 네임서버 변경 → Cloudflare Active (10-25)
-4. [x] DNS 전용 결정 → `client-ip.ts`·`vercel.json`·인증 태그·CLAUDE.md 반영 (bf84be4)
-5. [x] Vercel Pro · GitHub(jungmin827/Ts-Net) 연결 · Root `FE` · 리전 `icn1` · 환경변수 7개 (10-25)
-6. [x] Domains apex + www(308) → Cloudflare 레코드 2개 → 인증서 발급 (10-25)
-7. [x] 사업자정보·보호책임자 → `NEXT_PUBLIC_SITE_URL` · `NEXT_PUBLIC_TEL` (Vercel 에 따로 넣어야 한다 — `.env.local` 은 배포되지 않는다) → 재배포 (10-25)
-8. [x] Turnstile 실키("TS-Net 상담 폼") → Vercel 환경변수 반영 (10-25)
-9. [x] 운영 TOTP 등록 완료(10-25, verified) · `ADMIN_SKIP_2FA` 는 운영 환경변수에 없음. (Supabase Site URL 은 비밀번호 로그인이라 영향 없음 — 선택)
-10. [ ] 메일 라우팅(보호책임자 주소) · 서치콘솔 · 네이버 서치어드바이저 · 최종 확인
+- ⚠ `.env.local` 은 배포되지 않는다 — 운영 값은 Vercel 에 따로 넣는다
+- ⚠ 운영에서 테스트 접수를 하면 **즉시 SPAM 으로** — 6건이 되자 실시간 현황 게이트(5건)를 넘어 테스트 행이 4분간 노출됐다
+- ⚠ TXT `google-site-verification` 을 지우면 서치콘솔 인증이 풀린다
+
+## 체크리스트 — 전부 완료
+1. [x] 후이즈 구매 · 2. [x] Cloudflare 존 · 3. [x] 네임서버 이전 · 4. [x] DNS only 결정·코드 반영(bf84be4)
+5. [x] Vercel 프로젝트·env · 6. [x] 도메인·인증서 · 7. [x] 사업자정보 → 검색 공개
+8. [x] Turnstile 실키 · 9. [x] 운영 TOTP(verified) · 10. [x] 서치콘솔·네이버·메일 라우팅
 
 ## 작업 보고
-- 10-25 Vercel 첫 배포(bf84be4) + 도메인 연결. 프로젝트 생성 화면 오류로 첫 빌드가 안 돌아 Create Deployment(main)로 수동 실행
-- 10-25 Cloudflare 등록 완료. 남은 Cloudflare 일: 계정 이메일 인증, (Vercel 후) 레코드 추가, Turnstile 실키, Email Routing. DNSSEC 는 선택(켜면 후이즈에 DS 등록 필요)
+- 10-25 운영 E2E 실측: 접수 → 목록 → 상세(VIEW) → 번호 보기(DECRYPT). 서버 화면 3곳 접속기록 IP 누락 수정(9ad708b)
+- 10-25 보호책임자 이메일 오타 수정 → `privacy@tsnet.io.kr` 전환, 처리방침 시행일 10-25
+- 10-25 첫 배포는 프로젝트 생성 화면 오류로 빌드가 안 돌아 Create Deployment(main)로 수동 실행

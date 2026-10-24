@@ -336,7 +336,9 @@ export const PRIVACY_OFFICER = {
   // 대표자가 겸한다 (2026-10-25 운영자 지정). 연락 전화는 대표번호(`SITE.tel`)를 같이 쓴다
   name: "유태환",
   position: "대표",
-  email: "yootaewhan1212@gmail.com",
+  // 도메인 주소. Cloudflare Email Routing 이 대표 개인 메일로 전달한다 —
+  // 받는 사람이 바뀌면 여기가 아니라 Cloudflare 전달 대상만 고친다
+  email: "privacy@tsnet.io.kr",
 } as const;
 
 /** 방침 한 절(節). 문단·목록·표를 섞을 수 있다 */
@@ -359,7 +361,7 @@ export interface PolicyDoc {
 }
 
 export const PRIVACY_POLICY: PolicyDoc = {
-  effectiveFrom: "2026-10-08",
+  effectiveFrom: "2026-10-25",
   intro: [
     "본 사이트는 통신사 인터넷·TV 가입 상담 접수를 위해 이름과 연락처를 수집합니다. 아래는 수집한 개인정보를 어떤 목적으로 처리하고, 누구에게 넘기며, 언제 파기하는지에 대한 설명입니다.",
     "이 방침에 적힌 내용은 사이트가 실제로 동작하는 방식과 일치시켜 작성했습니다. 처리 방식이 바뀌면 방침과 시행일을 함께 고칩니다.",

@@ -138,6 +138,8 @@ docs/SPEC.md           기능 명세 — 작업 전 반드시 읽을 것
 
 ## 현재 진행 상태
 
+> **2026-10-25 운영 오픈 — https://tsnet.io.kr** (Vercel Pro · icn1 · Cloudflare DNS only).
+> 배포·도메인·DNS·환경변수 구성은 **`docs/work/domain.md`** 한 장에 있다.
 > 10-14 개편(디자인 축소·카피·QA) 현황은 **`docs/work/`** 의 design·copy·qa 세 문서.
 > 그 이전 기록의 한 장 요약은 **`docs/작업진행상황(10-07).md`** — 여섯 목표의 상태, 검증
 > 명령과 그 출력, 내가 만든 결함 11건, 지금 열려 있는 것(비평 15건 +
@@ -166,19 +168,20 @@ docs/SPEC.md           기능 명세 — 작업 전 반드시 읽을 것
   + 폼 3종(인라인·플로팅 퀵상담·모바일 하단바). 카피·사업자정보는 `FE/lib/site-config.ts`
   - 잔여: 실제 카피·사업자 정보 (약관·처리방침 전문은 `lib/site-config.ts` 에 작성 완료)
 - [x] `/api/leads` 접수 파이프라인 + `/api/feed/live` (60초 캐시, 5건 미만 빈 배열)
-  - 키 기입 완료. 실 접수 E2E 는 아직 — `leads` 3건은 10-07 QA 행이고
-    (id 1·3·4, 전부 `NEW`) 그 뒤로 새 접수가 없다
+  - **운영 E2E 완료(10-25)** — 실 Turnstile 키로 접수 → 어드민 확인.
+    QA 접수 6건(1·3·4·5·7·8)은 전부 `SPAM`. 실 고객 접수는 아직 0건.
+    ⚠ 운영에서 테스트 접수를 하면 즉시 `SPAM` 으로 — 실시간 현황 게이트(5건)를 넘기면
+    테스트 행이 "실시간 신청"으로 노출된다(규칙 1, 10-25 에 4분간 실제로 일어났다)
 - [x] 어드민 — 로그인(2FA/TOTP)·목록·필터·상세·상태변경·메모·**기간 지정 엑셀 내보내기**
   (`app/(admin)/admin/*`, `app/api/admin/export/route.ts`). 전화번호 복호화는
   상세에서 버튼으로만, `access_logs` 기록 후. 검증은 `scripts/verify-export.mjs`
   — 기간 프리셋·잘못된 입력 거부·KST→UTC 경계·xlsx 생성까지 본다.
-  - 계정 생성·로그인 완료(2026-10-13). **TOTP 등록은 아직** — 지금은
-    `ADMIN_SKIP_2FA=1` 로 우회 중이고, 그 분기는 `NODE_ENV !== production` 과
-    두 조건을 모두 요구한다. **배포 전 등록 + 변수 제거 필수.**
-  - 엑셀 내보내기·전화번호 복호화는 **스크립트 검증만** 되어 있다.
-    `access_logs` 에 `EXPORT`·`DECRYPT` 가 0건 — 사람이 눌러 본 적이 없다.
-    서버 로그의 403/401 을 사람의 조작으로 오독한 적이 있으니, 눌렀는지는
-    로그가 아니라 `access_logs` 로 판단할 것
+  - **운영 TOTP 등록 완료(10-25, verified)**. `ADMIN_SKIP_2FA` 는 로컬 `.env.local`
+    에만 있고 운영 env 에는 없다(있어도 `NODE_ENV=production` 이면 무시된다).
+  - 번호 복호화: **운영에서 사람이 눌러 확인(10-25)** — `access_logs` 에 VIEW·DECRYPT 기록.
+    서버 화면 3곳(대시보드·목록·상세)이 접속기록에 IP 를 안 남기던 것을 고쳤다(9ad708b).
+  - [ ] **엑셀 내보내기는 아직 사람이 눌러 본 적이 없다** — `access_logs` 의 `EXPORT` 0건.
+    눌렀는지는 서버 로그가 아니라 `access_logs` 로 판단할 것
 - [x] 통신사 서브페이지 4종 (`/kt` `/sk` `/lg` `/skylife`) — SSG, 미등록 slug는 404
   + 메인 통신사 4카드 허브. 요금제는 `plans` 테이블 기반, 미등록 시 상담 유도로 대체
   - 요금제 데이터 입력 완료 — `plans` 72행
@@ -212,7 +215,8 @@ docs/SPEC.md           기능 명세 — 작업 전 반드시 읽을 것
   **비어 있거나 운영 빌드에서 로컬 주소면 robots 가 전체 수집을 막고
   sitemap 을 비운다** — 틀린 canonical 은 없는 canonical 보다 나쁘다.
   검색·2페이지 이후 목록은 `noindex, follow` + canonical 을 목록 첫 페이지로.
-  - [ ] 도메인 연결 후 `NEXT_PUBLIC_SITE_URL` 기입 (이것 하나로 색인이 열린다)
+  - [x] `NEXT_PUBLIC_SITE_URL=https://tsnet.io.kr` (Vercel Production) → 색인 공개(10-25).
+    Google Search Console(도메인 속성, TXT 인증) · 네이버 서치어드바이저(메타 태그) 등록·사이트맵 제출
   - [ ] 트래킹: `.env.example` 에 GA/Meta/Kakao/Naver 자리는 있으나 **미연결**.
     픽셀은 쿠키를 심으므로 동의 절차와 처리방침 고지를 같이 정해야 한다 —
     운영자 결정 사항으로 남긴다. 결정 없이 넣으면 동의 없는 수집이 된다.
