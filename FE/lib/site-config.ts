@@ -538,7 +538,7 @@ export const PRIVACY_POLICY: PolicyDoc = {
 };
 
 export const TERMS_DOC: PolicyDoc = {
-  effectiveFrom: "2026-10-08",
+  effectiveFrom: "2026-10-25",
   intro: [
     "본 약관은 이 사이트가 제공하는 통신 상품 가입 상담 접수 서비스의 이용 조건을 정합니다.",
   ],

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import { PRODUCTS, checkNamePhone } from "@/lib/validation";
-import { CONSENT, SITE, hasTel } from "@/lib/site-config";
+import { CONSENT } from "@/lib/site-config";
 import Icon from "@/components/ui/Icon";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
@@ -486,18 +486,10 @@ export default function StickyConsultBar() {
 
           <nav
             aria-label="빠른 상담"
-            className={`grid shadow-float ${hasTel() ? "grid-cols-2" : "grid-cols-1"}`}
+            className="grid grid-cols-1 shadow-float"
             style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
           >
-            {hasTel() && (
-              <a
-                href={`tel:${SITE.tel}`}
-                className="flex items-center justify-center gap-2 border-t-2 border-line bg-white py-4 font-black text-brand-deep transition-colors active:bg-surface-muted"
-              >
-                <Icon name="phone" size={18} />
-                전화 상담
-              </a>
-            )}
+            {/* 전화 버튼은 두지 않는다(10-25 운영자 결정) — 바는 접수 폼으로만 쓴다 */}
             <button
               type="button"
               onClick={() => {

@@ -39,15 +39,6 @@ export default function Footer() {
               상담 신청하기
               <Icon name="arrowRight" size={18} />
             </a>
-            {hasTel() && (
-            <a
-              href={`tel:${SITE.tel}`}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-line-strong bg-surface px-7 py-4 font-black transition-colors hover:border-foreground"
-            >
-              <Icon name="phone" size={18} />
-              <span className="tabular">{SITE.tel}</span>
-            </a>
-            )}
           </div>
         </div>
       </section>
@@ -108,7 +99,10 @@ export default function Footer() {
 
           <p className="mt-5 border-t border-line pt-5 text-xs leading-relaxed text-muted">
             본 사이트는 통신사 공식 대리점/판매점의 가입 상담 접수 페이지이며,
-            계약 체결은 각 통신사 절차에 따릅니다.{hasTel() ? ` 대표번호 ${SITE.tel}` : ""}
+            계약 체결은 각 통신사 절차에 따릅니다.
+            {/* 대표번호는 이 사업자 고지 줄에만 글자로 둔다(10-25 운영자 결정) —
+                누르는 전화 버튼은 사이트 어디에도 두지 않는다 */}
+            {hasTel() ? ` 대표번호 ${SITE.tel}` : ""}
           </p>
         </div>
       </div>

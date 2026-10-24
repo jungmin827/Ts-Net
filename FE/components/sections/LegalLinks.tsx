@@ -6,7 +6,6 @@ import {
   PRIVACY_POLICY,
   SITE,
   TERMS_DOC,
-  hasTel,
   isPlaceholder,
   orPending,
 } from "@/lib/site-config";
@@ -69,7 +68,6 @@ export function PrivacyPolicyBody() {
             <InfoRow label="성명" value={orPending(PRIVACY_OFFICER.name)} />
             <InfoRow label="직책" value={orPending(PRIVACY_OFFICER.position)} />
             <InfoRow label="이메일" value={orPending(PRIVACY_OFFICER.email)} />
-            <InfoRow label="전화" value={hasTel() ? SITE.tel : "등록 전"} />
           </dl>
           {officerNotice && (
             <p className="text-xs text-faint">{officerNotice}</p>
@@ -88,7 +86,6 @@ export default function LegalLinks() {
 
   const contactNotice = pendingNotice([
     SITE.business.companyName,
-    SITE.tel,
     PRIVACY_OFFICER.email,
   ]);
 
@@ -119,10 +116,6 @@ export default function LegalLinks() {
             <>
               <dl className="text-[13px]">
                 <InfoRow label="상호" value={orPending(SITE.business.companyName)} />
-                <InfoRow
-                  label="문의 전화"
-                  value={hasTel() ? SITE.tel : "등록 전"}
-                />
                 <InfoRow label="이메일" value={orPending(PRIVACY_OFFICER.email)} />
               </dl>
               {contactNotice && (
