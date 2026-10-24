@@ -31,97 +31,93 @@ export const SITE = {
   },
 
   /**
-   * 히어로 좌측 영역 카피 — 시안 `docs/태산넷 메인 좌측 영역.pdf` 기준.
+   * 히어로 왼쪽 카피.
    *
-   * 초록으로 찍히는 부분을 코드가 아니라 여기서 가른다. 운영자가 문구를 바꿀 때
-   * 어디가 강조인지도 같이 정할 수 있어야 하기 때문이다.
-   * - titleParts: [앞, **초록**, 뒤] 세 토막
-   * - emphasis: [**초록 앞부분**, 나머지] 쌍
-   * 줄바꿈은 배열 한 칸이 한 줄이다. 좁은 화면에서는 강제 줄바꿈을 풀고 자연 줄바꿈에 맡긴다.
+   * 상담원이 전화로 건네는 말투로 쓴다 — 선언문("~를 약속합니다")이나
+   * 설명문("~를 투명하게 밝힙니다")은 광고처럼 읽힌다.
+   * - titleParts: [앞, **굵게**, 뒤] 세 토막
+   * - emphasis: [**굵게 앞부분**, 나머지] 쌍
+   * 배열 한 칸이 데스크톱의 한 줄이다. 모바일은 자연 줄바꿈.
+   * 금액·비율 같은 수치는 근거가 생기기 전까지 넣지 않는다 (CLAUDE.md 규칙 6).
    */
   heroPitch: {
-    titleParts: ["저희 ", "태산넷", "은 자신있습니다!"] as const,
+    titleParts: ["인터넷 바꾸실 때, ", "태산넷", "에 한 번 물어보세요"] as const,
     intro: [
-      "고객님의 요구사항과 원하시는 상품에 맞춰",
-      "지원금과 경품을 최대한 챙겨드리려고 노력하고 있습니다.",
+      "지금 쓰시는 요금이 괜찮은 건지, 어디로 옮기는 게 나은지",
+      "전화 한 통으로 차근차근 짚어 드릴게요.",
     ],
     emphasis: [
-      ["다른 곳과 비교", "하고 오셔도 됩니다."],
-      ["챗지피티에게 견적", "을 물어보고 오셔도 됩니다."],
+      ["다른 데서 받은 견적", " 있으시면 그대로 들고 오셔도 돼요."],
+      ["챗GPT한테 물어본 금액", "이어도 괜찮아요. 같이 맞춰 볼게요."],
     ],
-    outro: [
-      "저희 직원들은 고객님과 win-win이 되는 방법을",
-      "항상 고민하고 있습니다.",
-    ],
-    closing: "편하게 물어봐주세요",
+    outro: ["쓰지도 않을 비싼 요금제는 권하지 않습니다."],
+    closing: "이름이랑 번호만 남겨주세요",
   },
 
   hero: {
-    // headline·sub 는 히어로가 heroPitch 로 교체되면서 쓰이지 않는다.
-    // 메타 설명·서브페이지에서 다시 필요해질 수 있어 값만 남겨둔다.
-    headline: "인터넷·TV 가입, 통신사별 조건 비교하고 신청하세요",
-    sub: "KT · SK · LG · KT스카이라이프 상품 조건을 비교해 안내해 드립니다",
     cta: "상담 신청하기",
 
     /*
      * 배경 사진 — `public/` 기준 경로. 예: "/hero.jpg"
-     *
-     * **비워 두는 것이 지금의 기본값이자 결정이다.** 비면 아주 옅은 찬 뉴트럴
-     * 그라데이션(#f7fafc → #ffffff)만 깔린다 — "흰 바탕 + 초록 점" 구조
-     * (CLAUDE.md 색 규칙)를 그대로 지키는 상태다. 사진이 **없어서 비어 있는 게
-     * 아니라, 없어도 완성된 화면**이다.
-     *   (한동안 이 자리에 "비워두면 초록 그라데이션만 쓴다"고 적혀 있었다.
-     *    히어로가 초록 풀블리드이던 폐기된 구성의 잔재다 — 지금은 그렇지 않다.)
-     *
-     * 넣고 싶으면 파일만 두고 경로를 적으면 된다. 위에 흰 스크림(`overlay`)이
-     * 자동으로 깔려 검은 글씨 가독성을 지킨다.
+     * 비워 두는 것이 기본값이다. 비면 오프화이트 바탕만 깔린다.
+     * 넣으면 위에 흰 스크림(`overlay`)이 자동으로 깔려 검은 글씨를 지킨다.
      * 글자가 박힌 사진은 넣지 마라 — 수정이 불가능해지고 모바일에서 잘린다.
      */
     background: "",
-    // 이미지에서 화면에 남길 기준점. 인물·제품이 한쪽에 있으면 조정한다.
     backgroundPosition: "center",
-    // 이미지 위 **흰색 스크림** 농도(0~1). 히어로가 흰 면 기조로 바뀌면서
-    // 초록 오버레이 → 흰 스크림이 됐다. 낮출수록 사진이 선명해지지만
-    // 검은 글씨 가독성이 떨어진다. 0.7 아래로는 내리지 말 것.
+    // 흰 스크림 농도(0~1). 0.7 아래로는 내리지 말 것
     overlay: 0.82,
   },
 
-  // icon 값은 components/ui/Icon.tsx 의 IconName 과 일치해야 한다.
-  // 신청부터 혜택 수령까지의 흐름 — 실제 순서가 있는 내용이라 번호를 붙인다.
-  journey: {
-    title: "신청에서 설치 혜택 수령까지의 과정!",
-    sub: "모든 과정은 투명하게! 신속하게 진행되도록 노력하고 있습니다!",
-    steps: [
+  /** 메인 '이렇게 상담해요' 3칸. 지킬 수 있는 것만 적는다 */
+  promises: {
+    title: "태산넷은 이렇게 상담해요",
+    items: [
       {
-        icon: "chat",
-        title: "문자 받기",
-        desc: "원하는 상품과 정보 입력으로 신청을 넣어주세요",
+        icon: "clipboard",
+        title: "네 곳 다 놓고 비교해 드려요",
+        desc: "KT, SK, LG, 스카이라이프 조건을 같은 기준으로 맞춰서 보여드려요. 여기저기 따로 전화하실 필요 없어요.",
       },
       {
-        icon: "phone",
-        title: "상담 연결",
-        desc: "상담사가 고객님의 요구사항과 상황에 맞춰서 최적의 상품 안내를 도와드립니다.",
+        icon: "check",
+        title: "필요 없는 건 안 붙여요",
+        desc: "안 쓰실 부가서비스나 한 단계 비싼 요금제를 끼워 넣지 않아요. 쓰시는 만큼만 맞춰 드려요.",
       },
       {
-        icon: "wrench",
-        title: "설치하기",
-        desc: "전문 기사님이 방문하여 빠르고 안전하게 설치해 드립니다.",
-      },
-      {
-        icon: "gift",
-        title: "혜택 수령",
-        desc: "설치 완료 후 포함된 혜택은 바로 받아 보실 수 있습니다. 상품 설치 직후에 문제 발생시 태산넷이 책임지고 수리합니다.",
+        icon: "wallet",
+        title: "돈 얘기부터 먼저 드려요",
+        desc: "월 요금, 약정, 설치비, 사은품 조건까지 가입 전에 다 말씀드려요. 나중에 몰랐던 비용 나올 일 없게요.",
       },
     ],
   },
 
-  processSteps: [
-    { icon: "chat", title: "상담 신청", desc: "이름·연락처 접수" },
-    { icon: "clipboard", title: "전화 상담", desc: "조건 비교 안내" },
-    { icon: "calendar", title: "통신사 접수", desc: "가입 신청 진행" },
-    { icon: "wrench", title: "설치", desc: "기사 방문 설치" },
-    { icon: "wallet", title: "사은품 지급", desc: "설치 확인 후 지급" },
-  ],
+  // icon 값은 components/ui/Icon.tsx 의 IconName 과 일치해야 한다.
+  journey: {
+    title: "신청부터 설치까지, 이렇게 진행돼요",
+    sub: "복잡한 건 저희가 챙길게요. 고객님은 전화만 받아 주시면 돼요.",
+    steps: [
+      {
+        icon: "chat",
+        title: "상담 신청",
+        desc: "이름이랑 연락처만 남겨주세요. 보고 계신 통신사가 있으면 같이 골라 주시고요.",
+      },
+      {
+        icon: "phone",
+        title: "전화 상담",
+        desc: "상담사가 전화드려서 쓰시는 환경에 맞는 상품을 같이 골라 드려요.",
+      },
+      {
+        icon: "wrench",
+        title: "설치",
+        desc: "편하신 날짜를 정하시면 기사님이 방문해서 설치해 드려요.",
+      },
+      {
+        icon: "gift",
+        title: "사은품 지급",
+        desc: "설치가 확인되면 상담 때 안내드린 사은품을 보내드려요.",
+      },
+    ],
+  },
 } as const;
 
 /** 아직 확정되지 않은 자리표시자인가. `TODO` 로 시작하거나 비어 있으면 참 */
@@ -134,47 +130,11 @@ export function hasTel(): boolean {
   return !isPlaceholder(SITE.tel);
 }
 
-/**
- * 홍보 밴드 — 프레임이 순차 교체되며 한 문장이 완성되는 풀폭 타이포 배너.
- *
- * 운영자가 **이 배열만 고치면** 문구가 통째로 바뀐다. 컴포넌트 쪽엔 문구가 없다.
- * - `words` 의 한 항목이 화면에 한 번에 뜨는 덩어리다. `accent: true` 면 강조색.
- * - `tone` 은 프레임 배경의 **틴트 유무**만 가른다.
- *   "brand" = 아주 옅은 초록 틴트 / "light" = 흰 면.
- *   예전에는 "brand" 가 진한 색면이었고, 2.4초마다 퍼스트뷰 바로 아래가 통째로
- *   덮여 흰 면 기조가 무너졌다. 지금 색은 강조 단어의 마커에만 남아 있다.
- *   (한때 남색 `#2b50c8` 이었다는 기록이 이 자리에 남아 있었는데, 그 색은
- *    두 번 폐기됐다. 되살릴 근거로 읽히지 않도록 지운다 — CLAUDE.md 참고)
- * - 수치(금액·지원금 등)는 **근거를 확보한 경우에만** 넣는다 (CLAUDE.md 규칙 6).
- *   지금은 검증 가능한 사실만 적힌 중립 자리표시자다.
- * - `enabled: false` 로 두면 섹션 자체가 렌더링되지 않는다.
- */
-/** 밴드에 한 번에 뜨는 단어 한 덩어리. accent 면 강조색으로 찍힌다 */
-export type PromoWord = { t: string; accent?: boolean };
-/** 밴드 한 장(프레임). tone 은 그 프레임의 면 색 */
-export type PromoFrame = { tone: "brand" | "light"; words: PromoWord[] };
-
-export const PROMO_BAND: {
-  enabled: boolean;
-  holdMs: number;
-  frames: PromoFrame[];
-} = {
-  enabled: true,
-  holdMs: 2400, // 프레임 한 장이 머무는 시간
-  frames: [
-    { tone: "brand", words: [{ t: "인터넷 · TV" }, { t: "가입", accent: true }] },
-    { tone: "light", words: [{ t: "통신사" }, { t: "4사", accent: true }, { t: "조건을" }] },
-    { tone: "brand", words: [{ t: "한자리에서" }, { t: "비교하고", accent: true }] },
-    { tone: "light", words: [{ t: "확인 후" }, { t: "신청하세요", accent: true }] },
-  ],
-};
-
-// 통신사 4사 — 메뉴·서브페이지 라우팅·브랜드 컬러의 단일 출처.
-// colorVar 는 globals.css 의 통신사 토큰을 가리킨다 (서브 히어로 그라데이션에 사용).
+// 통신사 4사 — 메뉴·서브페이지 라우팅의 단일 출처. 통신사색은 쓰지 않는다 (2026-10-14).
 /**
  * ⚠ 각 항목의 `tagline` 은 **화면 안 부제 전용**이다.
  *   `<meta name="description">` · 구조화 데이터 · OG 태그처럼 **외부에 색인되는
- *   자리에는 쓰지 말 것.** "전국 커버리지와 안정적인 품질"(KT) 같은 문구는
+ *   자리에는 쓰지 말 것.** "인터넷에 지니TV, 휴대폰까지 묶어서 보실 수 있어요"(KT) 같은 문구는
  *   비교 대상 없이 쓴 우위 서술이고 근거 문서가 저장소에 없다.
  *   페이지 안의 작은 글씨와 검색결과 스니펫은 같은 문자열이라도 무게가 다르다 —
  *   후자는 사업자가 외부에 한 표시 광고로 읽힌다 (CLAUDE.md 규칙 6).
@@ -186,40 +146,28 @@ export const CARRIER_MENU = [
     code: "KT",
     label: "KT",
     fullLabel: "KT 인터넷·IPTV",
-    colorVar: "--carrier-kt",
-    /** 흰 글자를 얹는 자리 전용 (대비 4.5:1 이상). 점·테두리에는 colorVar 를 쓴다 */
-    inkVar: "--carrier-kt-ink",
-    tagline: "전국 커버리지와 안정적인 품질",
+    tagline: "인터넷에 지니TV, 휴대폰까지 묶어서 보실 수 있어요",
   },
   {
     slug: "sk",
     code: "SK",
     label: "SK브로드밴드",
     fullLabel: "SK브로드밴드 인터넷·IPTV",
-    colorVar: "--carrier-sk",
-    /** 흰 글자를 얹는 자리 전용 (대비 4.5:1 이상). 점·테두리에는 colorVar 를 쓴다 */
-    inkVar: "--carrier-sk-ink",
-    tagline: "결합 구성에 강점이 있는 상품군",
+    tagline: "인터넷에 B tv, 휴대폰까지 묶어서 보실 수 있어요",
   },
   {
     slug: "lg",
     code: "LG",
     label: "LG유플러스",
     fullLabel: "LG유플러스 인터넷·IPTV",
-    colorVar: "--carrier-lg",
-    /** 흰 글자를 얹는 자리 전용 (대비 4.5:1 이상). 점·테두리에는 colorVar 를 쓴다 */
-    inkVar: "--carrier-lg-ink",
-    tagline: "IPTV 콘텐츠 구성이 다양한 편",
+    tagline: "인터넷에 U+tv, 휴대폰까지 묶어서 보실 수 있어요",
   },
   {
     slug: "skylife",
     code: "SKYLIFE",
     label: "KT스카이라이프",
     fullLabel: "KT스카이라이프 인터넷·TV",
-    colorVar: "--carrier-skylife",
-    /** 흰 글자를 얹는 자리 전용 (대비 4.5:1 이상). 점·테두리에는 colorVar 를 쓴다 */
-    inkVar: "--carrier-skylife-ink",
-    tagline: "위성 기반으로 설치 지역 제약이 적음",
+    tagline: "위성 TV라 케이블이 안 들어오는 곳에서도 보실 수 있어요",
   },
 ] as const;
 
@@ -234,16 +182,6 @@ export function carrierByCode(code: string): CarrierMenuItem | undefined {
 export function carrierBySlug(slug: string): CarrierMenuItem | undefined {
   return CARRIER_MENU.find((c) => c.slug === slug);
 }
-
-/** 통신사 코드 → 뱃지 배경 클래스 (globals.css 토큰) */
-export const CARRIER_COLOR: Record<string, string> = {
-  // 이 맵은 **흰 글자가 얹히는 뱃지**에 쓰인다. 그래서 원색이 아니라
-  // 대비를 맞춘 ink 변형을 가리킨다 (globals.css 주석 참고).
-  KT: "bg-carrier-kt-ink",
-  SK: "bg-carrier-sk-ink",
-  LG: "bg-carrier-lg-ink",
-  SKYLIFE: "bg-carrier-skylife-ink",
-};
 
 /**
  * 동의 문구 — 수집항목·목적·보유기간을 명시해야 한다 (런칭 전 법적 체크리스트).
@@ -296,35 +234,19 @@ export const PARTNER_CARD = {
    ===================================================================== */
 
 /**
- * 이미지를 넣을 수 있는 위치. 메인 페이지의 섹션 경계와 1:1 대응한다.
+ * 이미지를 넣을 수 있는 위치.
  *
- * ⚠ 이름이 실제 위치와 어긋나면 안 된다. `afterCarrierHub` 라는 이름이
- *   한동안 붙어 있었는데, 실제 삽입 지점은 통신사 4카드 바로 아래가 아니라
- *   `CarrierMatrix` · `PriceCompare` 를 지난 **요금 비교표 아래**였다.
- *   운영자는 이름을 보고 자리를 고르므로, 이름이 거짓이면 배포해서
- *   눈으로 봐야만 알아챈다. 삽입 지점을 옮기면 이름도 함께 바꿀 것.
+ *   메인 (`app/(site)/page.tsx`) —
+ *     Hero → **afterHero** → … → Reviews → **beforeFooter** → (푸터)
+ *   통신사 상세 (`/kt` `/sk` `/lg` `/skylife`) —
+ *     CarrierHero → **carrierAfterHero** → … → **carrierAfterPlans** → … →
+ *     **carrierBeforeConsult** → ConsultSection
  *
- *   실제 순서 (`app/(site)/page.tsx`) —
- *     Hero → **afterHero** → PromoBand → **afterPromoBand** → LiveFeed →
- *     CarrierHub → CarrierMatrix → PriceCompare → **afterPriceCompare** →
- *     Journey → **afterJourney** → ConsultGuide → Reviews → Faq →
- *     PrivacyPromise → **beforeFooter** → (푸터)
+ * 삽입 지점을 옮기면 이름도 함께 바꿀 것 — 운영자는 이름을 보고 자리를 고른다.
  */
 export type PromoSlotName =
   | "afterHero"
-  | "afterPromoBand"
-  | "afterPriceCompare"
-  | "afterJourney"
   | "beforeFooter"
-  // ── 통신사 상세페이지 (`/kt` `/sk` `/lg` `/skylife`) ─────────────
-  // 요구사항의 "상세페이지 홍보 이미지" 자리가 여기다. 한동안 메인에만
-  // 슬롯이 있어서, 상세페이지에 이미지를 넣으려면 코드를 고쳐야 했다 —
-  // 구조를 만들라는 요구의 핵심이 "코드를 고치지 않고 교체" 인데
-  // 정작 상세페이지가 그 밖에 있었다.
-  //
-  //   CarrierHero → **carrierAfterHero** → PlanCards → PlanCalculator →
-  //   PlanTable → **carrierAfterPlans** → PartnerCard → PlanNotice →
-  //   **carrierBeforeConsult** → ConsultSection
   | "carrierAfterHero"
   | "carrierAfterPlans"
   | "carrierBeforeConsult";
@@ -362,291 +284,18 @@ export interface PromoImage {
 
 /**
  * 운영자가 채우는 유일한 자리. 컴포넌트에는 경로도 문구도 없다.
- * 작성법은 `docs/PROMO_IMAGE_GUIDE.md` 참고.
+ * 작성법은 `docs/PROMO_IMAGE_GUIDE.md` 참고. 비어 있으면 슬롯은 아무것도 그리지 않는다.
  *
  * 예시 —
  *   {
- *     id: "gift-2026q4", slot: "afterPriceCompare",
+ *     id: "gift-2026q4", slot: "afterHero",
  *     desktop: "/promo/gift-2026q4.png",  mobile: "/promo/gift-2026q4-m.png",
  *     width: 2240, height: 900, mobileWidth: 750, mobileHeight: 900,
  *     alt: "4분기 가전 사은품 안내 — 자세한 조건은 상담 시 안내",
  *     href: "#consult", enabled: true,
  *   }
  */
-export const PROMO_IMAGES: PromoImage[] = [
-  {
-    // 히어로 바로 아래. 왼쪽 카피가 "다른 곳과 비교하고 오셔도 됩니다"로 끝나므로,
-    // **비교하라고 해놓고 무엇을 비교할지는 안 알려주는 공백**을 이 자리에서 메운다.
-    // 다른 홍보 이미지(1,000~1,900px)보다 얇게(620px) 만들었다 —
-    // 메인이 이미 레퍼런스보다 길어서 덩치를 더 얹으면 길이만 늘고 밀도는 떨어진다.
-    id: "compare-four",
-    slot: "afterHero",
-    desktop: "/promo/compare-four.png",
-    mobile: "/promo/compare-four-m.png",
-    width: 2240,
-    height: 620,
-    mobileWidth: 750,
-    mobileHeight: 1215,
-    alt: "다른 곳과 비교하실 때 이 네 가지를 같이 보세요 — 월 요금은 약정·결합 조건을 맞춰야 같은 비교가 되고, 약정 기간은 중간에 해지하면 할인반환금이 생기며, 설치비·장비는 설치 환경과 구성에 따라 달라지고, 사은품은 지급 시점과 반환 조건까지 확인해야 합니다. 비교해 보신 뒤에 결정하셔도 됩니다",
-    href: "#consult",
-    enabled: true,
-  },
-  {
-    id: "check-three",
-    slot: "afterJourney",
-    desktop: "/promo/check-three.png",
-    mobile: "/promo/check-three-m.png",
-    width: 2240,
-    height: 938,
-    mobileWidth: 750,
-    mobileHeight: 1582,
-    alt: "가입 전 확인할 세 가지 — 약정과 위약금, 설치비와 장비, 사은품 조건. 상담 때 먼저 안내해 드립니다",
-    href: "#consult",
-    enabled: true,
-  },
-  {
-    id: "what-we-do",
-    slot: "afterPromoBand",
-    desktop: "/promo/what-we-do.png",
-    mobile: "/promo/what-we-do-m.png",
-    width: 2240,
-    height: 1155,
-    mobileWidth: 750,
-    mobileHeight: 1570,
-    alt: "하는 일과 하지 않는 일을 먼저 적어둡니다 — 합니다: KT·SK·LG·스카이라이프 네 곳의 조건을 같은 기준으로 비교해 드립니다, 요금·약정·설치비를 먼저 말씀드리고 상담을 시작합니다, 남겨주신 연락처는 암호화해 보관하고 열람 기록을 남깁니다. 하지 않습니다: 지어낸 접수 내역을 실시간인 것처럼 띄우지 않습니다, 근거 없는 지원금·보상률을 숫자로 내걸지 않습니다, 동의하지 않으신 마케팅 연락은 드리지 않습니다",
-    href: "#consult",
-    enabled: true,
-  },
-  {
-    id: "choose-criteria",
-    slot: "afterPriceCompare",
-    desktop: "/promo/choose-criteria.png",
-    mobile: "/promo/choose-criteria-m.png",
-    width: 2240,
-    height: 1012,
-    mobileWidth: 750,
-    mobileHeight: 1737,
-    alt: "통신사는 어디가 더 좋은지가 아니라 무엇이 맞는지로 고릅니다 — 1 설치할 주소, 2 보려는 TV 채널, 3 묶을 휴대폰 회선. 어느 통신사가 더 낫다고 말하지 않습니다",
-    href: "#consult",
-    enabled: true,
-  },
-  {
-    id: "before-call",
-    slot: "beforeFooter",
-    desktop: "/promo/before-call.png",
-    mobile: "/promo/before-call-m.png",
-    width: 2240,
-    height: 991,
-    mobileWidth: 750,
-    mobileHeight: 1882,
-    alt: "이 네 가지를 알고 계시면 통화가 짧아집니다 — 1 설치할 주소, 2 지금 쓰는 통신사와 약정이 끝나는 시점, 3 원하는 인터넷 속도, 4 결합할 휴대폰 회선. 모르셔도 상담은 됩니다",
-    href: "#consult",
-    enabled: true,
-  },
-];
-
-/* =====================================================================
-   자주 묻는 질문 · 상담 진행 안내 · 개인정보 처리 안내
-
-   이 세 블록의 원칙 — **확인된 사실만 적는다.**
-   보유하지 않은 수상·인증, 근거 없는 수치(최대 ○○만원 / ○○% 절감),
-   레퍼런스 사이트의 문구는 넣지 않는다 (CLAUDE.md 규칙 5·6).
-   금액이 조건에 따라 달라지는 항목은 "달라진다"고 쓰는 것이 정확한 서술이다.
-   ===================================================================== */
-
-/** 아코디언 한 칸. a 는 단락 단위 배열 — 한 항목이 화면에서 한 문단이다 */
-export interface FaqItem {
-  q: string;
-  a: string[];
-}
-
-/**
- * 방문자가 연락처를 남기기 전에 실제로 망설이는 지점만 모았다.
- * 질문을 늘리기 위한 질문은 넣지 않는다 — 답이 "상담 시 안내"로만 끝나는 항목은
- * 왜 미리 적을 수 없는지까지 함께 밝힌다.
- */
-export const FAQ: { title: string; sub: string; items: FaqItem[] } = {
-  title: "자주 묻는 질문",
-  sub: "연락처를 남기기 전에 가장 많이 묻는 것부터 정리했습니다",
-  items: [
-    {
-      q: "연락처를 남기면 광고 전화가 계속 오나요?",
-      a: [
-        "상담 신청으로 받은 연락처는 가입 상담 목적으로만 사용합니다.",
-        "마케팅 정보 수신 동의는 개인정보 수집·이용 동의와 체크박스를 따로 두었고, 선택 항목입니다. 동의하지 않아도 상담 신청과 안내는 그대로 받으실 수 있습니다.",
-      ],
-    },
-    {
-      q: "상담을 신청하면 바로 가입되는 건가요?",
-      a: [
-        "아닙니다. 신청은 상담 요청이며 계약이 아닙니다. 신청만으로 요금이 발생하거나 통신사에 가입 접수가 들어가지 않습니다.",
-        "상담에서 요금·약정·설치 조건을 확인하신 뒤, 동의하신 경우에만 가입 접수를 진행합니다.",
-      ],
-    },
-    {
-      q: "설치비와 장비 임대료는 얼마인가요?",
-      a: [
-        "설치비와 장비 임대료는 통신사 약관에 따라 책정되며, 선택한 상품·속도·TV 구성과 설치 현장 환경에 따라 달라집니다.",
-        "이 사이트에 금액을 미리 적지 않는 이유는, 조건에 따라 달라지는 금액을 하나로 적어두면 실제 청구와 어긋나기 때문입니다. 상담에서 적용 금액을 먼저 확인하신 뒤 결정하셔도 됩니다.",
-      ],
-    },
-    {
-      q: "약정 기간 중에 해지하면 어떻게 되나요?",
-      a: [
-        "약정 기간 안에 해지하면 그동안 받은 요금 할인에 대한 할인반환금과 장비 관련 비용이 발생할 수 있습니다. 산정 기준은 통신사 약관을 따르며, 금액은 해지 시점까지의 사용 기간에 따라 달라집니다.",
-        "사은품을 받으신 경우 반환 조건이 함께 적용될 수 있습니다. 가입 전 상담에서 해당 상품의 약정 조건과 반환 조건을 안내해 드립니다.",
-      ],
-    },
-    {
-      q: "사은품은 언제 어떻게 받나요?",
-      a: [
-        "사은품은 설치가 확인된 뒤 지급합니다. 품목과 지급 방식은 상품과 시기에 따라 달라지므로, 확정된 조건을 상담에서 안내해 드립니다.",
-        "이 사이트에 사은품 금액이 표기되지 않은 상품은 아직 금액이 확정되지 않았다는 뜻입니다. 확인되지 않은 금액은 적지 않습니다.",
-      ],
-    },
-    {
-      q: "표시된 월 요금이 실제 청구 금액과 같나요?",
-      a: [
-        "요금 비교에 표시한 금액은 3년 약정, 휴대폰 1회선 결합, 부가세 포함을 전제로 한 금액입니다. 약정 기간·결합 회선 수·제휴카드 적용 여부가 달라지면 금액도 달라집니다.",
-        "통신사마다 TV 구성 등급 체계가 달라서, 같은 금액이라도 채널 수와 부가서비스가 다를 수 있습니다. 요금 옆에 적힌 구성명을 함께 확인해 주세요.",
-      ],
-    },
-    {
-      q: "지금 쓰는 인터넷 약정이 남아 있는데 신청해도 되나요?",
-      a: [
-        "신청하셔도 됩니다. 남은 약정 기간과 해지 시 발생하는 비용을 먼저 확인한 뒤, 지금 바꾸는 편이 나은지 유지하는 편이 나은지 함께 따져 보는 것이 상담의 일입니다.",
-        "확인해 본 결과 지금 옮기는 것이 유리하지 않다면 그대로 말씀드립니다.",
-      ],
-    },
-    {
-      q: "남긴 이름과 연락처는 어떻게 보관되나요?",
-      a: [
-        "연락처는 암호화해서 저장하고, 목록 화면에는 가운데 자리를 가린 번호만 보이게 했습니다. 번호 원본은 상담에 필요한 시점에만 확인하며 열람 기록을 남깁니다.",
-        "보유기간과 파기 시점은 아래 개인정보 처리 안내에서 확인하실 수 있습니다.",
-      ],
-    },
-  ],
-};
-
-/** 상담 진행 안내의 운영 정보 한 줄. value 가 null 이면 그 칸은 렌더링되지 않는다 */
-export interface ConsultFact {
-  /** components/ui/Icon.tsx 의 IconName 과 일치해야 한다 */
-  icon: string;
-  label: string;
-  value: string | null;
-}
-
-/**
- * 상담 진행 안내.
- *
- * `facts` 는 **운영자만 알 수 있는 값**이다. 지어내면 약속이 되어버리므로
- * 확정 전까지 `null` 로 두고, null 인 칸은 화면에 나오지 않는다.
- * 세 칸이 모두 null 이면 체크리스트만 렌더링된다.
- *
- * `checklist` 는 상담 통화에서 실제로 확인하는 항목이다. 상품 구성 표기는
- * `lib/validation.ts` 의 `PRODUCTS` 와 같은 범위로 맞춰 둔다.
- */
-export const CONSULT_GUIDE: {
-  title: string;
-  sub: string;
-  facts: ConsultFact[];
-  checklistTitle: string;
-  checklist: string[];
-  notes: string[];
-} = {
-  title: "상담은 이렇게 진행됩니다",
-  sub: "연락 전에 무엇을 확인하는지, 무엇을 묻는지 미리 알려드립니다",
-  facts: [
-    // TODO(운영자): 실제 상담 가능 시간으로 교체. 예) "평일 09:00~19:00 · 토요일 10:00~16:00"
-    { icon: "calendar", label: "상담 가능 시간", value: null },
-    // TODO(운영자): 접수 후 연락까지 평균 소요. 운영 실적으로 확인된 값만 적을 것
-    { icon: "phone", label: "접수 후 연락", value: null },
-    // TODO(운영자): 가입 접수부터 설치까지 통상 소요 기간
-    { icon: "wrench", label: "설치까지", value: null },
-  ],
-  checklistTitle: "상담에서 함께 확인하는 것",
-  checklist: [
-    "원하시는 통신사와 상품 구성 (인터넷 단독 / TV / 인터넷+TV / 인터넷+TV+휴대폰)",
-    "설치 주소에서 가능한 인터넷 속도와 설치 방식",
-    "지금 쓰고 계신 통신사와 남은 약정 기간",
-    "적용 가능한 월 요금, 약정 기간, 설치비 등 발생 비용",
-    "사은품 지급 조건과 반환 조건",
-    "희망하시는 설치 일정",
-  ],
-  notes: [
-    "신청 폼에서 받는 것은 이름과 연락처, 그리고 원하시는 통신사·상품뿐입니다. 주민등록번호·계좌번호·카드번호는 입력받지 않습니다.",
-    "상담 내용에 동의하지 않으시면 가입 접수를 진행하지 않습니다.",
-  ],
-};
-
-/** 개인정보 처리 안내 카드 한 장 */
-export interface PrivacyPoint {
-  /** components/ui/Icon.tsx 의 IconName 과 일치해야 한다 */
-  icon: string;
-  title: string;
-  desc: string;
-}
-
-/**
- * 개인정보 처리 안내 — **구현된 사실만 적는다.**
- *
- * 각 항목의 근거:
- * - 암호화 저장 / 원본 미로깅 → `lib/crypto.ts`(AES-256-GCM), `app/api/leads/route.ts`
- *   (오류 로그에 error.code·message 만 남긴다)
- * - 마스킹 노출 → `leads.phone_masked`, 어드민 목록
- * - 열람 기록 → `lib/audit.ts` + `app/api/admin/leads/[id]/decrypt`, `/api/admin/export`
- * - 보유기간 → `BE/supabase/migrations/003_purge_at_by_status.sql`
- *   (접수일 기준으로 purge_at 을 계산하는 트리거). 고지 문구 자체는
- *   `CONSENT.privacyDetail` 을 그대로 화면에 다시 보여주므로 여기서 새 숫자를 쓰지 않는다.
- * - 동의 분리 → `lib/validation.ts` (`consent_privacy` 필수 / `consent_marketing` 선택)
- *
- * 문구를 고칠 때는 위 근거 코드가 그대로인지 먼저 확인할 것.
- * 구현이 받쳐주지 않는 문장은 과장광고이자 허위 고지가 된다.
- */
-export const PRIVACY_PROMISE: {
-  eyebrow: string;
-  title: string;
-  sub: string;
-  points: PrivacyPoint[];
-  noticeTitle: string;
-} = {
-  eyebrow: "개인정보 처리 안내",
-  title: "연락처를 어떻게 다루는지 밝힙니다",
-  sub: "번호를 남겨도 괜찮은 이유를 약속이 아니라 구조로 설명합니다",
-  points: [
-    {
-      icon: "shield",
-      title: "번호는 암호화해서 저장합니다",
-      desc: "접수된 연락처는 AES-256-GCM 으로 암호화해 보관합니다. 서버 로그와 오류 기록에도 번호 원본을 남기지 않습니다.",
-    },
-    {
-      icon: "compare",
-      title: "화면에는 가린 번호만 보입니다",
-      desc: "운영자 목록 화면에서도 가운데 자리를 가린 번호만 표시됩니다. 번호 원본은 상담에 필요한 순간에만 확인합니다.",
-    },
-    {
-      icon: "clipboard",
-      title: "열람하면 기록이 남습니다",
-      desc: "번호 원본을 확인하거나 내보낸 경우, 누가 언제 어떤 건을 열었는지 접속기록으로 남깁니다.",
-    },
-    {
-      icon: "calendar",
-      title: "보유기간이 지나면 파기합니다",
-      desc: "접수일을 기준으로 보유기간을 미리 계산해 두고, 기간이 지난 접수는 복구할 수 없게 파기합니다.",
-    },
-    {
-      icon: "card",
-      title: "필요한 항목만 받습니다",
-      desc: "신청 폼에 주민등록번호·계좌번호·카드번호 입력란이 없습니다. 이름과 연락처, 원하시는 통신사·상품만 받습니다.",
-    },
-    {
-      icon: "check",
-      title: "동의는 따로 받습니다",
-      desc: "개인정보 수집·이용 동의와 마케팅 정보 수신 동의는 체크박스를 분리했습니다. 마케팅 동의는 선택이며 기본값은 해제 상태입니다.",
-    },
-  ],
-  noticeTitle: "수집·이용 고지",
-};
+export const PROMO_IMAGES: PromoImage[] = [];
 
 /* =====================================================================
    개인정보처리방침 · 이용약관 전문

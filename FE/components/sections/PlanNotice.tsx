@@ -29,7 +29,7 @@ export default function PlanNotice({
         <SectionHeading
           eyebrow="필수 확인"
           title="신청 전 확인사항"
-          description="표시 요금의 기준과 추가로 발생할 수 있는 비용을 안내합니다"
+          description="화면 요금이 어떤 기준인지, 따로 드는 비용은 뭐가 있는지 적어 뒀어요"
         />
 
         <div className="flex flex-col gap-2.5">

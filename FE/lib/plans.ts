@@ -159,65 +159,6 @@ export function findCombo(
   );
 }
 
-/** 통신사 비교 차트 한 칸 */
-export interface CarrierPrice {
-  carrier: string;
-  /** 그 통신사에서 같은 속도 결합 중 가장 낮은 월요금 */
-  monthly_fee: number;
-  /** 할인 전 총요금 (있으면 취소선으로) */
-  list_fee: number | null;
-  /** 어떤 TV 구성인지 — 같은 속도라도 TV 등급이 달라 반드시 밝혀야 한다 */
-  tv_option: string | null;
-  name: string;
-}
-
-/**
- * 같은 인터넷 속도의 **인터넷+TV 결합** 중 통신사별 최저가를 모은다.
- *
- * 경쟁사가 아니라 **우리가 취급하는 4사끼리** 비교한다. 타사 대비 우위를
- * 주장하지 않으므로 표시광고법 리스크가 없고, 방문자에게 실제로 쓸모가 있다.
- *
- * 통신사마다 TV 구성 등급 체계가 달라 금액을 그냥 나란히 두면 오해를 준다.
- * 그래서 `tv_option` 을 함께 돌려주고 화면에서 반드시 같이 표기한다.
- */
-export async function getCarrierPriceComparison(
-  speed = "500M",
-): Promise<CarrierPrice[]> {
-  const supabase = publicClient();
-  if (!supabase) return [];
-
-  const { data, error } = await supabase
-    .from("plans")
-    .select("carrier, name, speed, tv_option, monthly_fee, list_fee, sort_order")
-    .eq("category", "BUNDLE")
-    .eq("speed", speed)
-    .eq("is_active", true)
-    .gte("sort_order", TABLE_SORT_MIN)
-    .not("monthly_fee", "is", null);
-
-  if (error) {
-    console.error("[plans] 비교 조회 실패:", error.code, error.message);
-    return [];
-  }
-
-  const cheapest = new Map<string, CarrierPrice>();
-  for (const row of (data ?? []) as Plan[]) {
-    const fee = row.monthly_fee;
-    if (fee === null) continue;
-    const cur = cheapest.get(row.carrier);
-    if (!cur || fee < cur.monthly_fee) {
-      cheapest.set(row.carrier, {
-        carrier: row.carrier,
-        monthly_fee: fee,
-        list_fee: row.list_fee,
-        tv_option: row.tv_option,
-        name: row.name,
-      });
-    }
-  }
-  return [...cheapest.values()].sort((a, b) => a.monthly_fee - b.monthly_fee);
-}
-
 /**
  * 같은 카테고리 안에서 인터넷 속도별로 다시 묶는다 (100M < 200M < 500M < 1G).
  *

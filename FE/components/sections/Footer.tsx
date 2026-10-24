@@ -21,31 +21,22 @@ export default function Footer() {
 
   return (
     <footer>
-      {/* 전환 밴드 — 스크롤 끝까지 내려온 사람에게 마지막으로 행동을 제안한다 */}
-      {/* 전환 밴드. 예전에는 진초록 풀블리드였지만, 레퍼런스 실측 결과
-          그 사이트에는 진한 색 밴드가 단 하나도 없었다 — CTA 섹션조차
-          포인트색 3% 농도의 틴트(#fff8f2→#fff0e7)이고 푸터는 #f8f9fb 다.
-          색면으로 소리치지 않고 CTA 버튼 하나만 튀게 둔다. */}
-      <section
-        className="relative isolate overflow-hidden border-y border-line"
-        style={{
-          backgroundImage:
-            "linear-gradient(90deg, #f3fcf6 0%, #e9f8ef 55%, #f3fcf6 100%)",
-        }}
-      >
+      {/* 전환 밴드 — 끝까지 내려온 사람에게 마지막으로 건네는 한마디.
+          면은 흰색, 튀는 건 검은 버튼 하나뿐이다 */}
+      <section className="border-y border-line bg-surface">
         <div className="relative mx-auto flex max-w-6xl flex-col items-start gap-6 px-4 py-14 md:flex-row md:items-center md:justify-between md:py-16">
           <div>
             <h2 className="text-2xl leading-snug font-black text-foreground md:text-3xl">
-              어떤 상품이 맞는지 고민되시나요?
+              아직 고민 중이세요?
             </h2>
             <p className="mt-2.5 text-muted">
-              연락처를 남겨주시면 조건을 비교해 안내해 드립니다
+              번호만 남겨주시면 저희가 먼저 전화드릴게요. 듣고 결정하셔도 늦지 않아요
             </p>
           </div>
           <div className="flex w-full shrink-0 flex-col gap-3 sm:flex-row md:w-auto">
             <a
               href="#consult"
-              className="inline-flex items-center justify-center gap-2 rounded-xl cta-fill px-7 py-4 font-black shadow-cta transition-all duration-200 hover:-translate-y-0.5 hover:shadow-float active:translate-y-0"
+              className="cta-fill inline-flex items-center justify-center gap-2 rounded-xl px-7 py-4 font-black transition-colors"
             >
               상담 신청하기
               <Icon name="arrowRight" size={18} />
@@ -53,9 +44,9 @@ export default function Footer() {
             {hasTel() && (
             <a
               href={`tel:${SITE.tel}`}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-brand/30 bg-white px-7 py-4 font-black text-brand-deep transition-all duration-200 hover:-translate-y-0.5 hover:border-brand hover:shadow-card active:translate-y-0"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-line-strong bg-surface px-7 py-4 font-black transition-colors hover:border-foreground"
             >
-              <Icon name="phone" size={18} className="text-brand-dark" />
+              <Icon name="phone" size={18} />
               <span className="tabular">{SITE.tel}</span>
             </a>
             )}

@@ -25,12 +25,8 @@ export default function SectionHeading({
           {eyebrow}
         </span>
       )}
-      {/* 섹션 제목 28 / 40px.
-          32px 이던 때는 그 아래가 바로 18px 이라 **1.78배 점프**가 생겼다 —
-          제목과 본문 사이에 쓸 단계가 없어 화면이 평평해 보인다
-          (레퍼런스는 45px 제목에 20~31px 구간을 12.5% 쓴다).
-          40px 으로 올리고, 섹션 안 소제목을 22px 로 세워 그 사이를 메웠다. */}
-      <h2 className="text-[1.75rem] leading-snug font-black text-foreground md:text-[2.5rem]">
+      {/* 섹션 제목 26 / 32px. 소제목(18~20px)과 한 단계 차이로 둔다 */}
+      <h2 className="text-[1.625rem] leading-snug font-black text-foreground md:text-[2rem]">
         {title}
       </h2>
       {description && (

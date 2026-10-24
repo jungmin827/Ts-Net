@@ -2,6 +2,7 @@ import Header from "@/components/sections/Header";
 import Footer from "@/components/sections/Footer";
 import StickyConsultBar from "@/components/forms/StickyConsultBar";
 import BackToTop from "@/components/ui/BackToTop";
+import ConsultAnchorFallback from "@/components/ui/ConsultAnchorFallback";
 import Icon from "@/components/ui/Icon";
 import { SITE, hasTel } from "@/lib/site-config";
 
@@ -18,6 +19,7 @@ export default function SiteLayout({
         <Footer />
       </div>
       <BackToTop />
+      <ConsultAnchorFallback />
       <StickyConsultBar />
 
       {/*

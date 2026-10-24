@@ -43,7 +43,7 @@ export default function PlanCards({
       <div className="mx-auto max-w-6xl px-4">
         <SectionHeading
           title="추천 상품"
-          description={`${carrier.label} 상품 중 문의가 많은 구성입니다`}
+          description={`${carrier.label}에서 먼저 보시면 좋은 구성이에요`}
         />
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
@@ -52,12 +52,6 @@ export default function PlanCards({
               key={p.id}
               className="flex h-full flex-col overflow-hidden rounded-panel border-2 border-line bg-white"
             >
-              {/* 통신사 색 스트라이프 — 어느 통신사 상품인지 카드 자체가 말하게 */}
-              <span
-                aria-hidden="true"
-                className="h-1.5 w-full"
-                style={{ backgroundColor: `var(${carrier.colorVar})` }}
-              />
 
               <div className="flex flex-1 flex-col p-6">
                 <h3 className="text-lg font-bold">{p.name}</h3>

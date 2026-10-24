@@ -139,8 +139,7 @@ export default function LeadForm({
       className="relative flex flex-col gap-3"
     >
       {/* 통신사는 드롭다운이 아니라 칩 라디오로 받는다.
-          선택지가 4개뿐이라 펼칠 이유가 없고(2탭 → 1탭), 통신사 고유색이
-          그대로 드러나 무엇을 고르는 자리인지 한눈에 읽힌다.
+          선택지가 4개뿐이라 펼칠 이유가 없다(2탭 → 1탭). 선택된 칩은 검게 채운다.
           radio 로 구현해 키보드 화살표 이동과 스크린리더 그룹 읽기가 살아 있다. */}
       {variant === "full" && (
         <fieldset className="rounded-xl border border-line-strong p-3">
@@ -155,12 +154,9 @@ export default function LeadForm({
                   key={m.slug}
                   className={`flex cursor-pointer items-center gap-1.5 rounded-lg border-2 px-2.5 py-1.5 text-[0.8125rem] font-bold transition-all duration-200 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand ${
                     on
-                      ? "border-transparent text-white"
-                      : "border-line-strong bg-white text-foreground hover:border-brand"
+                      ? "border-foreground bg-foreground text-white"
+                      : "border-line-strong bg-surface text-foreground hover:border-foreground"
                   }`}
-                  // 선택 시 흰 글자가 얹히므로 ink 변형을 쓴다.
-                    // 원색은 SK 3.50:1 · 스카이라이프 2.91:1 로 기준 미달이었다.
-                    style={on ? { backgroundColor: `var(${m.inkVar})` } : undefined}
                 >
                   <input
                     type="radio"
@@ -169,11 +165,6 @@ export default function LeadForm({
                     checked={on}
                     onChange={() => setCarrier(m.code)}
                     className="sr-only"
-                  />
-                  <span
-                    aria-hidden="true"
-                    className={`size-2 rounded-full ${on ? "bg-white/85" : ""}`}
-                    style={on ? undefined : { backgroundColor: `var(${m.colorVar})` }}
                   />
                   {m.label}
                 </label>

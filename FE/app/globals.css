@@ -2,110 +2,56 @@
 
 /* =====================================================================
    디자인 토큰 — 색·그림자·라운드·모션의 단일 출처.
-   브랜드 베이스는 쨍한 그린(docs/GOAL_PLAN.md G4). 여기만 바꾸면 전체가 따라온다.
+
+   2026-10-14 개편: **오프화이트 바탕 + 블랙 요소.**
+   초록은 로고와 상단 메뉴바(`.brand-scope`)에만 남긴다. 통신사색도 쓰지 않는다 —
+   통신사는 글자로 구분한다. 토큰 이름(`--brand*`)은 그대로 두고 값만 바꿨으므로
+   컴포넌트는 손대지 않아도 따라온다.
    ===================================================================== */
 :root {
-  --background: #ffffff;
-  --foreground: #17191c; /* 거의 검정. 레퍼런스 실측 #171717 과 같은 급 */
+  --background: #fafaf8; /* 오프화이트. 섹션 면은 전부 이 색 */
+  --foreground: #141414;
 
-  /* ── 주조색 — 쨍한 그린 ────────────────────────────────────────────
-     레퍼런스(탐나넷) 실측에서 배운 것은 색상값이 아니라 **운용 구조**다.
-     흰색이 배경 면적의 약 90%, 포인트색은 글자로만 등장하고 배경 상위
-     10위에 아예 없다. 유일한 색면은 CTA 버튼 하나(25k px²)뿐.
-     → 초록은 '면'이 아니라 '점'으로 쓴다. 큰 면을 초록으로 칠하지 말 것.
+  /* 요소색 — 블랙 계열. 이름은 역사적 이유로 brand 다 */
+  --brand: #141414;
+  --brand-dark: #141414;
+  --brand-deep: #0a0a0a;
+  --brand-light: #ededea; /* 배지·아이콘 바탕 */
+  --brand-soft: #f3f3f0; /* 가장 옅은 면 */
 
-     네이버 그린(#03C75A, HSL 146°)은 브랜드 혼동 때문에 피한다.
-     우리는 색상각 140°로 두어 벌린다. */
-  --brand: #07b040; /* HSL(140,92%,36%). 아이콘·선·작은 면.
-                       흰 글자를 얹지 말 것 — 대비 2.88:1 로 기준 미달 */
-  --brand-dark: #0a8230; /* 흰 배경 위 초록 글자 전용 — 4.94:1 (본문 통과) */
-  /* ⚠ 이 색을 **배경**으로 쓸 때 흰 글자의 투명도 한계는 95% 다.
-       white/100=4.94 · white/95=4.62 · white/90=4.32 · white/85=4.02 · white/75=3.48
-       요금 띠 라벨이 관행적으로 `text-white/85` 였는데 전부 본문 기준(4.5) 미달이었다.
-       부차적인 글자를 흐리게 하고 싶으면 투명도가 아니라 크기·굵기로 낮출 것. */
-  --brand-deep: #07521f; /* 푸터 딥엔드 — 9.39:1 */
-  --brand-light: #dff7e6; /* 배지·아이콘 배경 */
-  --brand-soft: #f2fcf5; /* 가장 옅은 면 틴트 */
+  /* 주 CTA — 검정 면 + 흰 글자 (17.9:1) */
+  --cta-from: #262626;
+  --cta-to: #141414;
+  --cta-ink: #ffffff;
 
-  /* CTA 전용 그라데이션 — **쨍한 브랜드 그린 + 진한 글자.**
-     한동안 흰 글자를 전제로 색을 골랐고, 그 탓에 양 끝을 4.5:1 위로 끌어내리느라
-     `#08852f → #067327`(L28%·L24%)까지 어두워졌다. 결과적으로 "쨍한 녹색으로
-     간다"고 적어 놓고 **정작 `--brand` 가 화면의 0.003% 밖에 안 쓰이는** 상태였다.
+  /* 보조 표시([필수] 라벨·어드민 내보내기). 면으로 쓰지 않는다 */
+  --accent: #e8e8e4;
+  --accent-dark: #d6d6d1;
+  --accent-ink: #141414;
 
-     전제를 뒤집으면 풀린다 — 글자를 흰색이 아니라 진하게 쓰면
-     `--brand #07b040`(L36%·S92%, 진짜 쨍한 그 색)이 **6.12:1** 로 통과한다.
-     흰 글자였을 때의 2.88:1 과 비교할 것.
+  --star: #141414; /* 빈 별(line-strong) 대비 3:1 이상 */
 
-     | 색면 | 흰 글자 | 진한 글자 |
-     |---|---|---|
-     | `#08bb45` (위) | 2.59 ✗ | **6.88** ✓ |
-     | `#07b040` (아래) | 2.88 ✗ | **6.12** ✓ |
+  --surface: #ffffff; /* 카드 */
+  --surface-muted: #f2f2ef;
+  --line: #e5e5e1;
+  --line-strong: #cbcbc6;
+  --chart-neutral: #8a8a85; /* 막대 — 배경 대비 3:1 이상 (SC 1.4.11) */
+  --muted: #595955; /* 보조 글자 — 옅은 면 위에서도 4.5:1 이상 */
+  --faint: #6b6b66; /* surface-muted 위 4.8:1 */
+}
 
-     더 쨍해졌는데 대비는 오히려 올라갔다(4.77/6.02 → 6.88/6.12).
-     ⚠ 이 면 위에 흰 글자를 얹지 말 것. 바꾸려면 두 끝 모두 다시 재라. */
+/* 로고·상단 메뉴바 전용 — 브랜드 그린을 되살린다.
+   `--brand` 위에는 흰 글자 금지(2.88:1), 진한 글자는 6.12:1.
+   네이버 그린(146°)과 겹치지 않게 색상각 140° 로 둔다 */
+.brand-scope {
+  --brand: #07b040;
+  --brand-dark: #0a8230; /* 흰 바탕 위 초록 글자 4.94:1 */
+  --brand-deep: #07521f;
+  --brand-light: #dff7e6;
+  --brand-soft: #f2fcf5;
   --cta-from: #08bb45;
   --cta-to: #07b040;
-
-  /* 보조 하이라이트.
-     **공개 페이지에서는 면으로 쓰지 않는다** — [필수] 라벨처럼 아주 작은 자리에만.
-     포인트색이 둘이면 CTA 가 묻힌다.
-     한동안 요금 카드·계산기의 상담 버튼이 이 색 면이었는데, 그 버튼들도
-     `#consult` 로 가는 **같은 동작**이라 색만 다를 이유가 없었다. 초록으로 합쳤다.
-
-     예외는 어드민의 "엑셀 내보내기" 하나다. 그 동작은 전화번호를 복호화해
-     파일로 내보내고 접수 건을 '내보냄'으로 표시한다 — 되돌리기 번거로운 일이라
-     옆의 '검색'과 **색으로 구분되는 편이 맞다**. 어드민에는 전환 CTA 가 없어
-     "포인트색이 둘" 이라는 문제도 생기지 않는다. */
-  --accent: #f7a928;
-  --accent-dark: #e0940f;
-  --accent-ink: #3a2a05;
-
-  /* 후기 평점 별 — **`--accent` 를 쓰면 안 된다.**
-     별 개수가 점수를 전달하므로 비문자 요소 3:1(SC 1.4.11) 대상인데,
-     `--accent #f7a928` 은 흰 배경 대비 **1.97:1** 이고 빈 별(`--line-strong`)
-     과도 1.32:1 이라 채워진 별과 빈 별이 구분되지 않는다.
-     `reviews` 가 비어 있어 섹션이 한 번도 렌더되지 않았고, 그래서 DOM 을 훑는
-     대비 감사기에 **영영 걸리지 않을 상태**였다 (가짜 행으로 렌더해 보고 찾았다).
-       #a86700  흰 배경 4.56:1 ✓ · 빈 별 대비 3.07:1 ✓ */
-  --star: #a86700;
-
-  /* 뉴트럴 — 레퍼런스처럼 살짝 찬 쪽으로. 초록기 뉴트럴은 주조색이
-     차분할 때 맞았지만, 쨍한 초록 옆에서는 면까지 초록이면 색이 탁해진다 */
-  --surface: #ffffff;
-  --surface-muted: #f5f8fa;
-  --line: #e4eaf0;
-  --line-strong: #cbd5df;
-  /* 데이터 시각화의 막대·선 전용. 경계선(line-strong 1.49:1)은 비교 대상이
-     아니라 구획이라 낮아도 되지만, 막대는 '내용을 이해하는 데 필요한 그래픽'
-     이라 SC 1.4.11 의 3:1 을 넘어야 한다 */
-  --chart-neutral: #828f9d;
-  --muted: #5b6670;
-  /* 2.87:1 이던 값을 4.63:1 로 올렸다. '보조 표기'라는 이름 때문에 안 읽혀도
-     되는 색처럼 쓰였지만, 실제 적용 지점이 **푸터 법정 고지문·사업자정보 6종**과
-     **입력칸의 유일한 라벨인 placeholder** 였다. 둘 다 반드시 읽혀야 한다.
-     값은 흰 배경이 아니라 **푸터 배경(#f5f8fa)** 기준으로 잡았다 —
-     흰 배경만 보고 맞추면 틴트 면 위에서 다시 미달한다 (4.63 → 4.34). */
-  /* ⚠ 흰 배경에서는 4.82:1 이지만 `--surface-muted`(#f5f8fa) 위에서는
-       **4.52:1** 로 기준을 0.02 차로 넘긴다. 여유가 거의 없다.
-       옅은 면 위에 본문 크기 글자를 얹을 때는 `--muted`(같은 면 위 5.8:1)를 쓸 것.
-       특히 **법으로 표기가 요구되는 정보**(사업자정보 등)를 이 색으로 깔지 말 것 —
-       실제로 푸터 전자상거래법 항목 6개가 그 상태였다. */
-  --faint: #687380;
-
-  /* 통신사 아이덴티티 컬러 (근사값 — 퍼블리싱 시 공식 가이드 확인) */
-  --carrier-kt: #e4002b;
-  --carrier-sk: #ea5b0c;
-  --carrier-lg: #e6007e;
-  --carrier-skylife: #00a0e9;
-
-  /* 위 네 값은 통신사 **브랜드색**이라 바꿀 수 없다. 그런데 흰 글자를 얹으면
-     SK 3.50:1 · 스카이라이프 2.91:1 로 기준에 못 미친다.
-     그래서 색상·채도는 그대로 두고 명도만 낮춘 '흰 글자 전용' 변형을 따로 둔다.
-     점·테두리·상단 스트라이프처럼 글자가 없는 자리에는 원래 브랜드색을 쓴다. */
-  --carrier-kt-ink: #e4002b; /* 4.85:1 — 원색 그대로 통과 */
-  --carrier-sk-ink: #c84e0a; /* 3.50 → 4.62:1 */
-  --carrier-lg-ink: #e3007d; /* 4.50 → 4.60:1 */
-  --carrier-skylife-ink: #007cb5; /* 2.91 → 4.62:1 */
+  --cta-ink: var(--foreground); /* 6.88 / 6.12 */
 }
 
 @theme inline {
@@ -129,16 +75,7 @@
   --color-chart-neutral: var(--chart-neutral);
   --color-muted: var(--muted);
   --color-faint: var(--faint);
-  --color-carrier-kt: var(--carrier-kt);
-  --color-carrier-sk: var(--carrier-sk);
-  --color-carrier-lg: var(--carrier-lg);
-  --color-carrier-skylife: var(--carrier-skylife);
-  --color-carrier-kt-ink: var(--carrier-kt-ink);
-  --color-carrier-sk-ink: var(--carrier-sk-ink);
-  --color-carrier-lg-ink: var(--carrier-lg-ink);
-  --color-carrier-skylife-ink: var(--carrier-skylife-ink);
   --font-sans: var(--font-noto-sans-kr);
-  --font-display: var(--font-jua); /* 포인트 전용 — 본문·금액에는 쓰지 않는다 */
 }
 
 @theme {
@@ -151,19 +88,18 @@
   --text-xs: 0.8125rem;      /* 12px → 13px */
   --text-xs--line-height: 1.5;
 
-  /* 그림자는 검정이 아니라 딥그린을 섞는다 — 브랜드와 같은 공기 안에 있게.
-     이번 개편에서 그림자 의존을 줄이고 경계선으로 구획하므로 전반적으로 낮췄다 */
-  --shadow-soft: 0 1px 2px rgb(7 82 31 / 0.04), 0 2px 8px rgb(7 82 31 / 0.04);
-  --shadow-card: 0 2px 4px rgb(7 82 31 / 0.04), 0 8px 22px -10px rgb(7 82 31 / 0.1);
-  --shadow-lift: 0 4px 8px rgb(7 82 31 / 0.06), 0 16px 36px -14px rgb(7 82 31 / 0.16);
-  --shadow-float: 0 8px 16px rgb(7 82 31 / 0.08), 0 24px 52px -18px rgb(7 82 31 / 0.22);
-  --shadow-brand: 0 4px 14px -2px rgb(7 176 64 / 0.34);
-  --shadow-cta: 0 4px 14px -3px rgb(5 144 58 / 0.45), 0 1px 2px rgb(5 144 58 / 0.2);
-  --shadow-accent: 0 4px 14px -2px rgb(247 169 40 / 0.45);
+  /* 그림자는 최소로. 구획은 경계선이 맡는다 */
+  --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.04);
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.04), 0 4px 12px -6px rgb(0 0 0 / 0.08);
+  --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.04), 0 10px 24px -12px rgb(0 0 0 / 0.14);
+  --shadow-float: 0 4px 10px rgb(0 0 0 / 0.06), 0 16px 36px -16px rgb(0 0 0 / 0.2);
+  --shadow-brand: none;
+  --shadow-cta: 0 2px 6px -2px rgb(0 0 0 / 0.25);
+  --shadow-accent: none;
 
-  /* 친근함은 곡률에서 온다 — 각진 카드보다 둥근 카드가 말을 걸어온다 */
-  --radius-card: 1.25rem;
-  --radius-panel: 1.75rem;
+  /* 곡률은 절제한다 — 둥글수록 장난스러워 보인다 */
+  --radius-card: 0.75rem;
+  --radius-panel: 1rem;
 
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
 
@@ -178,20 +114,6 @@
   --animate-feed-scroll: feed-scroll 32s linear infinite;
   --animate-slide-down: slide-down 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-pop: pop-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
-  --animate-promo-word: promo-word 0.62s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-/* 홍보 밴드 단어 등장 — 초대형 타이포라서 blur 필터를 쓰면 합성 비용이 크다.
-   transform/opacity 만으로 "훅 들어와 자리를 잡는" 인상을 만든다 */
-@keyframes promo-word {
-  from {
-    opacity: 0;
-    transform: translate3d(-0.18em, 0.14em, 0) scale(0.86);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
 }
 
 /* 실시간 신청현황 세로 롤링 — 리스트를 2배로 이어붙인 뒤 절반만큼 이동 */
@@ -249,129 +171,18 @@ h3 {
   letter-spacing: -0.012em;
 }
 
-/* CTA 색면 — 이 사이트에서 초록을 '면'으로 쓰는 유일한 자리다.
-   레퍼런스 구조상 페이지에 색면이 하나뿐이어야 CTA 가 튄다.
-   Tailwind 임의 그라데이션 대신 클래스로 둬서 한 곳에서만 관리한다. */
+/* 주 CTA — 페이지에서 유일하게 꽉 찬 면이다. 클래스 하나로 관리한다.
+   본문에서는 검정 면 + 흰 글자, 헤더(.brand-scope)에서는 초록 면 + 진한 글자 */
 .cta-fill {
   background-image: linear-gradient(180deg, var(--cta-from) 0%, var(--cta-to) 100%);
-  /* 흰 글자가 아니다 — 위 토큰 주석 참고 */
-  color: var(--foreground);
+  color: var(--cta-ink);
 }
 .cta-fill:hover {
   background-image: linear-gradient(180deg, var(--cta-to) 0%, var(--cta-to) 100%);
 }
 .cta-fill:disabled {
   background-image: linear-gradient(180deg, var(--line-strong) 0%, var(--line-strong) 100%);
-  /* `--line-strong`(#cbd5df) 위 흰 글자는 1.6:1 이라 읽히지 않았다 */
   color: var(--muted);
-}
-
-/* 주 CTA 주목 연출 — 빛이 한 번 훑고 지나간다.
-   레퍼런스는 같은 자리에 pulse·shine·화살표 흔들림 **세 개를 무한 반복**으로 건다.
-   그건 WCAG 2.2.2(Pause, Stop, Hide) 대상이 되고 — 자동으로 시작해 5초를 넘기는
-   움직임에는 멈출 수단이 있어야 한다 — 화면에 정지 버튼을 또 하나 늘린다.
-
-   그래서 **유한하게** 둔다. 2회 × 2.2초 = 4.4초면 5초를 넘지 않아 정지 컨트롤이
-   필요 없고, 주목시키는 일은 그대로 한다. 끝나면 버튼은 조용해진다.
-   모션 최소화 설정에서는 아래 `prefers-reduced-motion` 블록이 1회로 줄인다. */
-@keyframes cta-shine {
-  0% {
-    transform: translateX(-130%) skewX(-18deg);
-    opacity: 0;
-  }
-  15% {
-    opacity: 1;
-  }
-  60% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateX(240%) skewX(-18deg);
-    opacity: 0;
-  }
-}
-.cta-fill {
-  position: relative;
-  overflow: hidden;
-  /*
-   * 면 자체의 **경계 대비**.
-   *
-   * 글자 대비(6.88 / 6.12)만 재고 통과시켰는데, 버튼이 흰 배경에서 얼마나
-   * 또렷하게 떨어져 보이는지는 따로다 — `#08bb45` 는 흰 배경 대비 **2.59:1**,
-   * `#07b040` 은 **2.88:1** 로 둘 다 3:1(SC 1.4.11) 미달이다.
-   * 같은 CLAUDE.md 가 요금 막대에는 "2.88 은 미달" 이라며 3:1 을 적용한다 —
-   * 한 문서 안에서 기준이 갈리고 있었다.
-   *
-   * 색을 더 어둡게 내리면 "쨍한 녹색" 에서 또 멀어진다. 대신 1px 테두리를
-   * 안쪽으로 깐다 — `--brand-dark` 는 흰 배경 대비 **4.94:1** 이라
-   * 면은 쨍한 채로 두고 경계만 또렷해진다.
-   */
-  box-shadow: inset 0 0 0 1px var(--brand-dark);
-}
-/* 비활성 버튼은 회색 면이라 초록 테두리가 거짓 신호가 된다 */
-.cta-fill:disabled {
-  box-shadow: none;
-}
-.cta-fill::after {
-  content: "";
-  position: absolute;
-  inset-block: 0;
-  left: 0;
-  width: 38%;
-  background-image: linear-gradient(
-    100deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.52) 50%,
-    transparent 100%
-  );
-  /* 포커스 윤곽선은 outline 이라 overflow 에 잘리지 않는다. 포인터도 통과시킨다 */
-  pointer-events: none;
-  /* ⚠ **기본 상태가 보이지 않는 상태여야 한다.**
-     `animation-fill-mode` 를 주지 않았으므로 재생이 끝나면 여기 적힌 값으로
-     되돌아간다. opacity 를 적어 두지 않으면 기본값 1 로 돌아가,
-     연출이 끝난 뒤 **38% 폭짜리 흰 띠가 모든 CTA 왼쪽에 영구히 남는다.**
-     (실측으로 잡았다 — 끝난 뒤 transform=none / opacity=1 이었다.) */
-  opacity: 0;
-  transform: translateX(-130%) skewX(-18deg);
-  animation: cta-shine 2.2s ease-in-out 0.45s 2;
-}
-/* 비활성 버튼은 주목시킬 일이 없다 */
-.cta-fill:disabled::after {
-  animation: none;
-  content: none;
-}
-
-/* 요금 비교 막대 — 최종 상태가 '기본값'이고 애니메이션은 덧칠이다.
-   height 전환은 메인스레드 작업이라 탭이 비포커스면 중간에 멈추는 것을 확인했다
-   (높이 145px 지정인데 46px 에서 정지). 그래서 높이는 처음부터 제 값으로 두고,
-   컴포지터가 처리하는 transform: scaleY 로만 자라는 연출을 얹는다.
-   JS 가 죽든 애니메이션이 안 돌든 차트는 항상 올바른 높이로 보인다. */
-@keyframes bar-grow {
-  from {
-    transform: scaleY(0);
-  }
-  to {
-    transform: scaleY(1);
-  }
-}
-@keyframes bar-label-in {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-[data-bar-run="true"] .bar-fill {
-  transform-origin: bottom;
-  animation: bar-grow 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: var(--bar-delay, 0ms);
-}
-[data-bar-run="true"] .bar-label {
-  animation: bar-label-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: calc(var(--bar-delay, 0ms) + 300ms);
 }
 
 /* 셀렉트 화살표.
@@ -379,13 +190,13 @@ h3 {
    생성되지 않아 background-image 가 통째로 사라진다 (appearance:none 만 남아
    셀렉트가 텍스트 인풋과 구분되지 않았다). 평범한 CSS 로 옮겨 확실히 그린다. */
 .select-chevron {
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2307b040' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23141414' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 1rem center;
   background-size: 20px 20px;
 }
 .select-chevron-sm {
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2307b040' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23141414' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.6rem center;
   background-size: 18px 18px;
@@ -413,19 +224,6 @@ h3 {
   outline-offset: 2px;
 }
 
-/* 스크롤 등장 — Reveal 컴포넌트가 data-revealed 를 토글한다 */
-[data-reveal] {
-  opacity: 0;
-  transform: translateY(18px);
-  transition:
-    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-}
-[data-reveal][data-revealed="true"] {
-  opacity: 1;
-  transform: none;
-}
-
 /* 모션 민감 사용자는 애니메이션 전부 제거 */
 @media (prefers-reduced-motion: reduce) {
   html {
@@ -437,9 +235,5 @@ h3 {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
-  }
-  [data-reveal] {
-    opacity: 1;
-    transform: none;
   }
 }

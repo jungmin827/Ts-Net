@@ -46,6 +46,9 @@ function Wordmark({ className }: { className: string }) {
 /**
  * 헤더 — 1단 고정 바.
  *
+ * 로고와 이 바만 브랜드 그린을 쓴다(`brand-scope`). 페이지 본문은 무채색이다.
+ * 통신사 페이지에 들어와도 바의 색은 바뀌지 않는다 — 통신사색은 쓰지 않는다.
+ *
  * 이전에는 브랜드 존(1단)과 내비 바(2단)로 나뉘어 있었다. 세로로 100px 넘게 먹으면서
  * 정작 스크롤하면 1단이 흘러가 로고가 사라졌고, 2단 항목은 `flex-1` 균등 분배라
  * 1440px 에서 항목 간격이 120px 씩 벌어져 메뉴가 한 묶음으로 읽히지 않았다.
@@ -109,7 +112,7 @@ export default function Header() {
   return (
     <>
       <header
-        className={`sticky top-0 z-40 border-b border-line bg-white/95 backdrop-blur-md transition-shadow duration-300 ${
+        className={`brand-scope sticky top-0 z-40 border-b border-line bg-white/95 backdrop-blur-md transition-shadow duration-300 ${
           scrolled ? "shadow-soft" : ""
         }`}
       >
@@ -210,7 +213,7 @@ export default function Header() {
         `inert` 는 포커스·포인터·접근성 트리를 한 번에 막으므로 이것만 쓴다.
       */}
       <div
-        className={`fixed inset-0 z-50 lg:hidden ${open ? "" : "pointer-events-none"}`}
+        className={`brand-scope fixed inset-0 z-50 lg:hidden ${open ? "" : "pointer-events-none"}`}
         inert={!open}
       >
         <div
@@ -246,13 +249,7 @@ export default function Header() {
                     href={`/${c.slug}`}
                     className="flex items-center justify-between rounded-xl px-3 py-3 font-bold text-foreground transition-colors hover:bg-brand-soft hover:text-brand-dark"
                   >
-                    <span className="flex items-center gap-2.5">
-                      <span
-                        className="size-2.5 rounded-full"
-                        style={{ backgroundColor: `var(${c.colorVar})` }}
-                      />
-                      {c.label}
-                    </span>
+                    {c.label}
                     <Icon
                       name="chevronRight"
                       size={18}

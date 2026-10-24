@@ -519,11 +519,13 @@ async function g1() {
 // ── G2 레퍼런스 수준 UI ────────────────────────────────────────────────
 async function g2() {
   const { text } = await http("/");
+  // 2026-10-14 축소 — 레퍼런스(인터넷다모아) 메인은 섹션 5개다.
+  // 히어로·통신사·상담방식·절차 + (후기·현황은 데이터가 있을 때만) + 푸터 밴드
   const sections = (text.match(/<section/g) ?? []).length;
-  check("G2", "메인 섹션 수 (레퍼런스 13)", sections >= 13, `${sections}개`);
+  check("G2", "메인 섹션 수 ≤ 8 (레퍼런스 5)", sections >= 4 && sections <= 8, `${sections}개`);
 
   const cues = (text.match(/href="#consult"/g) ?? []).length;
-  check("G2", "본문 전환 수단", cues >= 8, `${cues}개`);
+  check("G2", "본문 전환 수단 (헤더·푸터 포함)", cues >= 2, `${cues}개`);
 
   let notices = 0;
   for (const c of ["kt", "sk", "lg", "skylife"]) {
@@ -560,24 +562,26 @@ async function g3() {
   check("G3", "보안 차단이 004 보다 먼저", migs[2]?.startsWith("003_lock_down"), migs.join(" "));
 }
 
-// ── G4 흰색 + 쨍한 녹색 ────────────────────────────────────────────────
+// ── G4 오프화이트 + 블랙, 초록은 헤더만 ─────────────────────────────
 function g4() {
   const css = read("FE/app/globals.css");
-  const tok = (n) => (css.match(new RegExp(`--${n}:\\s*([^;]+);`)) ?? [])[1]?.trim();
-  check("G4", "주조색 쨍한 그린", tok("brand") === "#07b040", tok("brand"));
-  check("G4", "CTA 전용 그라데이션", !!tok("cta-from") && !!tok("cta-to"),
-    `${tok("cta-from")} → ${tok("cta-to")}`);
-  check("G4", "통신사 흰글자용 ink 변형", !!tok("carrier-sk-ink"), tok("carrier-sk-ink"));
+  const root = css.match(/:root\s*\{([\s\S]*?)\n\}/)?.[1] ?? "";
+  const scope = css.match(/\.brand-scope\s*\{([\s\S]*?)\n\}/)?.[1] ?? "";
+  const tok = (src, n) => (src.match(new RegExp(`--${n}:\\s*([^;]+);`)) ?? [])[1]?.trim();
+  check("G4", "본문 배경 오프화이트", tok(root, "background") === "#fafaf8", tok(root, "background"));
+  check("G4", "본문 요소색 블랙 계열", tok(root, "brand") === "#141414", tok(root, "brand"));
+  check("G4", "헤더만 브랜드 그린", tok(scope, "brand") === "#07b040", tok(scope, "brand"));
+  const header = read("FE/components/sections/Header.tsx");
+  check("G4", "헤더에 brand-scope 적용", (header.match(/brand-scope/g) ?? []).length >= 2, "바 + 모바일 드로어");
+  const src = ["FE/components", "FE/app"].flatMap((d) =>
+    readdirSync(join(ROOT, d), { recursive: true })
+      .filter((f) => /\.(tsx|ts|css)$/.test(f))
+      .map((f) => read(`${d}/${f}`)),
+  ).join("\n");
+  const carrier = (src.match(/carrier-(kt|sk|lg|skylife)|colorVar|inkVar|CARRIER_COLOR/g) ?? []).length;
+  check("G4", "통신사색 참조 없음", carrier === 0, `${carrier}곳`);
   check("G4", "포커스 링 border-radius 제거",
     !/:focus-visible\s*\{[^}]*border-radius/.test(css), "요소 곡률을 따름");
-  const brandSoftSections = (
-    readdirSync(join(ROOT, "FE/components/sections"))
-      .map((f) => read(`FE/components/sections/${f}`))
-      .join("\n")
-      .match(/<section className="bg-brand-soft/g) ?? []
-  ).length;
-  check("G4", "대면적 섹션에 브랜드 틴트 없음", brandSoftSections === 0,
-    `${brandSoftSections}곳`);
 }
 
 // ── G5 홍보 이미지 삽입 구조 ───────────────────────────────────────────
@@ -611,27 +615,11 @@ async function g5() {
   // (`PromoSlot` 도 런타임에 막지만, 막혀서 안 보이는 것보다 여기서 걸리는 편이 낫다)
   const emptyAlt = [...cfg.matchAll(/id:\s*"([^"]+)"[\s\S]{0,420}?alt:\s*"(\s*)"/g)].map((m) => m[1]);
   check("G5", "모든 홍보 이미지에 alt", emptyAlt.length === 0,
-    emptyAlt.length ? `빈 alt: ${emptyAlt.join(", ")}` : `${used}개 슬롯 전부 채움`);
+    emptyAlt.length ? `빈 alt: ${emptyAlt.join(", ")}` : "빈 alt 없음");
   check("G5", "데스크톱/모바일 소스 분리", cfg.includes("mobileWidth"), "");
   check("G5", "운영자 가이드", has("docs/PROMO_IMAGE_GUIDE.md"), "");
-
-  const { text } = await http("/");
-  const rendered = [...new Set(text.match(/promo%2F[a-z0-9-]+\.png/g) ?? [])].length;
-  check("G5", "슬롯을 통해 실제 렌더", rendered >= 2, `${rendered}개 소스`);
-}
-
-// ── G6 자체 제작 홍보 이미지 ───────────────────────────────────────────
-function g6() {
-  const files = readdirSync(join(ROOT, "FE/public/promo")).filter((f) => f.endsWith(".png"));
-  const pairs = files.filter((f) => !f.endsWith("-m.png"));
-  check("G6", "홍보 이미지 (데스크톱+모바일 쌍)", pairs.length >= 4 && files.length === pairs.length * 2,
-    `${pairs.length}종 ${files.length}장`);
-  check("G6", "재생성 가능한 생성기", has("FE/scripts/build-promo-image.mjs") && has("FE/scripts/build-promo-images-2.mjs"), "");
-  const cfg = read("FE/lib/site-config.ts");
-  const ids = (cfg.match(/^\s+id: "/gm) ?? []).length;
-  check("G6", "설정에 등록", ids >= 4, `${ids}건`);
-  const gen = read("FE/scripts/build-promo-image.mjs");
-  check("G6", "카드 높이를 내용에서 계산", gen.includes("function cardHeight"), "하드코딩 제거");
+  // 슬롯은 운영자 이미지가 들어올 자리다. 2026-10-14 에 자체 제작 이미지를 내렸으므로
+  // 지금은 비어 있는 것이 정상이다 (실제 렌더 수는 세지 않는다).
 }
 
 // ── 라이브 DB 상태 ─────────────────────────────────────────────────────
@@ -725,7 +713,7 @@ async function live() {
     `${fcount ?? "?"}건 노출 — 1~4건이면 게이트 미적용`);
 }
 
-await g1(); await g2(); await g3(); g4(); await g5(); g6();
+await g1(); await g2(); await g3(); g4(); await g5();
 await live();
 
 const pad = (s, n) => String(s).padEnd(n);

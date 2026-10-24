@@ -22,7 +22,7 @@ import type { Carrier } from "@/lib/validation";
  */
 export default function ConsultSection({
   title = "가입 상담 신청",
-  description = "남겨주신 연락처로 확인 후 순차적으로 연락드립니다",
+  description = "남겨주시면 순서대로 전화드릴게요",
   defaultCarrier,
 }: {
   title?: string;

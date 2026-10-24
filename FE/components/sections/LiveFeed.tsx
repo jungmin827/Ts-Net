@@ -1,21 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CARRIER_COLOR } from "@/lib/site-config";
+import CarrierBadge from "@/components/ui/CarrierBadge";
 import SectionHeading from "@/components/ui/SectionHeading";
-import DataPolicy from "./DataPolicy";
 
 // 실시간 신청현황 — 실제 접수 데이터만 마스킹해 노출 (CLAUDE.md 규칙 1).
-// API 가 5건 미만이면 빈 배열을 준다. 그때는 섹션을 비우는 대신
-// DataPolicy 로 교체한다 — 왜 비어 있는지를 말하는 쪽이 공백보다 낫다.
-//
-// ⚠ "비어 있음"의 이유를 뭉뚱그리지 않는다.
-//   예전에는 `items.length === 0` 하나로 **로딩 중 · 조회 실패 · 5건 미만**을
-//   똑같이 처리했고, 그 자리에 "아직 공개할 만큼 쌓이지 않았습니다"라는
-//   단정문이 붙었다. 서버 렌더 결과가 늘 그 상태라 크롤러와 JS 미동작
-//   환경에서는 **항상** 그 문장을 보게 된다. 조회가 실패하고 있으면
-//   데이터가 아무리 쌓여도 거짓말이 된다.
-//   그래서 상태를 받아 문장을 달리한다.
+// API 가 5건 미만이면 빈 배열을 준다. 그때(그리고 로딩·실패 중에도)는
+// **아무것도 그리지 않는다.** 자리를 미리 잡지 않으므로 공백이 남지 않고,
+// "아직 쌓이지 않았다" 같은 단정을 할 일도 없다.
 
 /** 비어 있는 이유. `loading` 은 아직 아무것도 단정할 수 없는 상태 */
 type FeedState = "loading" | "ok" | "tooFew" | "error";
@@ -50,8 +42,13 @@ export default function LiveFeed() {
   const [paused, setPaused] = useState(false);
 
   useEffect(() => {
-    fetch("/api/feed/live")
-      .then((r) => r.json())
+    // 응답이 끝내 안 오면 "loading" 에 영영 머문다 — 상한을 두고 실패로 끝낸다.
+    // 실패여도 그리는 것은 없다(아래 가드). 단정하지 않는 상태로 남을 뿐이다
+    fetch("/api/feed/live", { signal: AbortSignal.timeout(10_000) })
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((d: { items?: FeedItem[]; state?: FeedState }) => {
         setItems(d.items ?? []);
         setState(d.state ?? (d.items?.length ? "ok" : "tooFew"));
@@ -62,19 +59,17 @@ export default function LiveFeed() {
       });
   }, []);
 
-  if (items.length === 0) {
-    return <DataPolicy reason={state === "ok" ? "tooFew" : state} />;
-  }
+  if (state !== "ok" || items.length === 0) return null;
 
   // 세로 롤링 — 목록을 2배로 이어붙여 -50% 이동을 무한 반복
   const doubled = [...items, ...items];
 
   return (
-    <section className="bg-surface-muted py-16 md:py-20">
+    <section className="border-t border-line py-16 md:py-20">
       <div className="mx-auto max-w-4xl px-4">
         <SectionHeading
           title="실시간 신청 현황"
-          description="실제 접수된 상담 신청만 마스킹해 표시합니다"
+          description="실제로 접수된 건만, 이름은 가려서 보여드려요"
         />
 
         <div className="mb-3 flex justify-end">
@@ -82,7 +77,7 @@ export default function LiveFeed() {
             type="button"
             onClick={() => setPaused((v) => !v)}
             aria-pressed={paused}
-            className="flex cursor-pointer items-center gap-1.5 rounded-full border border-line-strong bg-white px-3 py-1.5 text-xs font-bold text-muted transition-colors hover:border-brand hover:text-brand-dark"
+            className="flex cursor-pointer items-center gap-1.5 rounded-full border border-line-strong bg-white px-3 py-1.5 text-xs font-bold text-muted transition-colors hover:border-foreground hover:text-foreground"
           >
             {paused ? (
               <svg width="11" height="12" viewBox="0 0 11 12" fill="currentColor" aria-hidden="true">
@@ -130,13 +125,7 @@ export default function LiveFeed() {
                     {it.applied_date}
                   </span>
                   <span>
-                    {it.carrier && (
-                      <span
-                        className={`inline-block rounded-md px-1.5 py-0.5 text-[11px] font-black text-white ${CARRIER_COLOR[it.carrier] ?? "bg-muted"}`}
-                      >
-                        {it.carrier === "SKYLIFE" ? "SKY" : it.carrier}
-                      </span>
-                    )}
+                    {it.carrier && <CarrierBadge code={it.carrier} />}
                   </span>
                   <span className="font-bold">{it.masked_name}</span>
                   <span className="text-center">

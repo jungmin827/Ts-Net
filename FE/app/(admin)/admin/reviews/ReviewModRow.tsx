@@ -1,5 +1,5 @@
 import { formatDate } from "@/lib/board";
-import { CARRIER_COLOR } from "@/lib/site-config";
+import CarrierBadge from "@/components/ui/CarrierBadge";
 import Stars from "@/components/ui/Stars";
 import ReviewRowActions from "./ReviewRowActions";
 import type { ReviewModRowData } from "./page";
@@ -39,11 +39,7 @@ export default function ReviewModRow({
           {r.is_published ? "게시중" : "승인 대기"}
         </span>
         {r.carrier && (
-          <span
-            className={`rounded-md px-2 py-0.5 text-[11px] font-black text-white ${CARRIER_COLOR[r.carrier] ?? "bg-muted"}`}
-          >
-            {r.carrier === "SKYLIFE" ? "SKY" : r.carrier}
-          </span>
+          <CarrierBadge code={r.carrier} />
         )}
         <Stars rating={r.rating} size={14} />
         <time dateTime={r.created_at} className="ml-auto text-xs text-muted">

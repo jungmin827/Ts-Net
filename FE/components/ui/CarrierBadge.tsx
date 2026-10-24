@@ -1,4 +1,4 @@
-import { CARRIER_COLOR, carrierByCode } from "@/lib/site-config";
+import { carrierByCode } from "@/lib/site-config";
 
 /**
  * 통신사 뱃지 — 목록·상세·측정 하네스가 **같은 한 곳**을 쓴다.
@@ -14,8 +14,7 @@ import { CARRIER_COLOR, carrierByCode } from "@/lib/site-config";
  * prop 으로 넘기는 구조여서 하네스가 그 자리에서 계속 손으로 베끼고 있었다.**
  * 즉 사고가 난 바로 그 요소만 공유되지 않은 상태였다.
  *
- * 흰 글자가 얹히므로 배경은 원색이 아니라 대비를 맞춘 `-ink` 변형이다
- * (`CARRIER_COLOR`, globals.css 주석 참고).
+ * 통신사색은 쓰지 않는다 — 테두리 배지에 글자로만 구분한다.
  */
 export default function CarrierBadge({
   code,
@@ -41,7 +40,7 @@ export default function CarrierBadge({
         : code;
   return (
     <span
-      className={`inline-block w-fit rounded-md px-2 py-0.5 text-[11px] font-black text-white ${CARRIER_COLOR[code] ?? "bg-muted"} ${className}`}
+      className={`inline-block w-fit rounded-md border border-foreground px-1.5 py-px text-[11px] font-black text-foreground ${className}`}
     >
       {text}
     </span>

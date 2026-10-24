@@ -75,8 +75,8 @@ export default function PlanCalculator({
     <section className="bg-surface-muted py-16 md:py-20">
       <div className="mx-auto max-w-5xl px-4">
         <SectionHeading
-          title="내 요금 계산해보기"
-          description={`원하는 구성을 고르면 ${carrier.label} 월 요금이 바로 계산됩니다`}
+          title="우리 집 요금 계산해 보기"
+          description={`쓰실 구성만 고르시면 ${carrier.label} 월 요금이 바로 나와요`}
         />
 
         <div className="grid gap-5 md:grid-cols-[1fr_20rem]">
@@ -223,10 +223,10 @@ export default function PlanCalculator({
               {/* 어느 상태인지 금액 바로 아래에서 한 줄로 못 박는다 */}
               <p className="mt-2 text-xs leading-relaxed">
                 {noBundle
-                  ? "휴대폰을 결합하지 않는 경우의 금액은 요금표에 없어 상담 시 안내해 드립니다."
+                  ? "휴대폰 없이 쓰시는 금액은 표에 없어서, 상담 때 따로 알려드릴게요."
                   : mobile
-                    ? "휴대폰 1회선을 결합했을 때의 월 합계입니다."
-                    : "휴대폰 1회선 결합을 전제한 인터넷·TV 요금입니다. 휴대폰 요금은 별도이며, 요금제를 고르시면 합계로 바뀝니다."}
+                    ? "휴대폰 1회선 묶었을 때 한 달 합계예요."
+                    : "휴대폰 1회선 묶는 걸 기준으로 한 인터넷·TV 요금이에요. 휴대폰 요금제를 고르시면 합계로 바뀌어요."}
               </p>
             </div>
 
