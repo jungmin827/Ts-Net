@@ -1,9 +1,6 @@
 import { publicClient } from "@/lib/supabase/public";
 import Hero from "@/components/sections/Hero";
 import PromoSlot from "@/components/sections/PromoSlot";
-import CarrierHub from "@/components/sections/CarrierHub";
-import Promises from "@/components/sections/Promises";
-import Journey from "@/components/sections/Journey";
 import LiveFeed from "@/components/sections/LiveFeed";
 import Reviews, { type ReviewItem } from "@/components/sections/Reviews";
 
@@ -14,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 // 메인 랜딩. 레퍼런스(인터넷다모아)와 같은 밀도로 줄였다 —
-// 히어로(폼) · 통신사 · 상담 방식 · 가입 절차 · 후기, 그리고 하단 고정 상담바.
+// 히어로(메인 포스터 + 폼) · 포스터 3장(통신사 · 상담 방식 · 가입 절차) · 후기, 그리고 하단 고정 상담바.
 // 요금표·계산기는 통신사 상세에 있다. 메인에 다시 올리지 말 것. 후기 반영을 위해 5분 재생성
 export const revalidate = 300;
 
@@ -44,10 +41,8 @@ export default async function HomePage() {
     <main>
       {/* 히어로가 곧 퍼스트뷰 상담폼이다 — `#consult` 앵커도 히어로가 갖는다 */}
       <Hero />
+      {/* 포스터 3장(통신사 · 상담 방식 · 가입 절차) — 목록은 site-config 의 PROMO_IMAGES */}
       <PromoSlot slot="afterHero" />
-      <CarrierHub />
-      <Promises />
-      <Journey />
       <Reviews reviews={reviews} />
       {/* 실제 접수가 5건 이상일 때만 그려진다 (CLAUDE.md 규칙 1) */}
       <LiveFeed />

@@ -68,56 +68,6 @@ export const SITE = {
     // 흰 스크림 농도(0~1). 0.7 아래로는 내리지 말 것
     overlay: 0.82,
   },
-
-  /** 메인 '이렇게 상담해요' 3칸. 지킬 수 있는 것만 적는다 */
-  promises: {
-    title: "태산넷은 이렇게 상담해요",
-    items: [
-      {
-        icon: "clipboard",
-        title: "네 곳 다 놓고 비교해 드려요",
-        desc: "KT, SK, LG, 스카이라이프 조건을 같은 기준으로 맞춰서 보여드려요. 여기저기 따로 전화하실 필요 없어요.",
-      },
-      {
-        icon: "check",
-        title: "필요 없는 건 안 붙여요",
-        desc: "안 쓰실 부가서비스나 한 단계 비싼 요금제를 끼워 넣지 않아요. 쓰시는 만큼만 맞춰 드려요.",
-      },
-      {
-        icon: "wallet",
-        title: "돈 얘기부터 먼저 드려요",
-        desc: "월 요금, 약정, 설치비, 사은품 조건까지 가입 전에 다 말씀드려요. 나중에 몰랐던 비용 나올 일 없게요.",
-      },
-    ],
-  },
-
-  // icon 값은 components/ui/Icon.tsx 의 IconName 과 일치해야 한다.
-  journey: {
-    title: "신청부터 설치까지, 이렇게 진행돼요",
-    sub: "복잡한 건 저희가 챙길게요. 고객님은 전화만 받아 주시면 돼요.",
-    steps: [
-      {
-        icon: "chat",
-        title: "상담 신청",
-        desc: "이름이랑 연락처만 남겨주세요. 보고 계신 통신사가 있으면 같이 골라 주시고요.",
-      },
-      {
-        icon: "phone",
-        title: "전화 상담",
-        desc: "상담사가 전화드려서 쓰시는 환경에 맞는 상품을 같이 골라 드려요.",
-      },
-      {
-        icon: "wrench",
-        title: "설치",
-        desc: "편하신 날짜를 정하시면 기사님이 방문해서 설치해 드려요.",
-      },
-      {
-        icon: "gift",
-        title: "사은품 지급",
-        desc: "설치가 확인되면 상담 때 안내드린 사은품을 보내드려요.",
-      },
-    ],
-  },
 } as const;
 
 /** 아직 확정되지 않은 자리표시자인가. `TODO` 로 시작하거나 비어 있으면 참 */
@@ -280,6 +230,11 @@ export interface PromoImage {
    *  운영자에게 가장 단순하고, 그 때 타입이 깨지면 손이 더 간다.)
    */
   carrier?: Carrier;
+  /**
+   * 바탕색을 페이지 배경(#fafaf8)에 맞춰 만든 이미지(`scripts/build-posters.mjs`).
+   * 참이면 둥근 모서리·호버 들림 없이 그려 페이지 면과 이어진다 — 카드가 아니라 섹션처럼 보인다.
+   */
+  seamless?: boolean;
   /** false 면 파일을 지우지 않고도 내릴 수 있다 */
   enabled: boolean;
 }
@@ -297,7 +252,46 @@ export interface PromoImage {
  *     href: "#consult", enabled: true,
  *   }
  */
-export const PROMO_IMAGES: PromoImage[] = [];
+export const PROMO_IMAGES: PromoImage[] = [
+  /*
+   * 상담폼 아래 포스터 2장 — 상담 방식 · 가입 절차 순서.
+   * (통신사 포스터는 상담폼 배경 레이어라 `SITE.hero.formBackdrop` 에 있다)
+   * 원본은 docs/ 의 상담 포스터·과정안내 포스터.
+   * 교체 시 `node scripts/build-posters.mjs` 로 다시 만들고 찍힌 크기를 width/height 에 반영.
+   * ⚠ 모바일 전용본이 아직 없다 — 들어오면 `mobile` 과 크기만 채우면 된다.
+   */
+  {
+    id: "main-consult",
+    slot: "afterHero",
+    desktop: "/poster/consult.jpg",
+    width: 2700,
+    height: 1504,
+    seamless: true,
+    alt:
+      "상담 방식 — 이렇게 상담해 드려요. " +
+      "혜택 최대로 지원해 드려요: 투명하게 공개하고 최대 지원금 계산해 드려요. " +
+      "필요 없는 건 안 붙여요: 안 쓰실 부가서비스는 끼워 넣지 않아요. " +
+      "돈 얘기부터 먼저 드려요: 월 요금·약정·설치비 가입 전에 다 말씀드려요.",
+    href: "#consult",
+    enabled: true,
+  },
+  {
+    id: "main-process",
+    slot: "afterHero",
+    desktop: "/poster/process.jpg",
+    width: 1640,
+    height: 914,
+    seamless: true,
+    alt:
+      "가입 절차 — 신청부터 설치까지, 이렇게 진행돼요. " +
+      "1단계 상담 신청: 이름·연락처만 남겨주세요. " +
+      "2단계 전화 상담: 전화로 쓰시는 환경에 맞게 골라 드려요. " +
+      "3단계 설치: 편하신 날짜에 기사님이 와서 설치해 드려요. " +
+      "4단계 사은품 지급: 설치가 확인되면 상담 때 안내한 사은품 보내드려요.",
+    href: "#consult",
+    enabled: true,
+  },
+];
 
 /* =====================================================================
    개인정보처리방침 · 이용약관 전문

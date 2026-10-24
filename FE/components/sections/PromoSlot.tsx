@@ -83,11 +83,13 @@ export default function PromoSlot({
   }
 
   return (
-    <section className="bg-white py-8 md:py-12">
-      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4">
+    <section className="py-6 md:py-10">
+      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 md:gap-6">
         {notice}
         {items.map((it) => {
           const hasMobile = Boolean(it.mobile);
+          // 바탕을 페이지색으로 맞춘 포스터는 테두리 없이 면에 녹인다
+          const frame = it.seamless ? "" : "rounded-panel";
           const img = (
             <>
               <Image
@@ -96,7 +98,7 @@ export default function PromoSlot({
                 width={it.width}
                 height={it.height}
                 sizes="(min-width: 1152px) 1120px, 100vw"
-                className={`h-auto w-full rounded-panel ${hasMobile ? "hidden md:block" : ""}`}
+                className={`h-auto w-full ${frame} ${hasMobile ? "hidden md:block" : ""}`}
               />
               {hasMobile && (
                 <Image
@@ -105,7 +107,7 @@ export default function PromoSlot({
                   width={it.mobileWidth ?? it.width}
                   height={it.mobileHeight ?? it.height}
                   sizes="100vw"
-                  className="h-auto w-full rounded-panel md:hidden"
+                  className={`h-auto w-full ${frame} md:hidden`}
                 />
               )}
             </>
@@ -115,7 +117,11 @@ export default function PromoSlot({
             <Link
               key={it.id}
               href={it.href}
-              className="block rounded-panel transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5"
+              className={
+                it.seamless
+                  ? "block"
+                  : "block rounded-panel transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5"
+              }
             >
               {img}
               {/*
