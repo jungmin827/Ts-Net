@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { reviewSubmitSchema } from "@/lib/validation";
-import { verifyTurnstile } from "@/lib/turnstile";
+import { verifyTurnstile, TURNSTILE_FAILURE } from "@/lib/turnstile";
+import { readJsonBody, noStore, issueMessage } from "@/lib/http";
 import { publicClient } from "@/lib/supabase/public";
 import { clientIp } from "@/lib/client-ip";
 
@@ -26,6 +27,10 @@ import { clientIp } from "@/lib/client-ip";
 const FLOOD_WINDOW_MIN = 10;
 
 export async function POST(req: NextRequest) {
+  return noStore(await respond(req));
+}
+
+async function respond(req: NextRequest) {
   try {
     return await handlePost(req);
   } catch (e) {
@@ -41,15 +46,10 @@ export async function POST(req: NextRequest) {
 }
 
 async function handlePost(req: NextRequest) {
-  let body: unknown;
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json(
-      { ok: false, error: "잘못된 요청입니다" },
-      { status: 400 },
-    );
-  }
+  // JSON 이 아니거나 상한(32KB)을 넘는 본문은 파싱 전에 거절한다
+  const read = await readJsonBody(req);
+  if (!read.ok) return read.response;
+  const body = read.body;
 
   // 1. honeypot — 채워져 있으면 성공처럼 응답하고 조용히 폐기
   if (
@@ -64,22 +64,19 @@ async function handlePost(req: NextRequest) {
   // 2. zod
   const parsed = reviewSubmitSchema.safeParse(body);
   if (!parsed.success) {
-    const message = parsed.error.issues[0]?.message ?? "입력값을 확인해 주세요";
-    return NextResponse.json({ ok: false, error: message }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, error: issueMessage(parsed.error.issues) },
+      { status: 400 },
+    );
   }
   const input = parsed.data;
 
   // 3. Turnstile
   const { ip } = clientIp(req.headers);
   const human = await verifyTurnstile(input.turnstileToken, ip ?? undefined);
-  if (!human) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: "보안 검증에 실패했습니다. 새로고침 후 다시 시도해 주세요",
-      },
-      { status: 400 },
-    );
+  if (human !== "ok") {
+    const { status, error } = TURNSTILE_FAILURE[human];
+    return NextResponse.json({ ok: false, error }, { status });
   }
 
   const supabase = publicClient();

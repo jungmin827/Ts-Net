@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
-import { PRODUCTS, type Carrier } from "@/lib/validation";
+import { PRODUCTS, checkNamePhone, type Carrier } from "@/lib/validation";
 import { CARRIER_MENU, CONSENT } from "@/lib/site-config";
 import Button from "@/components/ui/Button";
 import Icon from "@/components/ui/Icon";
@@ -34,6 +34,13 @@ export default function LeadForm({
   const [consentMarketing, setConsentMarketing] = useState(false);
   const [token, setToken] = useState("");
   const tsRef = useRef<TurnstileInstance | null>(null);
+  /**
+   * 위젯·스크립트가 실패했는지. 광고 차단기나 사내망이 challenges.cloudflare.com
+   * 을 막으면 토큰이 영영 안 온다 — 그때 "잠시 후 다시" 는 거짓말이다.
+   */
+  const [tsFailed, setTsFailed] = useState(false);
+  // 스크립트 주입 effect 가 이 객체를 의존성으로 본다 — 매 렌더 새 객체면 주입을 재시도한다
+  const tsScriptOptions = useMemo(() => ({ onError: () => setTsFailed(true) }), []);
   const consentRef = useRef<HTMLDivElement>(null);
 
   /**
@@ -70,13 +77,22 @@ export default function LeadForm({
 
     // 버튼을 비활성으로 두지 않는다 — 누르면 무엇이 빠졌는지 말해준다.
     // 랜딩의 주 CTA 가 회색으로 죽어 있으면 페이지 전체가 미완성으로 읽힌다.
+    const missing = checkNamePhone(name, phone);
+    if (missing) {
+      fail(missing);
+      return;
+    }
     if (!consentPrivacy) {
       fail("개인정보 수집·이용에 동의해 주세요");
       consentRef.current?.scrollIntoView({ block: "center" });
       return;
     }
     if (!token) {
-      fail("자동입력 방지 확인 중입니다. 잠시 후 다시 눌러주세요");
+      fail(
+        tsFailed
+          ? "보안 확인을 불러오지 못했습니다. 광고 차단 기능을 끄거나 새로고침한 뒤 다시 시도해 주세요"
+          : "자동입력 방지 확인 중입니다. 잠시 후 다시 눌러주세요",
+      );
       return;
     }
 
@@ -250,8 +266,17 @@ export default function LeadForm({
         <Turnstile
           ref={tsRef}
           siteKey={siteKey}
-          onSuccess={setToken}
+          onSuccess={(t) => {
+            setToken(t);
+            setTsFailed(false);
+          }}
           onExpire={() => setToken("")}
+          onError={() => {
+            setToken("");
+            setTsFailed(true);
+          }}
+          onUnsupported={() => setTsFailed(true)}
+          scriptOptions={tsScriptOptions}
           options={{ size: compactTs ? "compact" : "flexible", theme: "light" }}
         />
         </div>

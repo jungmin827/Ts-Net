@@ -1,5 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
+import type { User } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
+import { fetchWithTimeout, SUPABASE_TIMEOUT_MS } from "@/lib/supabase/fetch-timeout";
 
 // 어드민 1차 가드. 세션 쿠키 갱신(@supabase/ssr 필수 단계)도 여기서 함께 처리한다.
 // 공개 사이트는 matcher 밖이라 영향이 없다.
@@ -23,6 +25,8 @@ export async function middleware(request: NextRequest) {
   const response = NextResponse.next({ request });
 
   const supabase = createServerClient(url, anonKey, {
+    // 인증 서버가 응답을 안 주면 어드민 요청 전체가 매달린다 — 상한을 건다
+    global: { fetch: fetchWithTimeout(SUPABASE_TIMEOUT_MS) },
     cookies: {
       getAll() {
         return request.cookies.getAll();
@@ -36,9 +40,15 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // 시간 초과·네트워크 오류는 "로그인 안 됨" 으로 닫는다 — 열어두지 않는다
+  let user: User | null = null;
+  try {
+    ({
+      data: { user },
+    } = await supabase.auth.getUser());
+  } catch (e) {
+    console.error("[middleware] 세션 확인 실패:", e instanceof Error ? e.name : e);
+  }
 
   if (!user && !isLoginPath) {
     const redirectUrl = new URL(LOGIN_PATH, request.url);

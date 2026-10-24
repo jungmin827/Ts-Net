@@ -69,9 +69,13 @@ export async function POST(
   }
 
   // 2) 복호화 — 결과는 응답으로만 흐른다. 서버 로그에 남기지 않는다.
+  //    평문이 실린 응답이므로 어떤 캐시(브라우저·프록시)에도 남기지 않는다.
   try {
     const phone = decryptPhone(data.phone_enc as string);
-    return NextResponse.json({ ok: true, phone });
+    return NextResponse.json(
+      { ok: true, phone },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   } catch {
     return NextResponse.json(
       { ok: false, error: "복호화에 실패했습니다. ENCRYPTION_KEY를 확인해 주세요" },

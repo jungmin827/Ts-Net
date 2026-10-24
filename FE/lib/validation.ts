@@ -51,6 +51,21 @@ export const leadSchema = z.object({
 export type LeadInput = z.infer<typeof leadSchema>;
 
 /**
+ * 폼에서 제출 전에 이름·연락처를 먼저 본다. 통과면 null, 아니면 안내 문구.
+ * 서버(`leadSchema`)와 같은 규칙을 쓴다 — 동의 안내보다 먼저 나와야
+ * "빈 칸을 두고 동의만 하라는" 엇갈린 안내가 생기지 않는다.
+ */
+export function checkNamePhone(name: string, phone: string): string | null {
+  if (!name.trim()) return "이름을 입력해 주세요";
+  const n = leadSchema.shape.name.safeParse(name);
+  if (!n.success) return n.error.issues[0]?.message ?? "이름을 확인해 주세요";
+  if (!phone.trim()) return "연락처를 입력해 주세요";
+  const p = leadSchema.shape.phone.safeParse(phone);
+  if (!p.success) return p.error.issues[0]?.message ?? "연락처를 확인해 주세요";
+  return null;
+}
+
+/**
  * 후기 제출 스키마.
  *
  * ── 받지 않는 것 ────────────────────────────────────────────────

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
-import { PRODUCTS } from "@/lib/validation";
+import { PRODUCTS, checkNamePhone } from "@/lib/validation";
 import { CONSENT, SITE, hasTel } from "@/lib/site-config";
 import Icon from "@/components/ui/Icon";
 import Modal from "@/components/ui/Modal";
@@ -60,6 +60,10 @@ export default function StickyConsultBar() {
   // 같은 요청을 두 번 하는 꼴이라, 히어로를 지나친 뒤에 올라온다
   const [visible, setVisible] = useState(false);
   const tsRef = useRef<TurnstileInstance | null>(null);
+  /** 위젯·스크립트 실패 — 차단되면 토큰이 영영 안 오므로 "잠시 후" 대신 원인을 말한다 */
+  const [tsFailed, setTsFailed] = useState(false);
+  // 스크립트 주입 effect 가 이 객체를 의존성으로 본다 — 매 렌더 새 객체면 주입을 재시도한다
+  const tsScriptOptions = useMemo(() => ({ onError: () => setTsFailed(true) }), []);
 
   const { status, error, submit, fail } = useLeadSubmit();
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
@@ -94,12 +98,21 @@ export default function StickyConsultBar() {
     e.preventDefault();
     // 주 CTA 를 회색으로 비활성화해 두지 않는다 — 이유를 알 수 없는 죽은 버튼이
     // 전 페이지 하단에 상시 노출되는 셈이 된다
+    const missing = checkNamePhone(name, phone);
+    if (missing) {
+      fail(missing);
+      return;
+    }
     if (!privacy) {
       fail("개인정보 수집·이용에 동의해 주세요");
       return;
     }
     if (!token) {
-      fail("자동입력 방지 확인 중입니다. 잠시 후 다시 눌러주세요");
+      fail(
+        tsFailed
+          ? "보안 확인을 불러오지 못했습니다. 광고 차단 기능을 끄거나 새로고침한 뒤 다시 시도해 주세요"
+          : "자동입력 방지 확인 중입니다. 잠시 후 다시 눌러주세요",
+      );
       return;
     }
     const ok = await submit({
@@ -144,8 +157,17 @@ export default function StickyConsultBar() {
       <Turnstile
         ref={tsRef}
         siteKey={siteKey}
-        onSuccess={setToken}
+        onSuccess={(t) => {
+          setToken(t);
+          setTsFailed(false);
+        }}
         onExpire={() => setToken("")}
+        onError={() => {
+          setToken("");
+          setTsFailed(true);
+        }}
+        onUnsupported={() => setTsFailed(true)}
+        scriptOptions={tsScriptOptions}
         options={{ appearance: "interaction-only" }}
       />
     </div>

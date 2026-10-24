@@ -6,7 +6,8 @@ import {
   encryptPhone,
   maskPhone,
 } from "@/lib/crypto";
-import { verifyTurnstile } from "@/lib/turnstile";
+import { verifyTurnstile, TURNSTILE_FAILURE } from "@/lib/turnstile";
+import { readJsonBody, noStore, issueMessage } from "@/lib/http";
 import { publicClient } from "@/lib/supabase/public";
 import { clientIp as sharedClientIp } from "@/lib/client-ip";
 
@@ -43,8 +44,13 @@ function clientIp(req: NextRequest): string | null {
  * 페이지가 나갔다. 클라이언트는 `res.json()` 을 호출하므로 거기서 다시 터져,
  * 사용자는 아무 안내 없이 폼이 멈춘 것처럼 보였다.
  * 접수 실패는 조용히 끝나면 안 된다 — 이 사이트의 유일한 기능이기 때문이다.
+ * 성공·실패 모두 `no-store` 로 나간다 (`lib/http.ts`).
  */
 export async function POST(req: NextRequest) {
+  return noStore(await respond(req));
+}
+
+async function respond(req: NextRequest) {
   try {
     return await handlePost(req);
   } catch (e) {
@@ -61,12 +67,10 @@ export async function POST(req: NextRequest) {
 }
 
 async function handlePost(req: NextRequest) {
-  let body: unknown;
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ ok: false, error: "잘못된 요청입니다" }, { status: 400 });
-  }
+  // JSON 이 아니거나 상한(32KB)을 넘는 본문은 파싱 전에 거절한다
+  const read = await readJsonBody(req);
+  if (!read.ok) return read.response;
+  const body = read.body;
 
   // 1. honeypot — 채워져 있으면 성공처럼 응답하고 조용히 폐기
   if (
@@ -83,17 +87,18 @@ async function handlePost(req: NextRequest) {
   // 2. Turnstile 검증 ← 3. zod 검증 (토큰 형식을 스키마가 함께 검증)
   const parsed = leadSchema.safeParse(body);
   if (!parsed.success) {
-    const message = parsed.error.issues[0]?.message ?? "입력값을 확인해 주세요";
-    return NextResponse.json({ ok: false, error: message }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, error: issueMessage(parsed.error.issues) },
+      { status: 400 },
+    );
   }
   const input = parsed.data;
 
+  // 토큰이 무효(400)인지, 우리가 확인을 못 한 건지(503) 구분해 알린다
   const human = await verifyTurnstile(input.turnstileToken, ip ?? undefined);
-  if (!human) {
-    return NextResponse.json(
-      { ok: false, error: "보안 검증에 실패했습니다. 새로고침 후 다시 시도해 주세요" },
-      { status: 400 },
-    );
+  if (human !== "ok") {
+    const { status, error } = TURNSTILE_FAILURE[human];
+    return NextResponse.json({ ok: false, error }, { status });
   }
 
   /**

@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import { CARRIER_MENU } from "@/lib/site-config";
 import { fieldBase, selectBase } from "@/components/ui/Field";
 import Icon from "@/components/ui/Icon";
+
+/** 응답 대기 상한 — 서버 최악 경로(Turnstile 5초 + DB 왕복 8초 ×2)보다 길게 */
+const SUBMIT_TIMEOUT_MS = 25_000;
 
 /**
  * 후기 작성 폼.
@@ -34,6 +37,15 @@ export default function ReviewForm() {
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
   const tsRef = useRef<TurnstileInstance | null>(null);
+  /**
+   * 위젯·스크립트가 실패했는지. 광고 차단기나 사내망이 challenges.cloudflare.com
+   * 을 막으면 토큰이 영영 안 온다 — 그때 "잠시 기다려 주세요" 는 거짓말이다.
+   */
+  const [tsFailed, setTsFailed] = useState(false);
+  // 스크립트 주입 effect 가 이 객체를 의존성으로 본다 — 매 렌더 새 객체면 주입을 재시도한다
+  const tsScriptOptions = useMemo(() => ({ onError: () => setTsFailed(true) }), []);
+  /** 진행 중 잠금. `sending` 은 렌더 시점 값이라 다시 그려지기 전 두 번째 제출을 못 막는다 */
+  const inFlight = useRef(false);
 
   // 좁은 화면에서 Turnstile 을 compact(150×140)로 — `flexible` 은 최소 300px 이다
   const [compactTs, setCompactTs] = useState(false);
@@ -57,9 +69,22 @@ export default function ReviewForm() {
      */
     if (title.trim().length < 2) return setError("제목을 2자 이상 입력해 주세요");
     if (content.trim().length < 10) return setError("내용을 10자 이상 입력해 주세요");
-    if (!token) return setError("보안 검증이 완료될 때까지 잠시 기다려 주세요");
+    if (!token) {
+      return setError(
+        tsFailed
+          ? "보안 확인을 불러오지 못했습니다. 광고 차단 기능을 끄거나 새로고침한 뒤 다시 시도해 주세요"
+          : "보안 검증이 완료될 때까지 잠시 기다려 주세요",
+      );
+    }
+    if (inFlight.current) return;
+    if (navigator.onLine === false) {
+      return setError("인터넷 연결이 끊겨 있습니다. 연결을 확인한 뒤 다시 눌러 주세요");
+    }
 
+    inFlight.current = true;
     setSending(true);
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), SUBMIT_TIMEOUT_MS);
     try {
       const res = await fetch("/api/reviews", {
         method: "POST",
@@ -71,23 +96,41 @@ export default function ReviewForm() {
           ...(carrier ? { carrier } : {}),
           turnstileToken: token,
         }),
+        signal: ctrl.signal,
+        cache: "no-store",
       });
       const json: { ok?: boolean; error?: string } = await res
         .json()
         .catch(() => ({}));
       if (!res.ok || !json.ok) {
-        setError(json.error ?? "등록에 실패했습니다. 잠시 후 다시 시도해 주세요");
+        // JSON 이 없으면(프록시 HTML 오류 등) 상태코드로만 말한다
+        setError(
+          json.error ??
+            (res.status === 429
+              ? "요청이 많습니다. 몇 분 뒤 다시 시도해 주세요"
+              : res.status >= 500
+                ? "서버가 잠시 응답하지 않습니다. 잠시 후 다시 시도해 주세요"
+                : "등록에 실패했습니다. 잠시 후 다시 시도해 주세요"),
+        );
         // Turnstile 토큰은 1회용 — 실패하면 재발급받아야 다시 보낼 수 있다
         setToken("");
         tsRef.current?.reset();
         return;
       }
       setDone(true);
-    } catch {
-      setError("네트워크 오류입니다. 연결을 확인하고 다시 시도해 주세요");
+    } catch (e) {
+      // 시간초과는 "모름" 이다 — 서버는 이미 저장했을 수 있다. 후기에는 당일
+      // 중복 차단이 없으므로 다시 누르면 같은 글이 두 번 접수될 수 있다고 말한다
+      setError(
+        e instanceof DOMException && e.name === "AbortError"
+          ? "응답이 늦어 등록 여부를 확인하지 못했습니다. 이미 접수됐을 수 있으니 잠시 뒤 다시 시도해 주세요"
+          : "네트워크 오류입니다. 연결을 확인하고 다시 시도해 주세요",
+      );
       setToken("");
       tsRef.current?.reset();
     } finally {
+      clearTimeout(timer);
+      inFlight.current = false;
       setSending(false);
     }
   }
@@ -238,8 +281,17 @@ export default function ReviewForm() {
           <Turnstile
             ref={tsRef}
             siteKey={siteKey}
-            onSuccess={setToken}
+            onSuccess={(t) => {
+              setToken(t);
+              setTsFailed(false);
+            }}
             onExpire={() => setToken("")}
+            onError={() => {
+              setToken("");
+              setTsFailed(true);
+            }}
+            onUnsupported={() => setTsFailed(true)}
+            scriptOptions={tsScriptOptions}
             options={{ size: compactTs ? "compact" : "flexible", theme: "light" }}
           />
         </div>

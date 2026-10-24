@@ -1,4 +1,5 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { fetchWithTimeout, SUPABASE_TIMEOUT_MS } from "./fetch-timeout";
 
 /**
  * service_role 클라이언트 — RLS를 우회한다.
@@ -11,5 +12,6 @@ export function createAdminClient() {
 
   return createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, key, {
     auth: { persistSession: false, autoRefreshToken: false },
+    global: { fetch: fetchWithTimeout(SUPABASE_TIMEOUT_MS) },
   });
 }
