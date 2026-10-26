@@ -100,9 +100,20 @@ export default function Footer() {
           <p className="mt-5 border-t border-line pt-5 text-xs leading-relaxed text-muted">
             본 사이트는 통신사 공식 대리점/판매점의 가입 상담 접수 페이지이며,
             계약 체결은 각 통신사 절차에 따릅니다.
-            {/* 대표번호는 이 사업자 고지 줄에만 글자로 둔다(10-25 운영자 결정) —
-                누르는 전화 버튼은 사이트 어디에도 두지 않는다 */}
-            {hasTel() ? ` 대표번호 ${SITE.tel}` : ""}
+            {/* 대표번호는 이 사업자 고지 줄에만 둔다(10-25 운영자 결정). 버튼은 만들지 않는다.
+                번호 자체는 tel: 링크다 — 글자로만 두면 아이폰은 자동으로 링크를 걸어
+                통화되지만 안드로이드는 눌러도 반응이 없었다(10-26). 모양은 글자 그대로 */}
+            {hasTel() && (
+              <>
+                {" "}대표번호{" "}
+                <a
+                  href={`tel:${SITE.tel.replace(/[^\d+]/g, "")}`}
+                  className="tabular whitespace-nowrap text-inherit underline-offset-2 hover:underline"
+                >
+                  {SITE.tel}
+                </a>
+              </>
+            )}
           </p>
         </div>
       </div>
