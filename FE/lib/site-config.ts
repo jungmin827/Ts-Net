@@ -3,6 +3,9 @@ import type { Carrier } from "@/lib/validation";
 // 과장 광고 문구(보상률·최대 지원금 등)는 코드에 하드코딩하지 않고 여기서만 관리한다.
 // TODO 항목은 사업자 정보 확정 후 실제 값으로 교체할 것 (런칭 전 체크리스트).
 
+/** 업체 인스타그램 — 헤더 버튼과 JSON-LD `sameAs` 가 같이 쓴다 */
+const INSTAGRAM_URL = "https://www.instagram.com/ts__net/";
+
 export const SITE = {
   name: "TS-Net",
   /**
@@ -14,6 +17,13 @@ export const SITE = {
    */
   searchName: "태산-Net",
   alternateNames: ["TS-Net", "태산넷", "태산 Net"],
+  /**
+   * 업체 공식 채널 (JSON-LD `sameAs`). 네이버는 이 목록으로 검색결과에 "연관 채널" 을
+   * 묶어 보여준다. **운영자가 직접 운영하는 계정만** 넣는다 — 남의 계정을 넣으면
+   * 그 계정이 우리 업체로 묶인다. 채널 프로필에도 홈페이지 주소를 걸어 두어야 양쪽이 맞물린다.
+   */
+  sameAs: [INSTAGRAM_URL],
+  instagram: INSTAGRAM_URL,
   // 브랜드 워드마크. 원본(docs/TS-Net 로고.jpg)에 세 가지 처리를 했다 —
   // (1) 여백 트림(원본은 78%가 여백), (2) 흰 배경 투명화,
   // (3) 잉크를 팔레트 색으로 치환(#69a72c→--brand, #05492a→--brand-deep).

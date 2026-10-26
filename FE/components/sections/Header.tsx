@@ -29,6 +29,25 @@ const CARRIER_NAV = CARRIER_MENU.map((c) => ({
   label: c.label,
 }));
 
+/**
+ * 인스타그램 바로가기. 새 창으로 연다 — 상담 중이던 페이지를 잃지 않게.
+ * 아이콘만 있는 버튼이라 이름은 `aria-label` 이 맡는다.
+ */
+function InstagramLink({ className }: { className: string }) {
+  return (
+    <a
+      href={SITE.instagram}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="인스타그램 (새 창)"
+      title="인스타그램"
+      className={`flex shrink-0 items-center justify-center rounded-xl border border-line-strong text-foreground transition-colors duration-200 hover:border-brand/40 hover:bg-brand-soft hover:text-brand-dark ${className}`}
+    >
+      <Icon name="instagram" size={22} />
+    </a>
+  );
+}
+
 /** 브랜드 워드마크. 크기는 쓰는 자리에서 높이만 지정하고 폭은 비율대로 따라온다 */
 function Wordmark({ className }: { className: string }) {
   return (
@@ -53,7 +72,7 @@ function Wordmark({ className }: { className: string }) {
  * 정작 스크롤하면 1단이 흘러가 로고가 사라졌고, 2단 항목은 `flex-1` 균등 분배라
  * 1440px 에서 항목 간격이 120px 씩 벌어져 메뉴가 한 묶음으로 읽히지 않았다.
  *
- * 지금은 한 줄이다: 로고 · 통신사 4사 · (구분선) 게시판 2종 · 대표번호 · 신청 CTA.
+ * 지금은 한 줄이다: 로고 · 통신사 4사 · (구분선) 게시판 2종 · 인스타그램 · 신청 CTA.
  * 항목은 제 글자폭만큼만 차지하고, 통신사와 게시판 사이의 세로선이 두 묶음을 구분한다.
  */
 export default function Header() {
@@ -142,6 +161,7 @@ export default function Header() {
           <div className="ml-auto flex shrink-0 items-center gap-2 pl-3 xl:gap-3 xl:pl-4">
             {/* 메뉴바에는 대표번호를 싣지 않는다(10-25 운영자 결정 — 푸터·하단 띠에만 둔다).
                 스크롤 위치와 무관하게 접수로 가는 길이 헤더에 항상 있어야 한다. */}
+            <InstagramLink className="size-12" />
             <a
               href="#consult"
               className="cta-fill flex items-center gap-2 rounded-xl px-6 py-3 text-[1.0625rem] font-black whitespace-nowrap shadow-cta transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift active:translate-y-0"
@@ -163,6 +183,7 @@ export default function Header() {
           </Link>
 
           <div className="flex items-center gap-2">
+            <InstagramLink className="size-10" />
             <button
               type="button"
               onClick={() => setOpen(true)}

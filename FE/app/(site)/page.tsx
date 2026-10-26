@@ -40,6 +40,7 @@ const STRUCTURED_DATA = ORIGIN
           alternateName: SITE.alternateNames,
           url: `${ORIGIN}/`,
           logo: `${ORIGIN}${SITE.logo.src}`,
+          sameAs: SITE.sameAs,
         },
       ],
     }
