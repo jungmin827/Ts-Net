@@ -21,26 +21,14 @@ const HOME_DESCRIPTION =
   "KT·SK브로드밴드·LG유플러스·KT스카이라이프 요금을 3년 약정·휴대폰 결합 기준으로 나란히 비교해 드립니다.";
 
 /**
- * 검색엔진 소유 확인 태그. 값은 각 도구가 발급하는 문자열이고 환경변수로만 받는다.
+ * 검색엔진 소유 확인 태그. 값은 각 도구가 발급하는 공개 문자열이다.
  * 네이버 서치어드바이저는 DNS 인증이 없어 메타 태그가 필요하다. 구글은 DNS TXT 로도
  * 되지만 같은 자리를 둔다. 비어 있으면 태그를 내보내지 않는다.
  *
- * 값은 `SITE_VERIFICATION`(site-config, 공개값) + 환경변수(쉼표로 여러 개)를 합친다.
- * 네이버는 계정마다 다른 값을 발급한다 — 한 계정 값을 지우면 그 계정의 소유확인이 풀린다.
+ * 값은 `SITE_VERIFICATION`(site-config, 공개값) 한 곳에서만 온다.
  */
-const verifyList = (env: string | undefined, fixed: readonly string[]) => [
-  ...new Set(
-    [...(env ?? "").split(","), ...fixed].map((s) => s.trim()).filter(Boolean),
-  ),
-];
-const GOOGLE_VERIFY = verifyList(
-  process.env.GOOGLE_SITE_VERIFICATION,
-  SITE_VERIFICATION.google,
-);
-const NAVER_VERIFY = verifyList(
-  process.env.NAVER_SITE_VERIFICATION,
-  SITE_VERIFICATION.naver,
-);
+const GOOGLE_VERIFY = SITE_VERIFICATION.google;
+const NAVER_VERIFY = SITE_VERIFICATION.naver;
 
 export const metadata: Metadata = {
   /*
