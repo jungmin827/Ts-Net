@@ -92,6 +92,20 @@ export const SITE = {
   },
 } as const;
 
+/**
+ * 검색엔진 소유확인 값 — **공개 문자열**이라 코드에 둔다(페이지 HTML 에 그대로 나간다).
+ * 네이버는 계정마다 다른 값을 발급한다. 지우면 그 계정의 소유확인이 풀리므로
+ * 새 계정 값은 **덧붙이기만** 한다. 환경변수(`*_SITE_VERIFICATION`)에 있는 값과 합쳐진다.
+ * (Vercel 은 env 값 수정에 이메일 인증을 요구해, 공개값은 여기서 관리하기로 했다 — 2026-10-26)
+ */
+export const SITE_VERIFICATION = {
+  google: [] as string[],
+  naver: [
+    "074b06792b6cb1c5d9dfd793e08d80289b5f682e", // 10-25 첫 등록 (env 에도 있음)
+    "d77b7f691f61db4e9a1904349e24f26fb98cb473", // 10-26 추가 계정
+  ],
+};
+
 /** 아직 확정되지 않은 자리표시자인가. `TODO` 로 시작하거나 비어 있으면 참 */
 export function isPlaceholder(v: string | null | undefined): boolean {
   return !v || v.trim() === "" || v.trim().startsWith("TODO");
