@@ -2,6 +2,7 @@ import { formatDate } from "@/lib/board";
 import CarrierBadge from "@/components/ui/CarrierBadge";
 import Stars from "@/components/ui/Stars";
 import ReviewRowActions from "./ReviewRowActions";
+import ReviewPhotoEditor from "./ReviewPhotoEditor";
 import type { ReviewModRowData } from "./page";
 
 /**
@@ -55,6 +56,17 @@ export default function ReviewModRow({
         {r.content}
       </p>
 
+      {r.image_paths && (
+        // 장수가 바뀌면(사진 빼기) 다시 마운트해 입력칸을 새 배열에 맞춘다 —
+        // 그대로 두면 칸 순서가 밀려 1번 사진의 설명이 2번 사진에 붙는다
+        <ReviewPhotoEditor
+          key={r.image_paths.join("|")}
+          id={r.id}
+          paths={r.image_paths}
+          alts={r.image_alts}
+        />
+      )}
+
       {r.admin_reply && (
         <div // 경계 토큰은 `AdminReply` 와 같다 — `--brand-light` 는 흰 면 위 1.13:1
             className="mt-4 rounded-lg border-2 border-brand-dark bg-brand-soft px-4 py-3">
@@ -78,6 +90,7 @@ export default function ReviewModRow({
           published={r.is_published}
           reply={r.admin_reply ?? null}
           replyAvailable={replyAvailable}
+          needsAlts={!!r.image_paths && !r.image_alts}
         />
       </div>
     </li>

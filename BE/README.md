@@ -25,7 +25,7 @@
 - [x] 어드민 계정 생성 + `admin_users` INSERT (OWNER/active) — 로그인 실측 완료
   - [ ] **2FA(TOTP) 등록** — 지금은 `ADMIN_SKIP_2FA=1` 개발 분기로 우회 중.
         배포 전 등록 + 변수 제거 (어드민은 단일 계정 1개 + 2FA 가 확정사항)
-- [ ] `review-images` Storage 버킷
+- [x] `review-images` Storage 버킷 — 010 마이그레이션이 만든다 (2026-10-26 적용)
 - [x] anon / service_role 키를 `FE/.env.local`에 기입
       (URL·ENCRYPTION_KEY·PHONE_PEPPER·Turnstile 테스트 키는 세팅됨)
   - [ ] **service_role 키 교체** — 채팅에 평문으로 오갔다. 레거시 JWT 라 JWT
@@ -77,7 +77,8 @@ BE/
    insert into admin_users (id, email, role)
    values ('<auth.users의 uuid>', '<이메일>', 'OWNER');
    ```
-7. **Storage 버킷** — 후기 이미지용 `review-images` 버킷 생성 (public read)
+7. **Storage 버킷** — 후기 사진용 `review-images` 는 `010_review_images.sql` 이 만든다
+   (public read · 1.2MB · WebP/JPEG). anon 에게 storage 정책을 **주지 않는다** — 010 주석 참고
 8. **키 전달** — Project URL / anon key / service_role key를 `FE/.env.local`에 기입
    (`FE/.env.example` 참고. service_role key는 절대 클라이언트 노출 금지)
 
