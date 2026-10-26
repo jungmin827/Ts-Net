@@ -25,6 +25,8 @@
 8. [x] Turnstile 실키 · 9. [x] 운영 TOTP(verified) · 10. [x] 서치콘솔·네이버·메일 라우팅
 
 ## 작업 보고
+- 10-26 상호 검색 대응: 모든 페이지 제목 `태산-Net` 하나(사용자 결정) · 설명·OG 에 `태산-Net(TS-Net)`, 홈 JSON-LD(WebSite·Organization, alternateName TS-Net·태산넷·태산 Net), OG 이미지 = 메인 포스터. 화면 표기는 그대로 TS-Net (`SITE.searchName`)
+  - 남은 것(운영자): 구글 URL 검사 → 색인 요청 · 네이버 웹 페이지 수집 요청 · 네이버 스마트플레이스 · Google 비즈니스 프로필
 - 10-25 네이버 사이트맵 제출(운영자, 확장 정책상 수동) · Search Console 에 대표 계정 소유자 추가
 - 10-25 Google 사이트맵 "성공" 확인 · `ENCRYPTION_KEY`·`PHONE_PEPPER` 오프라인 백업 완료(운영자 보관)
 - 10-25 운영 E2E 실측: 접수 → 목록 → 상세(VIEW) → 번호 보기(DECRYPT). 서버 화면 3곳 접속기록 IP 누락 수정(9ad708b)

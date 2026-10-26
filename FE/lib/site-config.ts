@@ -5,6 +5,15 @@ import type { Carrier } from "@/lib/validation";
 
 export const SITE = {
   name: "TS-Net",
+  /**
+   * 검색용 이름 (2026-10-26 사용자 결정). 고객은 법정 상호 `태산-Net` 으로 찾는데,
+   * 제목·설명·구조화 데이터에 그 글자가 없어 수집돼도 그 검색어와 이어지지 않았다.
+   * 화면의 로고·본문 표기는 그대로 `name`(TS-Net) — 이 값은 메타·JSON-LD 에만 쓴다.
+   * `alternateNames` 는 같은 사업자를 가리키는 표기 변형이다. 상관없는 키워드를 넣지 말 것
+   * (구글 사이트 이름 지침 위반이 되고, 이름이 아예 무시된다).
+   */
+  searchName: "태산-Net",
+  alternateNames: ["TS-Net", "태산넷", "태산 Net"],
   // 브랜드 워드마크. 원본(docs/TS-Net 로고.jpg)에 세 가지 처리를 했다 —
   // (1) 여백 트림(원본은 78%가 여백), (2) 흰 배경 투명화,
   // (3) 잉크를 팔레트 색으로 치환(#69a72c→--brand, #05492a→--brand-deep).

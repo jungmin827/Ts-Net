@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Noto_Sans_KR } from "next/font/google";
 import "./globals.css";
 import { siteUrl } from "@/lib/site-url";
+import { SITE } from "@/lib/site-config";
 
 // 본문·헤드라인 — 레퍼런스 사이트도 같은 Noto Sans KR 을 쓴다.
 // 넓은 굵기 폭(400~900)이 있어 위계를 만들기 좋다.
@@ -12,6 +13,12 @@ const notoSansKr = Noto_Sans_KR({
 });
 
 const ORIGIN = siteUrl();
+
+/** 모든 페이지의 제목 (2026-10-26 사용자 결정 — 페이지별 제목 없이 상호 하나) */
+const HOME_TITLE = SITE.searchName;
+const HOME_DESCRIPTION =
+  `${SITE.searchName}(${SITE.name}) 인터넷·IPTV 가입 상담센터. ` +
+  "KT·SK브로드밴드·LG유플러스·KT스카이라이프 요금을 3년 약정·휴대폰 결합 기준으로 나란히 비교해 드립니다.";
 
 /**
  * 검색엔진 소유 확인 태그. 값은 각 도구가 발급하는 문자열이고 환경변수로만 받는다.
@@ -39,33 +46,47 @@ export const metadata: Metadata = {
    *   화면에는 아무 증상이 없고 검색결과가 사라질 때까지 몇 주가 걸린다.
    *   페이지마다 적는다 — `verify-goals` 의 G0 검사가 둘을 같이 본다.
    */
-  // TODO: 상호·대표 카피 확정 후 교체
+  /*
+   * 제목은 모든 페이지가 `태산-Net` 하나다 (2026-10-26 사용자 결정).
+   * 템플릿에 `%s` 가 없으므로 페이지가 `title` 을 적어도 이 값으로 나간다 —
+   * 페이지별 `title` 은 지우지 않았다. 되돌릴 때는 템플릿에 `%s` 만 되살리면 된다.
+   */
   title: {
-    default: "TS-Net — 인터넷·TV 가입 상담센터",
-    template: "%s | TS-Net",
+    default: HOME_TITLE,
+    template: HOME_TITLE,
   },
+  applicationName: SITE.searchName,
   /**
    * 메타 설명. 한국어는 검색결과에서 대략 **80자**까지 보이고 그 뒤는 잘린다.
-   * 기존 29자는 절반도 못 쓰고 있었다. 그렇다고 넘기면 뒷부분이 안 보이므로
    * 80자 언저리를 겨냥한다. 내용은 **확인된 사실만** — 근거 없는 지원금·보상률은
-   * 넣지 않는다 (CLAUDE.md 규칙 6).
+   * 넣지 않는다 (CLAUDE.md 규칙 6). 상호를 맨 앞에 두는 건 네이버가 설명문도
+   * 검색어 일치에 쓰기 때문이다.
    */
-  description:
-    "KT·SK브로드밴드·LG유플러스·KT스카이라이프 인터넷·IPTV 가입 상담. " +
-    "3년 약정·휴대폰 1회선 결합 기준으로 4사 요금을 나란히 비교해 드립니다.",
+  description: HOME_DESCRIPTION,
   /*
    * OG 는 `title`/`description` 을 자동으로 물려받지 않는다 — 비워 두면
-   * 공유 카드에 URL 만 뜬다. 이미지는 **아직 넣지 않는다**: 홍보 이미지는
-   * 운영자가 제작해 제공할 예정이고(CLAUDE.md), 임시 이미지를 넣으면
-   * 교체되기 전까지 그게 사이트의 첫인상이 된다.
+   * 공유 카드에 URL 만 뜬다. 이미지는 운영자 제작 메인 포스터(10-25)를 쓴다.
+   * 상대 경로라 `metadataBase` 가 있을 때만 넣는다 — 없으면 Next 가
+   * localhost 로 절대화해 아무도 열 수 없는 이미지 주소가 나간다.
    */
   openGraph: {
     type: "website",
     locale: "ko_KR",
-    siteName: "TS-Net",
-    title: "TS-Net — 인터넷·TV 가입 상담센터",
-    description:
-      "KT·SK브로드밴드·LG유플러스·KT스카이라이프 인터넷·IPTV 가입 상담.",
+    siteName: SITE.searchName,
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
+    ...(ORIGIN
+      ? {
+          images: [
+            {
+              url: SITE.hero.poster.src,
+              width: SITE.hero.poster.width,
+              height: SITE.hero.poster.height,
+              alt: SITE.hero.poster.alt,
+            },
+          ],
+        }
+      : {}),
   },
   /*
    * 정본 주소를 모르면 **메타 로봇으로도 막는다.** robots.txt 는 "수집하지
