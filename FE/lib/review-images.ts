@@ -58,6 +58,24 @@ export function reviewThumbUrl(path: string): string {
 }
 
 /**
+ * 사진 한 장의 대체 텍스트. 운영자가 적은 설명이 있으면 그것, 없으면 자동 문구.
+ *
+ * 설명은 **선택**이다(011, 2026-10-26 사용자 결정 — 운영자는 승인만 누른다).
+ * 비었다고 `alt=""` 로 두지 않는다. 그건 "정보 없는 장식" 이라는 선언이고,
+ * 후기 사진에선 거의 항상 거짓이다(CLAUDE.md). 자동 문구는 사진 내용을 말하지
+ * 못하지만 "작성자가 올린 사진이 여기 있다" 는 사실은 정확히 전한다.
+ */
+export function reviewImageAlt(
+  alts: readonly string[] | null | undefined,
+  index: number,
+  count: number,
+): string {
+  const written = alts?.[index]?.trim();
+  if (written) return written;
+  return count > 1 ? `작성자가 올린 사진 ${index + 1}/${count}` : "작성자가 올린 사진";
+}
+
+/**
  * 파일 앞 몇 바이트로 형식을 판정한다. **브라우저가 붙인 Content-Type 은
  * 믿지 않는다** — 요청을 직접 만들면 아무 값이나 붙일 수 있다.
  * 캔버스가 만드는 두 형식(WebP, JPEG)만 받는다.

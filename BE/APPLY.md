@@ -52,6 +52,7 @@ cat supabase/.temp/linked-project.json   # ref 가 yrqfnjiynyenxrjxruot 인지 �
 | 007 | `007_board_reply_and_images.sql` | 게시판 — 후기 **운영자 답글** 1건, 정보공유 **본문 이미지** 배열 |
 | 008 | `008_review_public_submit.sql` | 후기 **방문자 제출** 경로 (anon INSERT, `is_published=false` 강제) + 길이 제약 + 폭증 상한 함수 |
 | 010 | `010_review_images.sql` | 후기 **사진 3장** — `review-images` 버킷 + `image_paths`/`image_alts` + 게시 전 설명 필수 + anon 정책에서 `thumbnail_url` 차단. **2026-10-26 `supabase db query --linked -f` 로 적용** |
+| 011 | `011_review_alts_optional.sql` | 010 의 "게시 전 사진 설명 필수" 제약 제거 — 운영자는 승인만 누른다. **2026-10-26 적용** |
 
 **003 이 004 보다 먼저여야 하는 이유**: 004 는 미개통 접수의 파기 예정일을 D+14 로
 당긴다. 삭제 구멍(003 이 막는 것)이 열린 상태에서 파기 대상만 넓어지면 피해가 커진다.

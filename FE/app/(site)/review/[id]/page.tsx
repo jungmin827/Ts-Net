@@ -8,7 +8,7 @@ import Stars from "@/components/ui/Stars";
 import { excerpt, formatDate } from "@/lib/board";
 import CarrierBadge from "@/components/ui/CarrierBadge";
 import { getNeighbors, getPublishedIds, getReview } from "@/lib/board-data";
-import { reviewImageUrl } from "@/lib/review-images";
+import { reviewImageAlt, reviewImageUrl } from "@/lib/review-images";
 
 export const revalidate = 300;
 
@@ -89,14 +89,12 @@ export default async function ReviewDetailPage({ params }: Params) {
           </>
         }
         /*
-          방문자가 올린 사진(최대 3장, 010). 대체 텍스트는 운영자가 승인할 때
-          장마다 쓰고, 010 이 "사진 있는 글은 설명 없이 게시 불가" 로 묶어 둔다 —
-          그래서 게시된 글에서 `image_alts` 가 빠질 일은 없다. `?? ""` 는 010 이
-          뚫렸을 때 페이지가 죽지 않게 하는 마지막 줄이다.
+          방문자가 올린 사진(최대 3장, 010). 운영자는 승인만 누르므로(011)
+          설명이 없는 게 보통이다 — 그때는 자동 문구가 대체 텍스트가 된다.
         */
-        images={(review.image_paths ?? []).map((p, i) => ({
+        images={(review.image_paths ?? []).map((p, i, all) => ({
           url: reviewImageUrl(p),
-          alt: review.image_alts?.[i] ?? "",
+          alt: reviewImageAlt(review.image_alts, i, all.length),
         }))}
         content={review.content}
         footer={

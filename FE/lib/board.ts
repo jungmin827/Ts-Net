@@ -21,7 +21,7 @@ export interface ReviewRow {
    * 001 의 `thumbnail_url` 은 더 이상 읽지 않는다 — 010 이 anon 의 그 열을 닫았다.
    */
   image_paths?: string[] | null;
-  /** `image_paths` 와 1:1 대체 텍스트. 운영자가 승인할 때 쓰고, 게시된 글엔 반드시 있다(010) */
+  /** `image_paths` 와 1:1 대체 텍스트(선택, 011). 없으면 `reviewImageAlt` 가 자동 문구를 쓴다 */
   image_alts?: string[] | null;
   /**
    * 운영자 공개 답글 1건. 스레드형 댓글이 아니다 — 레퍼런스 두 곳이 공통으로

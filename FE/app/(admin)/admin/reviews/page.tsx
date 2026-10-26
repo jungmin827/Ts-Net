@@ -92,9 +92,8 @@ export default async function AdminReviewsPage() {
           않습니다.
         </p>
         <p className="mt-2 text-sm leading-relaxed text-muted">
-          사진이 있는 글은 <strong>장마다 설명을 적어야</strong> 게시할 수 있습니다
-          (화면을 못 보는 분께 읽어 주는 글입니다). 이름·주소·번호가 보이는 사진은{" "}
-          <strong>사진 빼기</strong>로 내리고 게시하세요.
+          사진이 있는 글도 <strong>게시 승인만 누르면</strong> 됩니다. 이름·주소·번호가
+          보이는 사진이 있으면 <strong>사진 빼기</strong>로 그 장만 내리고 승인하세요.
         </p>
         {!replyAvailable && (
           <p className="mt-3 rounded-lg border border-line bg-surface-muted px-3.5 py-3 text-sm leading-relaxed text-muted">

@@ -15,15 +15,12 @@ export default function ReviewRowActions({
   published,
   reply,
   replyAvailable,
-  needsAlts = false,
 }: {
   id: number;
   published: boolean;
   reply: string | null;
   /** 007 미적용이면 답글 열이 없다 — 입력창을 띄워 두면 저장이 503 으로 실패한다 */
   replyAvailable: boolean;
-  /** 사진은 있는데 설명이 아직 저장되지 않았다 — 게시를 누르면 무엇이 빠졌는지 말한다 */
-  needsAlts?: boolean;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -56,14 +53,7 @@ export default function ReviewRowActions({
         <button
           type="button"
           disabled={busy}
-          onClick={() => {
-            // 버튼을 죽이지 않고, 누르면 빠진 것을 말한다 (CLAUDE.md 주 CTA 규칙과 같은 판단)
-            if (!published && needsAlts) {
-              setError("사진 설명을 먼저 적고 ‘설명 저장’을 눌러 주세요");
-              return;
-            }
-            void patch({ is_published: !published });
-          }}
+          onClick={() => patch({ is_published: !published })}
           className={`min-h-11 rounded-lg border-2 px-4 text-sm font-bold transition-colors duration-200 ${
             published
               ? "border-line bg-white text-muted hover:border-brand hover:text-brand-dark"

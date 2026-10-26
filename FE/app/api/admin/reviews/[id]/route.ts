@@ -23,7 +23,8 @@ import { REVIEW_IMAGE_BUCKET, isReviewImagePath, thumbPath } from "@/lib/review-
  * 쓰느라 폴백이 필요했는데, `reviews` 에는 그 트리거가 없다.)
  *
  * ── 사진 (010) ──────────────────────────────────────────────────
- *   · `image_alts` — 장마다 대체 텍스트. 사진이 있는 글은 이게 있어야 게시된다
+ *   · `image_alts` — 장마다 대체 텍스트(선택, 011). 없어도 승인만으로 게시된다 —
+ *     화면이 자동 문구를 쓴다(`reviewImageAlt`)
  *   · `remove_image` — 한 장 빼기. 계약서·고지서처럼 개인정보가 찍힌 사진을
  *     글은 살리고 사진만 내리는 길이다. 파일 삭제만 service_role 로 한다 —
  *     storage 에는 authenticated 정책도 주지 않았다(010: 업로드·삭제는 서버만).
@@ -40,13 +41,10 @@ const patchSchema = z
      */
     admin_reply: z.string().max(2000).optional(),
     /**
-     * 사진 설명. 빈 칸을 받지 않는다 — 후기 사진은 계약서·설치 모습처럼
-     * 그 자체가 내용이라 "장식" 일 일이 거의 없다. 비워 두면 게시 전에 막힌다.
+     * 사진 설명(선택). 빈 칸은 "그 장은 자동 문구" 라는 뜻이다(011).
+     * 전부 비우면 `null` 로 저장한다 — 빈 문자열 배열과 null 이 같은 뜻이 되지 않게.
      */
-    image_alts: z
-      .array(z.string().trim().min(1, "사진 설명을 모두 적어 주세요").max(200))
-      .max(3)
-      .optional(),
+    image_alts: z.array(z.string().trim().max(200)).max(3).optional(),
     remove_image: z.string().refine(isReviewImagePath, "잘못된 요청입니다").optional(),
   })
   .refine((v) => Object.keys(v).length > 0, {
@@ -176,15 +174,8 @@ export async function PATCH(
         { status: 409 },
       );
     }
-    alts = parsed.data.image_alts;
+    alts = parsed.data.image_alts.some((a) => a !== "") ? parsed.data.image_alts : null;
     patch.image_alts = alts;
-  }
-  const willPublish = parsed.data.is_published ?? before.is_published;
-  if (willPublish && paths && !alts) {
-    return NextResponse.json(
-      { ok: false, error: "사진 설명을 먼저 적고 저장해 주세요" },
-      { status: 400 },
-    );
   }
   if (parsed.data.admin_reply !== undefined) {
     const body = parsed.data.admin_reply.trim();

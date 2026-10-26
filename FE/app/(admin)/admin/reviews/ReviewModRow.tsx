@@ -90,7 +90,6 @@ export default function ReviewModRow({
           published={r.is_published}
           reply={r.admin_reply ?? null}
           replyAvailable={replyAvailable}
-          needsAlts={!!r.image_paths && !r.image_alts}
         />
       </div>
     </li>
