@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ANONYMOUS, maskName } from "@/lib/mask-name";
 
 export const CARRIERS = ["KT", "SK", "LG", "SKYLIFE"] as const;
 export type Carrier = (typeof CARRIERS)[number];
@@ -68,19 +69,22 @@ export function checkNamePhone(name: string, phone: string): string | null {
 /**
  * 후기 제출 스키마.
  *
- * ── 받지 않는 것 ────────────────────────────────────────────────
- * **작성자 이름을 받지 않는다.** 레퍼런스(인터넷다모아)도 작성자 입력란이
- * 없다(전부 `익명`). 개인정보를 한 종류라도 덜 받는 쪽이 항상 안전하고,
- * 후기의 신뢰는 이름이 아니라 "실제 가입자가 썼다" 는 경로에서 나온다.
- * 받지 않으면 마스킹할 것도, 유출될 것도 없다.
+ * ── 이름은 가린 형태로만 받는다 (2026-10-26 사용자 결정) ──────────
+ * 작성자 이름은 **선택**이고, 브라우저가 `박*민` 으로 가린 뒤에 보낸다.
+ * 여기서 `maskName` 을 한 번 더 건다(멱등) — 브라우저를 거치지 않은 요청이
+ * 원래 이름을 보내도 저장되는 건 가린 형태뿐이다. 원래 이름을 저장하지
+ * 않으므로 유출될 것이 없고, 그래서 이 폼에는 여전히 동의 체크박스가 없다.
+ * 숫자·기호는 받지 않는다 — 이름 칸에 연락처를 적어 넣는 경로를 막는다.
+ * 익명을 고르면 `author = "익명"` 이 그대로 온다.
  *
  * **수정용 비밀번호도 받지 않는다.** 받으면 보관·검증해야 하고, 재사용
  * 비밀번호가 들어오면 그 자체가 유출 리스크다. 수정이 필요하면 운영자에게
  * 요청하는 쪽이 받는 정보가 더 적다.
  *
- * **이미지도 받지 않는다.** 업로드를 열면 Storage 정책·용량·악성 파일
- * 검사까지 따라오고, 그걸 anon 에게 여는 결정은 따로 해야 한다.
- * 운영자가 어드민에서 `thumbnail_url` 을 채울 수는 있다.
+ * **사진은 이 스키마 밖이다** (010, 2026-10-26). 최대 3장을 multipart 로
+ * 따로 받고, 형식·크기 검사와 경로 결정은 `/api/reviews` 가 한다
+ * (`lib/review-images.ts`). `thumbnail_url` 은 더 이상 받지 않는다 —
+ * 010 의 anon 정책이 그 열에 값이 든 INSERT 를 거부한다.
  *
  * 길이 하한은 **DB 제약과 같은 값**이다(008). 한쪽만 고치면 통과한 입력이
  * DB 에서 거부되어 사용자에게 "접수 실패" 만 보인다.
@@ -100,6 +104,14 @@ export const reviewSubmitSchema = z.object({
   // 만점으로 바꿔 그리던 버그를 고친 뒤의 계약이다).
   rating: z.coerce.number().int().min(1).max(5).optional(),
   carrier: z.enum(CARRIERS).optional(),
+  author: z
+    .string()
+    .trim()
+    .max(20, "이름은 20자까지 입력할 수 있습니다")
+    .regex(/^[\p{L}\s*]*$/u, "이름에는 글자만 입력해 주세요")
+    .optional()
+    // `익명` 은 가리지 않는다 — 가리면 `익*` 이 되어 이름처럼 보인다
+    .transform((v) => (!v ? undefined : v === ANONYMOUS ? ANONYMOUS : maskName(v) || undefined)),
   turnstileToken: z.string().min(1, "보안 검증이 필요합니다"),
 });
 

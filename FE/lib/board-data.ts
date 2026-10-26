@@ -168,7 +168,8 @@ const empty = <T>(state: BoardState, current = 1): BoardPage<T> => ({
  * RLS 로 쓰기가 막혀 있어 숫자가 영구히 0 이다). 받아서 버리는 열은 비용보다
  * 오해가 문제다 — 다음 사람이 "조회수를 쓰고 있구나" 로 읽는다.
  */
-const REVIEW_LIST_COLUMNS = "id, title, content, rating, thumbnail_url, carrier, created_at";
+// `image_paths` 는 목록 썸네일(첫 장)에 쓴다 — 010 이 적용된 뒤의 열이다
+const REVIEW_LIST_COLUMNS = "id, title, content, rating, carrier, author, image_paths, created_at";
 const NOTICE_LIST_COLUMNS = "id, title, content, is_pinned, created_at";
 
 async function fetchReviewPage({
@@ -337,7 +338,7 @@ export async function getReview(id: number): Promise<ReviewRow | null> {
       supabase.from("reviews").select(columns).eq("is_published", true).eq("id", id),
     [
       {
-        columns: `${REVIEW_LIST_COLUMNS}, admin_reply, admin_reply_at`,
+        columns: `${REVIEW_LIST_COLUMNS}, image_alts, admin_reply, admin_reply_at`,
         missing: "007_board_reply_and_images.sql (운영자 답글)",
       },
       { columns: REVIEW_LIST_COLUMNS },

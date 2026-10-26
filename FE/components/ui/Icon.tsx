@@ -20,7 +20,8 @@ export type IconName =
   | "star"
   | "check"
   | "card"
-  | "instagram";
+  | "instagram"
+  | "camera";
 
 const PATHS: Record<IconName, React.ReactNode> = {
   phone: (
@@ -89,6 +90,12 @@ const PATHS: Record<IconName, React.ReactNode> = {
       <rect x="3.5" y="3.5" width="17" height="17" rx="5" />
       <circle cx="12" cy="12" r="4" />
       <path d="M17.2 6.8h.01" />
+    </>
+  ),
+  camera: (
+    <>
+      <path d="M4 8.5h3l1.5-2.5h7L17 8.5h3v10H4z" />
+      <circle cx="12" cy="13" r="3.5" />
     </>
   ),
 };

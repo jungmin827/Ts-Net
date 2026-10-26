@@ -78,7 +78,7 @@ export default async function ReviewListPage({
     <main>
       <PageHero
         title="가입 후기"
-        description="가입하신 분들이 직접 남긴 후기입니다. 승인된 글만 공개됩니다."
+        description="가입하신 분들이 직접 남긴 후기입니다."
       >
         {/* 건수는 **실제 조회된 수**만 쓴다. 못 읽었을 때는 숫자를 쓰지 않는다 —
             0 을 "후기 0건" 으로 적으면 장애가 콘텐츠로 읽힌다. */}

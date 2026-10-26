@@ -42,6 +42,7 @@ export default function ReviewModRow({
           <CarrierBadge code={r.carrier} />
         )}
         <Stars rating={r.rating} size={14} />
+        {r.author && <span className="text-xs font-bold">{r.author}</span>}
         <time dateTime={r.created_at} className="ml-auto text-xs text-muted">
           {formatDate(r.created_at, { withTime: true })}
         </time>

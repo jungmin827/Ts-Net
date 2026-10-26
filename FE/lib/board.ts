@@ -12,9 +12,17 @@ export interface ReviewRow {
   title: string;
   content: string;
   rating: number | null;
-  thumbnail_url: string | null;
   carrier: string | null;
   created_at: string;
+  /** 작성자 이름 — **가린 형태로만** 저장된다(`박*민`, `lib/mask-name.ts`). 없으면 그리지 않는다 */
+  author?: string | null;
+  /**
+   * 첨부 사진 경로(최대 3장, 010). 주소·썸네일은 `lib/review-images.ts` 가 만든다.
+   * 001 의 `thumbnail_url` 은 더 이상 읽지 않는다 — 010 이 anon 의 그 열을 닫았다.
+   */
+  image_paths?: string[] | null;
+  /** `image_paths` 와 1:1 대체 텍스트. 운영자가 승인할 때 쓰고, 게시된 글엔 반드시 있다(010) */
+  image_alts?: string[] | null;
   /**
    * 운영자 공개 답글 1건. 스레드형 댓글이 아니다 — 레퍼런스 두 곳이 공통으로
    * 투자한 유일한 상호작용이 이것뿐이었다(007 마이그레이션 주석 참고).

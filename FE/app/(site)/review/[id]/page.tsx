@@ -8,6 +8,7 @@ import Stars from "@/components/ui/Stars";
 import { excerpt, formatDate } from "@/lib/board";
 import CarrierBadge from "@/components/ui/CarrierBadge";
 import { getNeighbors, getPublishedIds, getReview } from "@/lib/board-data";
+import { reviewImageUrl } from "@/lib/review-images";
 
 export const revalidate = 300;
 
@@ -79,19 +80,24 @@ export default async function ReviewDetailPage({ params }: Params) {
               "조회 0" 으로 보인다. 0 을 보여 주는 건 "아무도 안 읽었다" 는
               틀린 사실을 적는 것이다. 증가 경로가 생기면 그때 켠다.
             */}
+            {review.author && (
+              <span className="text-sm font-bold text-foreground">{review.author}</span>
+            )}
             <time dateTime={review.created_at} className="text-sm text-muted">
               {formatDate(review.created_at, { withTime: true })}
             </time>
           </>
         }
         /*
-          후기에는 대체 텍스트 칸이 없다 — 008 이 방문자에게서 이미지를
-          받지 않기로 했으므로(이름·연락처·비밀번호·이미지 미수집) 이
-          썸네일은 운영자가 직접 넣은 경우에만 존재한다. 그 한 장을
-          장식으로 선언한다. 후기에 이미지를 받게 되는 날 `reviews` 에도
-          009 와 같은 모양의 alt 칸을 더하고 여기를 고친다.
+          방문자가 올린 사진(최대 3장, 010). 대체 텍스트는 운영자가 승인할 때
+          장마다 쓰고, 010 이 "사진 있는 글은 설명 없이 게시 불가" 로 묶어 둔다 —
+          그래서 게시된 글에서 `image_alts` 가 빠질 일은 없다. `?? ""` 는 010 이
+          뚫렸을 때 페이지가 죽지 않게 하는 마지막 줄이다.
         */
-        images={[{ url: review.thumbnail_url, alt: "" }]}
+        images={(review.image_paths ?? []).map((p, i) => ({
+          url: reviewImageUrl(p),
+          alt: review.image_alts?.[i] ?? "",
+        }))}
         content={review.content}
         footer={
           <AdminReply body={review.admin_reply} at={review.admin_reply_at} />

@@ -78,7 +78,7 @@ export default async function NoticeListPage({
     <main>
       <PageHero
         title="정보공유"
-        description="가입 절차·요금·설치 관련 안내를 정리해 올립니다."
+        description="인터넷 요금에 대한 다양한 정보들을 공유해드립니다."
       >
         {/* 건수는 **검색 중이 아닐 때만** 여기 적는다. 검색 중에는
             `BoardSearch` 가 "검색 — N건" 으로 말하므로, 위에 전체 건수를

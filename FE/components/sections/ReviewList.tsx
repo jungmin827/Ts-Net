@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Stars from "@/components/ui/Stars";
 import CarrierBadge from "@/components/ui/CarrierBadge";
+import ReviewThumb from "@/components/ui/ReviewThumb";
 import { excerpt, formatDate, type ReviewRow } from "@/lib/board";
 
 /**
@@ -21,6 +22,11 @@ export default function ReviewList({ items }: { items: ReviewRow[] }) {
             href={`/review/${r.id}`}
             className="group flex h-full flex-col rounded-panel border-2 border-line bg-white p-5 transition-colors duration-200 hover:border-brand"
           >
+            <ReviewThumb
+              paths={r.image_paths}
+              sizes="(min-width: 1024px) 352px, (min-width: 640px) 50vw, 100vw"
+              className="mb-3.5"
+            />
             {r.carrier && <CarrierBadge code={r.carrier} className="mb-2.5" />}
             <h2 className="mb-1.5 line-clamp-2 font-bold transition-colors group-hover:text-brand-dark">
               {r.title}
@@ -30,6 +36,7 @@ export default function ReviewList({ items }: { items: ReviewRow[] }) {
               {excerpt(r.content)}
             </p>
             <p className="mt-auto pt-4 text-xs text-muted">
+              {r.author && <span className="font-bold">{r.author} · </span>}
               {formatDate(r.created_at)}
             </p>
           </Link>

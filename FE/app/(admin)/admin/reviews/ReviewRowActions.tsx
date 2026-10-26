@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { patchReview } from "./patch-review";
 
 /**
  * 후기 한 건의 승인 토글과 운영자 답글 편집.
@@ -14,12 +15,15 @@ export default function ReviewRowActions({
   published,
   reply,
   replyAvailable,
+  needsAlts = false,
 }: {
   id: number;
   published: boolean;
   reply: string | null;
   /** 007 미적용이면 답글 열이 없다 — 입력창을 띄워 두면 저장이 503 으로 실패한다 */
   replyAvailable: boolean;
+  /** 사진은 있는데 설명이 아직 저장되지 않았다 — 게시를 누르면 무엇이 빠졌는지 말한다 */
+  needsAlts?: boolean;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -30,28 +34,15 @@ export default function ReviewRowActions({
   async function patch(body: Record<string, unknown>) {
     setBusy(true);
     setError("");
-    try {
-      const res = await fetch(`/api/admin/reviews/${id}`, {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const json: { ok?: boolean; error?: string } = await res
-        .json()
-        .catch(() => ({}));
-      if (!res.ok || !json.ok) {
-        setError(json.error ?? "변경에 실패했습니다");
-        return false;
-      }
-      // 목록은 서버 컴포넌트다 — 다시 읽어야 바뀐 상태가 보인다
-      router.refresh();
-      return true;
-    } catch {
-      setError("네트워크 오류입니다");
+    const res = await patchReview(id, body);
+    setBusy(false);
+    if (!res.ok) {
+      setError(res.error);
       return false;
-    } finally {
-      setBusy(false);
     }
+    // 목록은 서버 컴포넌트다 — 다시 읽어야 바뀐 상태가 보인다
+    router.refresh();
+    return true;
   }
 
   return (
@@ -65,7 +56,14 @@ export default function ReviewRowActions({
         <button
           type="button"
           disabled={busy}
-          onClick={() => patch({ is_published: !published })}
+          onClick={() => {
+            // 버튼을 죽이지 않고, 누르면 빠진 것을 말한다 (CLAUDE.md 주 CTA 규칙과 같은 판단)
+            if (!published && needsAlts) {
+              setError("사진 설명을 먼저 적고 ‘설명 저장’을 눌러 주세요");
+              return;
+            }
+            void patch({ is_published: !published });
+          }}
           className={`min-h-11 rounded-lg border-2 px-4 text-sm font-bold transition-colors duration-200 ${
             published
               ? "border-line bg-white text-muted hover:border-brand hover:text-brand-dark"

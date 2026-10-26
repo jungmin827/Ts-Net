@@ -19,10 +19,15 @@ export interface ReviewModRowData {
   content: string;
   rating: number | null;
   carrier: string | null;
+  /** 가린 형태(`박*민`)로만 저장된다 */
+  author: string | null;
   is_published: boolean;
   created_at: string;
   admin_reply?: string | null;
   admin_reply_at?: string | null;
+  /** 첨부 사진(010). 승인 전에도 운영자는 볼 수 있다 — 주소를 아는 쪽이 운영자뿐이다 */
+  image_paths: string[] | null;
+  image_alts: string[] | null;
 }
 
 export default async function AdminReviewsPage() {
@@ -33,7 +38,8 @@ export default async function AdminReviewsPage() {
    * (`lib/board-data.ts` 의 `selectWithOptional` 주석). 여기서는 답글 열이
    * 없으면 답글 버튼 자체를 숨긴다. 버튼을 띄워 두면 누르는 순간 503 이 난다.
    */
-  const BASE = "id, title, content, rating, carrier, is_published, created_at";
+  const BASE =
+    "id, title, content, rating, carrier, author, is_published, created_at, image_paths, image_alts";
   let replyAvailable = true;
   let rows: ReviewModRowData[] = [];
   let loadError: string | null = null;
@@ -84,6 +90,11 @@ export default async function AdminReviewsPage() {
           방문자가 제출한 후기는 <strong>비공개로 들어옵니다.</strong> 내용을
           확인한 뒤 게시 승인하세요. 승인 전에는 공개 페이지에 노출되지
           않습니다.
+        </p>
+        <p className="mt-2 text-sm leading-relaxed text-muted">
+          사진이 있는 글은 <strong>장마다 설명을 적어야</strong> 게시할 수 있습니다
+          (화면을 못 보는 분께 읽어 주는 글입니다). 이름·주소·번호가 보이는 사진은{" "}
+          <strong>사진 빼기</strong>로 내리고 게시하세요.
         </p>
         {!replyAvailable && (
           <p className="mt-3 rounded-lg border border-line bg-surface-muted px-3.5 py-3 text-sm leading-relaxed text-muted">

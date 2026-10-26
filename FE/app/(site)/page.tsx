@@ -58,7 +58,7 @@ async function getReviews(): Promise<ReviewItem[]> {
 
   const { data, error } = await supabase
     .from("reviews")
-    .select("id, title, content, rating, thumbnail_url, carrier, created_at")
+    .select("id, title, content, rating, carrier, author, image_paths, created_at")
     .eq("is_published", true)
     .order("created_at", { ascending: false })
     .limit(8);
