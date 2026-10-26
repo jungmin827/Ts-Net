@@ -61,14 +61,14 @@ export const SITE = {
      * 교체할 때는 width/height 를 새 크기로 맞추고(레이아웃 시프트 방지) **파일명을 바꾼다**
      * — 같은 이름으로 덮으면 이미지 최적화 캐시가 옛 그림을 계속 내준다.
      * 글자가 그림 안에 있으므로 title(h1)과 alt 에 **그림 속 문구를 그대로** 옮긴다.
-     * 원본: docs/메인포스터수정본.jpg → `node scripts/build-posters.mjs` (여백 트림 + 바탕색 맞춤)
+     * 원본: docs/메인 포스터 수정본 막.jpg → `node scripts/build-posters.mjs` (여백 트림 + 바탕색 맞춤)
      */
     poster: {
-      src: "/poster/main-v2.jpg",
-      width: 2672,
-      height: 1460,
-      title: "인터넷·TV 가입 상담 — 태산만이 제공해드리는 특별한 혜택!",
-      alt: "신속하고 쉽고 친절한 상담. 최고의 지원금, 최다 사은품!",
+      src: "/poster/main-v3.jpg",
+      width: 2710,
+      height: 1536,
+      title: "인터넷·TV 가입 상담 — 태산만이 제공해 드리는 최대 160만원의 특별한 혜택!",
+      alt: "신속하고 쉽고 친절한 상담. 최고의 지원금, 최대 사은품! 최대 160만원의 혜택 제공",
     },
   },
 } as const;

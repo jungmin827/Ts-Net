@@ -31,7 +31,7 @@ const PAD = 0.035;
 const TOL = 14;
 
 const JOBS = [
-  ["메인포스터수정본.jpg", "main-v2.jpg"],
+  ["메인 포스터 수정본 막.jpg", "main-v3.jpg"],
   ["서브포스터.jpg", "carriers.jpg"],
   ["상담 포스터.jpg", "consult.jpg"],
   ["과정안내 포스터.jpg", "process.jpg"],
@@ -45,11 +45,13 @@ for (const [src, out] of JOBS) {
   const { width: W, height: H, channels: C } = info;
   const at = (x, y) => (y * W + x) * C;
 
-  // 네 귀퉁이 평균을 바탕색으로 본다
+  // 네 귀퉁이 중앙값(채널별)을 바탕색으로 본다 — 평균이면 그림이 귀퉁이 하나에
+  // 닿을 때(메인 포스터의 초록 원) 바탕색이 그 색으로 끌려간다
   const corners = [[4, 4], [W - 5, 4], [4, H - 5], [W - 5, H - 5]];
-  const edge = [0, 1, 2].map(
-    (k) => corners.reduce((s, [x, y]) => s + data[at(x, y) + k], 0) / corners.length,
-  );
+  const edge = [0, 1, 2].map((k) => {
+    const v = corners.map(([x, y]) => data[at(x, y) + k]).sort((a, b) => a - b);
+    return (v[1] + v[2]) / 2;
+  });
   const isBg = (i) => Math.abs(data[i] - edge[0]) < TOL &&
     Math.abs(data[i + 1] - edge[1]) < TOL && Math.abs(data[i + 2] - edge[2]) < TOL;
 
