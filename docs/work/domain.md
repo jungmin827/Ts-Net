@@ -4,14 +4,15 @@
 - https://tsnet.io.kr · Vercel Pro(팀 yootaewhan1212-1064 / 프로젝트 `ts-net`) · 리전 icn1 · `main` 푸시 = 자동 배포
 - 도메인: 후이즈(만료 2027-10-24) → 네임서버 Cloudflare(`cris`/`priscilla`, 계정 yootaewhan1212)
 - 인증서: Let's Encrypt, Vercel 자동 갱신. www → 308 → apex
-- 검색: robots·sitemap 공개. Google Search Console(도메인 속성, 소유자: qkrwjdals8827 · yootaewhan1212) · 네이버 서치어드바이저 소유확인·사이트맵 제출
+- 검색: robots·sitemap 공개. Google Search Console(도메인 속성, 소유자: qkrwjdals8827 · yootaewhan1212) · 네이버 서치어드바이저 — 10-26 인증값 교체(`d77b7f…`), **새 계정으로 소유확인·사이트맵 재제출 필요**
 - 메일: `privacy@tsnet.io.kr` → 대표 Gmail (Cloudflare Email Routing, 수신 확인). 처리방침 보호책임자 주소
 
 ## 구성 기록 (바꿀 때 같이 볼 것)
 | 자리 | 값 |
 |---|---|
 | Cloudflare DNS | `A @ 216.150.1.1` · `CNAME www → a8a1ac82d9ce2630.vercel-dns-016.com` (둘 다 **DNS only**) · MX 3 · SPF · DKIM · `TXT google-site-verification` |
-| Vercel env (Production) | Supabase 3 · `ENCRYPTION_KEY` · `PHONE_PEPPER` · Turnstile 2(실키) · `NEXT_PUBLIC_SITE_URL` · `NEXT_PUBLIC_TEL` · `NAVER_SITE_VERIFICATION` |
+| Vercel env (Production) | Supabase 3 · `ENCRYPTION_KEY` · `PHONE_PEPPER` · Turnstile 2(실키) · `NEXT_PUBLIC_SITE_URL` · `NEXT_PUBLIC_TEL` (`NAVER_SITE_VERIFICATION` 은 남아 있으나 **쓰지 않음**) |
+| 검색 소유확인 값 | `lib/site-config.ts` 의 `SITE_VERIFICATION` 한 곳(공개값). Vercel env 수정은 이메일 인증이 필요해 코드로 관리 |
 | 넣지 않는 것 | `ADMIN_SKIP_2FA`, 트래킹 픽셀 ID(동의 절차 결정 전) |
 | 코드 | `client-ip.ts` 는 `cf-connecting-ip` 를 믿지 않는다(DNS only 전제). 프록시(주황 구름)로 바꾸면 다시 정할 것 |
 
@@ -27,6 +28,7 @@
 ## 작업 보고
 - 10-26 상호 검색 대응: 모든 페이지 제목 `태산-Net` 하나(사용자 결정) · 설명·OG 에 `태산-Net(TS-Net)`, 홈 JSON-LD(WebSite·Organization, alternateName TS-Net·태산넷·태산 Net), OG 이미지 = 메인 포스터. 화면 표기는 그대로 TS-Net (`SITE.searchName`)
   - 남은 것(운영자): 구글 URL 검사 → 색인 요청 · 네이버 웹 페이지 수집 요청 · 네이버 스마트플레이스 · Google 비즈니스 프로필
+- 10-26 네이버 인증값 교체 → `SITE_VERIFICATION` 단일 출처(507ce89) · 푸터 대표번호 `tel:` 링크(654bc06, 안드로이드 통화 안 되던 것)
 - 10-25 네이버 사이트맵 제출(운영자, 확장 정책상 수동) · Search Console 에 대표 계정 소유자 추가
 - 10-25 Google 사이트맵 "성공" 확인 · `ENCRYPTION_KEY`·`PHONE_PEPPER` 오프라인 백업 완료(운영자 보관)
 - 10-25 운영 E2E 실측: 접수 → 목록 → 상세(VIEW) → 번호 보기(DECRYPT). 서버 화면 3곳 접속기록 IP 누락 수정(9ad708b)
