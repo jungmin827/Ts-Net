@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 // 상담 접수 제출 로직 — 인라인 폼(LeadForm)과 하단 고정 바(StickyConsultBar)가 공유한다.
 // 접수 규격은 /api/leads 한 곳에만 있으므로 여기서도 그 계약만 맞춘다.
@@ -27,6 +28,16 @@ interface Tracking {
 }
 
 const UTM_KEY = "tsnet_utm";
+
+/**
+ * 접수 완료 페이지. 접수에 성공하면 어느 폼에서 보냈든 여기로 옮긴다.
+ *
+ * 광고 대행이 **"URL 이 바뀌어야 전환으로 잡힌다"** 고 요청했다(2026-10-29).
+ * 그전에는 폼 자리에서 완료 문구만 바뀌어 주소가 그대로였다.
+ * 단, URL 기준 전환은 새로고침·직접 입력·뒤로가기 후 앞으로가기도 센다.
+ * 실제 접수 성공에만 나가는 신호는 `fireConversion` 의 Lead 이벤트다.
+ */
+export const LEAD_COMPLETE_PATH = "/complete";
 
 /** 최초 진입 시점의 UTM을 세션에 고정해 폼 위치와 무관하게 유입경로를 보존 */
 function collectTracking(): Tracking {
@@ -90,6 +101,7 @@ function fallbackMessage(status: number): string {
 }
 
 export function useLeadSubmit() {
+  const router = useRouter();
   const [status, setStatus] = useState<LeadStatus>("idle");
   const [error, setError] = useState("");
   /**
@@ -134,8 +146,12 @@ export function useLeadSubmit() {
       // 로그인 페이지처럼 200 + HTML 을 주는 중간자가 있으면, `ok !== false`
       // 로는 접수가 안 됐는데 완료 화면과 전환 이벤트가 나간다.
       if (res.ok && data.ok === true) {
+        // Lead 는 지금 페이지에서 먼저 보낸다 — 이동은 클라이언트 전환이라
+        // 페이지가 내려가지 않으므로 나가던 요청이 끊기지 않는다.
+        // 완료 상태도 그대로 둔다: 이동이 늦거나 실패해도 폼 자리에 완료 문구가 남는다
         fireConversion();
         setStatus("done");
+        router.push(LEAD_COMPLETE_PATH);
         return true;
       }
       setError(data.error ?? fallbackMessage(res.status));

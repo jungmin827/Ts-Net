@@ -4,6 +4,9 @@ import StickyConsultBar from "@/components/forms/StickyConsultBar";
 import BackToTop from "@/components/ui/BackToTop";
 import ConsultAnchorFallback from "@/components/ui/ConsultAnchorFallback";
 import Icon from "@/components/ui/Icon";
+import { metaPixelId } from "@/lib/meta-pixel";
+
+const PIXEL_ID = metaPixelId();
 
 /** 공개 사이트 공통 셸 — 어드민 (admin) 그룹에는 적용되지 않는다 */
 export default function SiteLayout({
@@ -49,6 +52,21 @@ export default function SiteLayout({
           </div>
         </div>
       </noscript>
+
+      {/* Meta 픽셀의 스크립트 없는 대체 — `<head>` 의 noscript 에는 img 를 둘 수 없어
+          공개 페이지 셸에 둔다. 어드민은 이 레이아웃을 지나지 않는다 */}
+      {PIXEL_ID && (
+        <noscript>
+          {/* eslint-disable-next-line @next/next/no-img-element -- 1px 추적 이미지 */}
+          <img
+            height="1"
+            width="1"
+            style={{ display: "none" }}
+            alt=""
+            src={`https://www.facebook.com/tr?id=${PIXEL_ID}&ev=PageView&noscript=1`}
+          />
+        </noscript>
+      )}
     </>
   );
 }

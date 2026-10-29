@@ -9,7 +9,7 @@ import Icon from "@/components/ui/Icon";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import { fieldBase, selectBase } from "@/components/ui/Field";
-import { formatPhone, useLeadSubmit } from "./useLeadSubmit";
+import { LEAD_COMPLETE_PATH, formatPhone, useLeadSubmit } from "./useLeadSubmit";
 
 /**
  * 화면 하단에 상시 고정되는 상담 신청 바.
@@ -202,6 +202,9 @@ export default function StickyConsultBar() {
       className="absolute -left-[9999px] h-0 w-0 opacity-0"
     />
   );
+
+  // 접수 완료 페이지에서는 내려둔다 — 페이지 본문이 곧 완료 안내다
+  if (pathname === LEAD_COMPLETE_PATH) return null;
 
   // 접수 완료 — 폼 대신 확인 메시지를 같은 자리에 보여준다
   if (status === "done") {

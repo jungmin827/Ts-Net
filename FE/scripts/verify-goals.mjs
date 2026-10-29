@@ -309,6 +309,18 @@ const strip = (html) =>
     return src.slice(lt, at);
   };
 
+  /*
+   * Meta 픽셀(2026-10-29)도 예외다 — 광고 대행이 `<head>` 인라인 코드를
+   * 요구했고, React 에서 head 에 인라인 스크립트를 SSR 로 넣는 방법이 이것뿐이다.
+   * 면제 조건은 셋이 **모두** 맞을 때만:
+   *   ① 여는 태그가 `<script id="meta-pixel"`
+   *   ② 표현식이 정확히 `{{ __html: metaPixelSnippet(PIXEL_ID) }}` (다른 값 섞기 불가)
+   *   ③ `lib/meta-pixel.ts` 가 ID 를 숫자만으로 검증한다 (스니펫의 유일한 변수)
+   */
+  const pixelIdGuarded = /\/\^\\d\{5,20\}\$\/\.test\(id\)/.test(
+    readFileSync(`${FE}/lib/meta-pixel.ts`, "utf8"),
+  );
+
   const unsafe = files.filter((f) => {
     const src = strip(readFileSync(f, "utf8"));
     let i = src.indexOf("dangerouslySetInnerHTML");
@@ -318,7 +330,11 @@ const strip = (html) =>
       const jsonLd =
         /^<script\b[^>]*application\/ld\+json/.test(tag) &&
         /replace\(\s*\/</.test(expr);
-      if (!jsonLd) return true;
+      const metaPixel =
+        pixelIdGuarded &&
+        /^<script\b[^>]*id="meta-pixel"/.test(tag) &&
+        /^\{\{\s*__html:\s*metaPixelSnippet\(PIXEL_ID\)\s*\}\}$/.test(expr);
+      if (!jsonLd && !metaPixel) return true;
       i = src.indexOf("dangerouslySetInnerHTML", i + 1);
     }
     return false;
