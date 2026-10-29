@@ -229,6 +229,10 @@ docs/SPEC.md           기능 명세 — 작업 전 반드시 읽을 것
   검색·2페이지 이후 목록은 `noindex, follow` + canonical 을 목록 첫 페이지로.
   - [x] `NEXT_PUBLIC_SITE_URL=https://tsnet.io.kr` (Vercel Production) → 색인 공개(10-25).
     Google Search Console(도메인 속성, TXT 인증) · 네이버 서치어드바이저(메타 태그) 등록·사이트맵 제출
-  - [ ] 트래킹: `.env.example` 에 GA/Meta/Kakao/Naver 자리는 있으나 **미연결**.
-    픽셀은 쿠키를 심으므로 동의 절차와 처리방침 고지를 같이 정해야 한다 —
-    운영자 결정 사항으로 남긴다. 결정 없이 넣으면 동의 없는 수집이 된다.
+  - [~] 트래킹: **Meta 픽셀만 연결(2026-10-29 운영자 요청)** — `<head>` 인라인
+    (`lib/meta-pixel.ts`, 어드민 제외, `autoConfig` 끔). 접수 성공 시 `fireConversion`
+    이 `Lead` 를 보내고 `/complete` 로 이동한다(광고 대행의 URL 기준 전환용, noindex).
+    처리방침 9항이 이 픽셀을 고지한다 — **픽셀 설정과 방침 표를 같이 고칠 것.**
+    방침에 "이름·연락처는 Meta 로 보내지 않는다" 고 적었으므로 이벤트 관리자의
+    **자동 고급 매칭은 꺼져 있어야 한다.** GA·카카오·네이버는 미연결 —
+    넣으려면 방침 9항과 시행일부터 고친다.

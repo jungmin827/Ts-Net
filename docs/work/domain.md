@@ -13,7 +13,8 @@
 | Cloudflare DNS | `A @ 216.150.1.1` · `CNAME www → a8a1ac82d9ce2630.vercel-dns-016.com` (둘 다 **DNS only**) · MX 3 · SPF · DKIM · `TXT google-site-verification` |
 | Vercel env (Production) | Supabase 3 · `ENCRYPTION_KEY` · `PHONE_PEPPER` · Turnstile 2(실키) · `NEXT_PUBLIC_SITE_URL` · `NEXT_PUBLIC_TEL` (`NAVER_SITE_VERIFICATION` 은 남아 있으나 **쓰지 않음**) |
 | 검색 소유확인 값 | `lib/site-config.ts` 의 `SITE_VERIFICATION` 한 곳(공개값). Vercel env 수정은 이메일 인증이 필요해 코드로 관리 |
-| 넣지 않는 것 | `ADMIN_SKIP_2FA`, 트래킹 픽셀 ID(동의 절차 결정 전) |
+| Meta 픽셀 | `NEXT_PUBLIC_META_PIXEL_ID` (10-29). **빌드 때 박히는 값**이라 넣은 뒤 재배포해야 나간다. 코드는 `lib/meta-pixel.ts`, 고지는 처리방침 9항 — 둘을 같이 고칠 것 |
+| 넣지 않는 것 | `ADMIN_SKIP_2FA`, GA·카카오·네이버 픽셀 ID(방침 9항 개정 전) |
 | 코드 | `client-ip.ts` 는 `cf-connecting-ip` 를 믿지 않는다(DNS only 전제). 프록시(주황 구름)로 바꾸면 다시 정할 것 |
 
 - ⚠ `.env.local` 은 배포되지 않는다 — 운영 값은 Vercel 에 따로 넣는다
@@ -26,6 +27,8 @@
 8. [x] Turnstile 실키 · 9. [x] 운영 TOTP(verified) · 10. [x] 서치콘솔·네이버·메일 라우팅
 
 ## 작업 보고
+- 10-29 Meta 픽셀 설치(`<head>`, 어드민 제외, `autoConfig` 끔) · 접수 성공 시 `/complete` 로 이동(noindex·사이트맵 제외, 하단바 숨김) · 처리방침 9항(행태정보·국외 처리·거부 방법)·8항(관리자 2계정) 개정, 시행일 10-29. 로컬 실측(가짜 ID·접수 API 스텁): `PageView(/)` → `Lead(/)` → `PageView(/complete)`, 요청에 이름·번호 없음, 어드민 요청 0건
+  - 남은 것(운영자): Vercel env `NEXT_PUBLIC_META_PIXEL_ID` + 재배포 · 이벤트 관리자에서 **자동 고급 매칭 끄기**(켜면 폼 입력값이 해시로 나가 방침 9항과 어긋난다) · 전환은 `Lead` 이벤트 권장(URL 기준은 새로고침도 센다)
 - 10-26 상호 검색 대응: 모든 페이지 제목 `태산-Net` 하나(사용자 결정) · 설명·OG 에 `태산-Net(TS-Net)`, 홈 JSON-LD(WebSite·Organization, alternateName TS-Net·태산넷·태산 Net), OG 이미지 = 메인 포스터. 화면 표기는 그대로 TS-Net (`SITE.searchName`)
   - 남은 것(운영자): 구글 URL 검사 → 색인 요청 · 네이버 웹 페이지 수집 요청 · 네이버 스마트플레이스 · Google 비즈니스 프로필
 - 10-26 네이버 인증값 교체 → `SITE_VERIFICATION` 단일 출처(507ce89) · 푸터 대표번호 `tel:` 링크(654bc06, 안드로이드 통화 안 되던 것)
