@@ -90,6 +90,68 @@ export const SITE = {
       alt: "신속하고 쉽고 친절한 상담. 최고의 지원금, 최대 사은품! 최대 160만원의 혜택 제공",
     },
   },
+
+  /*
+   * 상담폼 아래 두 섹션 — 상담 방식(Promises) · 가입 절차(Journey).
+   * 예전에는 글자가 구워진 포스터 2장이었다. 지금은 **글자 없는 사진**에 코드가 문구를 얹는다
+   * — 문구는 전부 여기에만 있고, 사진은 분위기를 더할 뿐이다(그래서 사진 alt 는 "").
+   * 사진은 docs/photo/ 원본 → `node scripts/build-photos.mjs`. 교체 시 파일명을 바꾸고
+   * 찍힌 크기를 width/height 에 반영한다.
+   * "최대 지원금" 같은 표현은 운영자가 근거에 맞춰 여기서 고친다 (CLAUDE.md 규칙 6).
+   */
+  promises: {
+    eyebrow: "상담 방식",
+    title: "이렇게 상담해 드려요",
+    items: [
+      {
+        title: "혜택 최대로 지원해 드려요",
+        desc: "투명하게 공개하고 최대 지원금 계산해 드려요",
+        image: { src: "/photo/promise-calculator.jpg", width: 1200, height: 800 },
+      },
+      {
+        title: "필요 없는 서비스는 판매하지 않아요",
+        desc: "안 쓰실 부가서비스는 끼워 넣지 않아요",
+        image: { src: "/photo/promise-remote.jpg", width: 1200, height: 800 },
+      },
+      {
+        title: "돈 이야기는 투명하게 공개해요",
+        desc: "월 요금·약정·설치비 가입 전에 다 말씀드려요",
+        image: { src: "/photo/promise-jar.jpg", width: 1200, height: 800 },
+      },
+    ],
+  },
+
+  /*
+   * `focus` 는 CSS `object-position` 값이다. 정사각 사진을 가로로 긴 칸에 `object-cover`
+   * 로 넣으면 위아래·좌우가 잘리는데, 피사체가 잘려 나가지 않게 남길 점을 사진마다 잡아 둔다.
+   * 사진을 바꾸면 이 값도 새 사진의 피사체 위치에 맞춰 다시 잡을 것.
+   */
+  journey: {
+    eyebrow: "가입 절차",
+    title: "신청부터 설치까지, 이렇게 진행돼요",
+    steps: [
+      {
+        title: "상담 신청",
+        desc: "고객님의 정보는 양방향 암호화로 안전하게 보관 후 파기해요.",
+        image: { src: "/photo/step-apply.jpg", width: 900, height: 900, focus: "62% 55%" },
+      },
+      {
+        title: "전화 상담",
+        desc: "상시 대기 중인 전문 상담사가 바로 안내드려요.",
+        image: { src: "/photo/step-call.jpg", width: 900, height: 900, focus: "66% 42%" },
+      },
+      {
+        title: "설치",
+        desc: "편하신 날짜에 기사님이 신속하게 설치해드려요.",
+        image: { src: "/photo/step-install.jpg", width: 900, height: 900, focus: "58% 58%" },
+      },
+      {
+        title: "사은품 지급",
+        desc: "설치가 확인되면 약속드린 사은품을 즉시 보내드려요.",
+        image: { src: "/photo/step-gift.jpg", width: 900, height: 900, focus: "60% 66%" },
+      },
+    ],
+  },
 } as const;
 
 /**
@@ -293,46 +355,7 @@ export interface PromoImage {
  *     href: "#consult", enabled: true,
  *   }
  */
-export const PROMO_IMAGES: PromoImage[] = [
-  /*
-   * 상담폼 아래 포스터 2장 — 상담 방식 · 가입 절차 순서.
-   * (통신사 포스터는 상담폼 배경 레이어라 `SITE.hero.formBackdrop` 에 있다)
-   * 원본은 docs/ 의 상담 포스터·과정안내 포스터.
-   * 교체 시 `node scripts/build-posters.mjs` 로 다시 만들고 찍힌 크기를 width/height 에 반영.
-   * ⚠ 모바일 전용본이 아직 없다 — 들어오면 `mobile` 과 크기만 채우면 된다.
-   */
-  {
-    id: "main-consult",
-    slot: "afterHero",
-    desktop: "/poster/consult.jpg",
-    width: 2700,
-    height: 1504,
-    seamless: true,
-    alt:
-      "상담 방식 — 이렇게 상담해 드려요. " +
-      "혜택 최대로 지원해 드려요: 투명하게 공개하고 최대 지원금 계산해 드려요. " +
-      "필요 없는 건 안 붙여요: 안 쓰실 부가서비스는 끼워 넣지 않아요. " +
-      "돈 얘기부터 먼저 드려요: 월 요금·약정·설치비 가입 전에 다 말씀드려요.",
-    href: "#consult",
-    enabled: true,
-  },
-  {
-    id: "main-process",
-    slot: "afterHero",
-    desktop: "/poster/process.jpg",
-    width: 1640,
-    height: 914,
-    seamless: true,
-    alt:
-      "가입 절차 — 신청부터 설치까지, 이렇게 진행돼요. " +
-      "1단계 상담 신청: 이름·연락처만 남겨주세요. " +
-      "2단계 전화 상담: 전화로 쓰시는 환경에 맞게 골라 드려요. " +
-      "3단계 설치: 편하신 날짜에 기사님이 와서 설치해 드려요. " +
-      "4단계 사은품 지급: 설치가 확인되면 상담 때 안내한 사은품 보내드려요.",
-    href: "#consult",
-    enabled: true,
-  },
-];
+export const PROMO_IMAGES: PromoImage[] = [];
 
 /* =====================================================================
    개인정보처리방침 · 이용약관 전문

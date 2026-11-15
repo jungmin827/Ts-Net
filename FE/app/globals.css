@@ -202,6 +202,15 @@ h3 {
   background-size: 18px 18px;
 }
 
+/* 사진 왼쪽 가장자리를 카드 면으로 풀어 준다 (가입 절차 카드, Journey.tsx).
+   흰 그라데이션을 덮지 않고 사진 자체에 마스크를 걸어 카드 면 색이 바뀌어도 따라온다.
+   직선 2단은 시작점에 띠가 보여서 완만한 곡선으로 여러 단을 뒀다 — 단이 많아
+   Tailwind 임의값으로는 한 줄에 읽히지 않고 -webkit- 접두도 따로 써야 해서 평범한 CSS 로 둔다. */
+.photo-fade-l {
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, rgb(0 0 0 / 0.12) 14%, rgb(0 0 0 / 0.5) 32%, rgb(0 0 0 / 0.88) 50%, #000 62%);
+  mask-image: linear-gradient(to right, transparent 0%, rgb(0 0 0 / 0.12) 14%, rgb(0 0 0 / 0.5) 32%, rgb(0 0 0 / 0.88) 50%, #000 62%);
+}
+
 /* 요금·금액은 자릿수가 흔들리지 않아야 표에서 눈이 편하다 */
 .tabular {
   font-variant-numeric: tabular-nums;

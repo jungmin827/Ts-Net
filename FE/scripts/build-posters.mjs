@@ -14,6 +14,7 @@
  *   3. 출력 크기를 찍는다 → `lib/site-config.ts` 의 width/height 에 반영할 것.
  *
  * 포스터를 교체하면 원본을 docs/ 에 넣고 JOBS 의 파일명만 바꿔 다시 돌린다.
+ * (상담 방식·가입 절차는 포스터가 아니라 글자 없는 사진이다 → `build-photos.mjs`)
  */
 import sharp from "sharp";
 import { fileURLToPath } from "node:url";
@@ -33,8 +34,6 @@ const TOL = 14;
 const JOBS = [
   ["메인 포스터 수정본 막.jpg", "main-v3.jpg"],
   ["서브포스터.jpg", "carriers.jpg"],
-  ["상담 포스터.jpg", "consult.jpg"],
-  ["과정안내 포스터.jpg", "process.jpg"],
 ];
 
 for (const [src, out] of JOBS) {
