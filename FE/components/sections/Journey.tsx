@@ -15,13 +15,13 @@ import SectionHeading from "@/components/ui/SectionHeading";
  * "장식" 선언이 참이다 (CLAUDE.md 가 막는 일괄 `alt=""` 는 게시판 홍보 이미지 얘기다).
  */
 export default function Journey() {
-  const { eyebrow, title, steps } = SITE.journey;
+  const { title, titleAccent, steps } = SITE.journey;
 
   return (
     <section className="pt-14 pb-16 md:pt-20 md:pb-20">
       <div className="mx-auto max-w-6xl px-4">
         <div className="md:flex md:items-end md:justify-between">
-          <SectionHeading eyebrow={eyebrow} title={title} align="left" />
+          <SectionHeading title={title} accent={titleAccent} align="left" />
           {/* 모바일에서는 하단 고정 상담바가 같은 일을 하므로 md 이상에서만 둔다.
               SectionHeading 이 mb-10 을 가져서 같은 값을 줘야 아랫선이 맞는다 */}
           <a

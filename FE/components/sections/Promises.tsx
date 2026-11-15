@@ -3,7 +3,8 @@ import { SITE } from "@/lib/site-config";
 import SectionHeading from "@/components/ui/SectionHeading";
 
 /**
- * '이렇게 상담해 드려요' 3칸 — 문구는 `SITE.promises` 에만 있다.
+ * 상담 방식 3칸 — 문구는 `SITE.promises` 에만 있다. 제목의 강조 낱말(`titleAccent`)만
+ * 초록으로 칠한다(`SectionHeading` 의 `accent`). 눈썹 라벨은 두지 않는다.
  *
  * 사진은 `alt=""` 다. 예전 포스터는 문구가 그림 안에 구워져 있어 alt 가 본문 전체를
  * 옮겨야 했지만, 지금은 제목·설명이 전부 HTML 에 있고 사진은 분위기를 더할 뿐이라
@@ -12,12 +13,12 @@ import SectionHeading from "@/components/ui/SectionHeading";
  * 클릭할 수 없는 카드라 hover 반응이 없다.
  */
 export default function Promises() {
-  const { eyebrow, title, items } = SITE.promises;
+  const { title, titleAccent, items } = SITE.promises;
 
   return (
     <section className="pt-14 md:pt-20">
       <div className="mx-auto max-w-6xl px-4">
-        <SectionHeading eyebrow={eyebrow} title={title} align="left" />
+        <SectionHeading title={title} accent={titleAccent} align="left" />
 
         <ul className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5">
           {items.map((it) => (
