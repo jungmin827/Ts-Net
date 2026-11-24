@@ -4,6 +4,7 @@ import "./globals.css";
 import { siteUrl } from "@/lib/site-url";
 import { SITE, SITE_VERIFICATION } from "@/lib/site-config";
 import { metaPixelId, metaPixelSnippet } from "@/lib/meta-pixel";
+import { gtmId, gtmSnippet } from "@/lib/gtm";
 
 // 본문·헤드라인 — 레퍼런스 사이트도 같은 Noto Sans KR 을 쓴다.
 // 넓은 굵기 폭(400~900)이 있어 위계를 만들기 좋다.
@@ -15,6 +16,7 @@ const notoSansKr = Noto_Sans_KR({
 
 const ORIGIN = siteUrl();
 const PIXEL_ID = metaPixelId();
+const GTM_ID = gtmId();
 
 /** 모든 페이지의 제목 (2026-10-26 사용자 결정 — 페이지별 제목 없이 상호 하나) */
 const HOME_TITLE = SITE.searchName;
@@ -117,12 +119,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      {/* Meta 픽셀은 광고 대행 요청대로 `<head>` 에 둔다 — `lib/meta-pixel.ts` */}
+      {/* Meta 픽셀·Google 태그 관리자는 광고 대행 요청대로 `<head>` 에 둔다 —
+          `lib/meta-pixel.ts` · `lib/gtm.ts`. 둘 다 ID 가 없으면 내보내지 않는다 */}
       <head>
         {PIXEL_ID && (
           <script
             id="meta-pixel"
             dangerouslySetInnerHTML={{ __html: metaPixelSnippet(PIXEL_ID) }}
+          />
+        )}
+        {GTM_ID && (
+          <script
+            id="gtm"
+            dangerouslySetInnerHTML={{ __html: gtmSnippet(GTM_ID) }}
           />
         )}
       </head>

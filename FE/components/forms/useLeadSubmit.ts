@@ -35,7 +35,8 @@ const UTM_KEY = "tsnet_utm";
  * 광고 대행이 **"URL 이 바뀌어야 전환으로 잡힌다"** 고 요청했다(2026-10-29).
  * 그전에는 폼 자리에서 완료 문구만 바뀌어 주소가 그대로였다.
  * 단, URL 기준 전환은 새로고침·직접 입력·뒤로가기 후 앞으로가기도 센다.
- * 실제 접수 성공에만 나가는 신호는 `fireConversion` 의 Lead 이벤트다.
+ * 실제 접수 성공에만 나가는 신호는 `fireConversion` 의 이벤트다
+ * (Meta `Lead` · GTM `dataLayer` 의 `generate_lead`).
  */
 export const LEAD_COMPLETE_PATH = "/complete";
 
@@ -61,14 +62,24 @@ function collectTracking(): Tracking {
   }
 }
 
-/** 접수 성공 시 전환 이벤트 발화. 스크립트 미설치 환경에서는 조용히 무시 */
+/**
+ * 접수 성공 시 전환 이벤트 발화. 스크립트 미설치 환경에서는 조용히 무시.
+ *
+ * GTM(`lib/gtm.ts`)에는 `dataLayer` 로 `generate_lead` 이벤트 이름만 넣는다.
+ * 처리방침 9항이 Google 에 가는 것을 "상담 신청 완료 여부" 로 적었으므로
+ * **이름·연락처·통신사 등 폼 값은 절대 싣지 않는다.** `dataLayer` 는 GTM 코드가
+ * 만든다 — 없으면 GTM 이 안 깔린 것(로컬·어드민)이므로 새로 만들지 않고 넘어간다.
+ */
 function fireConversion() {
   const w = window as unknown as Record<
     string,
     ((...args: unknown[]) => void) | undefined
   >;
-  w.gtag?.("event", "generate_lead");
+  // Google 은 GTM 의 dataLayer 한 경로로만 보낸다. gtag 를 같이 부르면 컨테이너에
+  // gtag 가 생겼을 때 같은 접수가 두 번 집계된다
   w.fbq?.("track", "Lead");
+  const dataLayer = (window as unknown as { dataLayer?: unknown }).dataLayer;
+  if (Array.isArray(dataLayer)) dataLayer.push({ event: "generate_lead" });
   // TODO: 네이버·카카오 픽셀은 트래킹 스크립트 도입 시 함께 연결
 }
 
@@ -146,7 +157,7 @@ export function useLeadSubmit() {
       // 로그인 페이지처럼 200 + HTML 을 주는 중간자가 있으면, `ok !== false`
       // 로는 접수가 안 됐는데 완료 화면과 전환 이벤트가 나간다.
       if (res.ok && data.ok === true) {
-        // Lead 는 지금 페이지에서 먼저 보낸다 — 이동은 클라이언트 전환이라
+        // 전환 이벤트(Lead·generate_lead)는 지금 페이지에서 먼저 보낸다 — 이동은 클라이언트 전환이라
         // 페이지가 내려가지 않으므로 나가던 요청이 끊기지 않는다.
         // 완료 상태도 그대로 둔다: 이동이 늦거나 실패해도 폼 자리에 완료 문구가 남는다
         fireConversion();

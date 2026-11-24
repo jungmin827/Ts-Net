@@ -321,6 +321,18 @@ const strip = (html) =>
     readFileSync(`${FE}/lib/meta-pixel.ts`, "utf8"),
   );
 
+  /*
+   * GTM(2026-11-24)도 같은 이유·같은 조건이다:
+   *   ① 여는 태그가 `<script id="gtm"`
+   *   ② 표현식이 정확히 `{{ __html: gtmSnippet(GTM_ID) }}`
+   *   ③ `lib/gtm.ts` 가 ID 를 `GTM-` + 영문 대문자·숫자로만 검증한다 (앵커 포함)
+   * ③ 은 정규식 원문을 그대로 찾는다 — `^`·`$` 가 빠지거나 문자 범위가 넓어지면
+   * 면제가 풀려 이 검사가 실패한다.
+   */
+  const gtmIdGuarded = /\/\^GTM-\[A-Z0-9\]\{4,12\}\$\/\.test\(id\)/.test(
+    readFileSync(`${FE}/lib/gtm.ts`, "utf8"),
+  );
+
   const unsafe = files.filter((f) => {
     const src = strip(readFileSync(f, "utf8"));
     let i = src.indexOf("dangerouslySetInnerHTML");
@@ -334,7 +346,11 @@ const strip = (html) =>
         pixelIdGuarded &&
         /^<script\b[^>]*id="meta-pixel"/.test(tag) &&
         /^\{\{\s*__html:\s*metaPixelSnippet\(PIXEL_ID\)\s*\}\}$/.test(expr);
-      if (!jsonLd && !metaPixel) return true;
+      const gtm =
+        gtmIdGuarded &&
+        /^<script\b[^>]*id="gtm"/.test(tag) &&
+        /^\{\{\s*__html:\s*gtmSnippet\(GTM_ID\)\s*\}\}$/.test(expr);
+      if (!jsonLd && !metaPixel && !gtm) return true;
       i = src.indexOf("dangerouslySetInnerHTML", i + 1);
     }
     return false;
