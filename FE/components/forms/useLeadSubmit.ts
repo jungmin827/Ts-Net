@@ -67,8 +67,8 @@ function collectTracking(): Tracking {
  *
  * GTM(`lib/gtm.ts`)에는 `dataLayer` 로 `generate_lead` 이벤트 이름만 넣는다.
  * 처리방침 9항이 Google 에 가는 것을 "상담 신청 완료 여부" 로 적었으므로
- * **이름·연락처·통신사 등 폼 값은 절대 싣지 않는다.** `dataLayer` 는 GTM 코드가
- * 만든다 — 없으면 GTM 이 안 깔린 것(로컬·어드민)이므로 새로 만들지 않고 넘어간다.
+ * **이름·연락처·통신사 등 폼 값은 절대 싣지 않는다.** GTM 이 없는 환경(로컬)에서는
+ * 빈 배열에 한 건이 쌓일 뿐 아무 데도 나가지 않는다.
  */
 function fireConversion() {
   const w = window as unknown as Record<
@@ -78,8 +78,9 @@ function fireConversion() {
   // Google 은 GTM 의 dataLayer 한 경로로만 보낸다. gtag 를 같이 부르면 컨테이너에
   // gtag 가 생겼을 때 같은 접수가 두 번 집계된다
   w.fbq?.("track", "Lead");
-  const dataLayer = (window as unknown as { dataLayer?: unknown }).dataLayer;
-  if (Array.isArray(dataLayer)) dataLayer.push({ event: "generate_lead" });
+  // 대행사가 준 한 줄 그대로(11-24) — dataLayer 가 없으면 만들어서라도 넣는다
+  const dl = window as unknown as { dataLayer?: unknown[] };
+  (dl.dataLayer = dl.dataLayer || []).push({ event: "generate_lead" });
   // TODO: 네이버·카카오 픽셀은 트래킹 스크립트 도입 시 함께 연결
 }
 
